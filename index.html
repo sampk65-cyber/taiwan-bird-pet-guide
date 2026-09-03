@@ -1543,23 +1543,23 @@
     <div class="portal-card">
       <h2 class="portal-title">鳥友影像館</h2>
       <p class="portal-subtitle">分享你的鳥兒照片，一起豐富台灣野鳥寵鳥圖鑑。加入影像館後，可分享與管理你拍攝的鳥類照片。</p>
-      <div class="portal-switch">
-        <button type="button" class="active" id="playerLoginTab" style="width:100%;">鳥友登入</button>
-        <button type="button" id="playerApplyTab" style="display:none;">首次註冊</button>
+      <div class="hint" id="birdfriendEntryGuide" style="margin:0 0 16px;line-height:1.8;font-size:16px;">
+        <strong>第一次使用：</strong>請按「取得授權」，取得 6 位授權碼並設定自己的密碼。<br>
+        <strong>已完成授權／已核准：</strong>請直接按「鳥友登入」，輸入帳號與密碼。
       </div>
-      <div class="hint" style="margin:0 0 16px;line-height:1.7;">首次使用：只要輸入想使用的鳥友帳號並按「鳥友登入」，系統會自動產生 6 位授權碼；完成密碼設定後等待管理員核准。已核准鳥友直接輸入帳號密碼登入。</div>
-      <div class="field"><label>帳號</label><input id="portalPlayerId" type="text" maxlength="24" autocomplete="username" placeholder="首次使用先輸入新帳號"></div>
-      <div class="field" id="portalPasswordField"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" placeholder="已有帳號請輸入密碼；首次可先留空"></div>
+      <div class="portal-switch" style="grid-template-columns:1fr 1fr;gap:10px;">
+        <button type="button" id="playerGrantTab">取得授權</button>
+        <button type="button" id="playerLoginTab">鳥友登入</button>
+      </div>
+      <div id="portalEntryFields" style="display:none;">
+        <div class="field"><label>帳號</label><input id="portalPlayerId" type="text" maxlength="24" autocomplete="username" placeholder="輸入鳥友帳號"></div>
+        <div class="field" id="portalPasswordField" style="display:none;"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" placeholder="輸入已設定的密碼"></div>
+      </div>
       <div id="playerCodePanel" style="display:none;">
         <div class="portal-status show ok" id="issuedPlayerCode" style="font-size:22px;font-weight:900;letter-spacing:5px;text-align:center;"></div>
-        <div class="hint">這是首次建立鳥友帳號時由系統自動產生的 6 位授權碼。請在下方再次輸入並設定自己的密碼；完成後等待管理員核准。</div>
-        <div class="field"><label>六位一次性認證碼</label><input id="portalSetupCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="輸入上方六位數字"></div>
-        <div class="field"><label>設定永久密碼</label><input id="portalNewPassword" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="至少 6 位密碼"></div>
-      </div>
-      <div id="playerProfileFields" style="display:none;">
-        <div class="field"><label>顯示名稱</label><input id="portalDisplayName" type="text" maxlength="24" placeholder="遊戲中顯示的名稱"></div>
-        <div class="field"><label>最喜歡的鳥</label><input id="portalFavoriteBird" type="text" maxlength="30" placeholder="例如：五色鳥"></div>
-        <div class="field"><label>自我介紹</label><textarea id="portalBio" maxlength="160" rows="4" placeholder="最多 160 字"></textarea></div>
+        <div class="hint">請輸入上方 6 位授權碼，並設定自己的登入密碼。完成後，若管理員已核准可直接登入；尚未核准則等待管理員核准。</div>
+        <div class="field"><label>六位授權碼</label><input id="portalSetupCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="輸入上方六位數字"></div>
+        <div class="field"><label>設定登入密碼</label><input id="portalNewPassword" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="至少 6 位密碼"></div>
       </div>
       <div id="playerUploadPanel" style="display:none;margin-top:22px;padding-top:20px;border-top:1px solid rgba(46,92,68,.18);">
         <h3 style="margin:0 0 8px;font-size:22px;color:#2d5f49;">分享鳥兒照片</h3>
@@ -1587,6 +1587,12 @@
         <button class="hint-btn" type="button" id="birdfriendCancelEditBtn" style="display:none;width:100%;margin-top:8px;padding:11px;">取消修改</button>
         <div class="portal-status" id="birdfriendPhotoStatus"></div>
         <div id="birdfriendMyPhotos" style="display:grid;gap:10px;margin-top:16px;"></div>
+      </div>
+      <div id="playerProfileFields" style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(46,92,68,.18);">
+        <h3 style="margin:0 0 10px;font-size:20px;color:#2d5f49;">我的鳥友資料</h3>
+        <div class="field"><label>顯示名稱</label><input id="portalDisplayName" type="text" maxlength="24" placeholder="顯示名稱"></div>
+        <div class="field"><label>最喜歡的鳥</label><input id="portalFavoriteBird" type="text" maxlength="30" placeholder="例如：五色鳥"></div>
+        <div class="field"><label>自我介紹</label><textarea id="portalBio" maxlength="160" rows="4" placeholder="最多 160 字"></textarea></div>
       </div>
       <div class="portal-status" id="playerPortalStatus"></div>
       <button class="save-btn" type="button" id="playerPortalSubmit">登入</button>
@@ -4811,7 +4817,7 @@ function renderScenePreview() {
 
 // ---------- V4.2 玩家申請、同裝置認證碼與個人資料 ----------
 const PLAYER_PENDING_ID_KEY = "birdGuidePendingPlayerIdV4";
-let playerPortalMode = "login";
+let playerPortalMode = "choice";
 let playerPortalSession = null;
 
 function setPlayerPortalStatus(message, type = "info") {
@@ -4822,16 +4828,38 @@ function setPlayerPortalStatus(message, type = "info") {
 }
 
 function setPlayerPortalMode(mode) {
-  playerPortalMode = mode === "setup" || mode === "edit" ? mode : "login";
+  playerPortalMode = ["choice","grant","setup","login","edit"].includes(mode) ? mode : "choice";
   if (playerPortalMode !== "edit") playerPortalSession = null;
-  document.getElementById("playerLoginTab").classList.add("active");
-  document.getElementById("playerProfileFields").style.display = playerPortalMode === "edit" ? "block" : "none";
-  document.getElementById("playerUploadPanel").style.display = playerPortalMode === "edit" ? "block" : "none";
-  document.getElementById("portalPasswordField").style.display = playerPortalMode === "login" ? "block" : "none";
-  document.getElementById("playerCodePanel").style.display = playerPortalMode === "setup" ? "block" : "none";
-  document.getElementById("playerPortalSubmit").textContent = playerPortalMode === "setup" ? "驗證並設定密碼" : (playerPortalMode === "edit" ? "儲存我的資料" : "鳥友登入");
-  document.getElementById("portalPlayerId").disabled = playerPortalMode !== "login";
+  const grantTab = document.getElementById("playerGrantTab");
+  const loginTab = document.getElementById("playerLoginTab");
+  const entry = document.getElementById("portalEntryFields");
+  const pwdField = document.getElementById("portalPasswordField");
+  const codePanel = document.getElementById("playerCodePanel");
+  const profile = document.getElementById("playerProfileFields");
+  const upload = document.getElementById("playerUploadPanel");
+  const submit = document.getElementById("playerPortalSubmit");
+  const idEl = document.getElementById("portalPlayerId");
+
+  grantTab?.classList.toggle("active", playerPortalMode === "grant" || playerPortalMode === "setup");
+  loginTab?.classList.toggle("active", playerPortalMode === "login" || playerPortalMode === "edit");
+  if (entry) entry.style.display = ["grant","setup","login"].includes(playerPortalMode) ? "block" : "none";
+  if (pwdField) pwdField.style.display = playerPortalMode === "login" ? "block" : "none";
+  if (codePanel) codePanel.style.display = playerPortalMode === "setup" ? "block" : "none";
+  if (profile) profile.style.display = playerPortalMode === "edit" ? "block" : "none";
+  if (upload) upload.style.display = playerPortalMode === "edit" ? "block" : "none";
+  if (submit) {
+    submit.style.display = playerPortalMode === "choice" ? "none" : "block";
+    submit.textContent = playerPortalMode === "grant" ? "取得授權碼" :
+      playerPortalMode === "setup" ? "驗證授權並設定密碼" :
+      playerPortalMode === "edit" ? "儲存我的資料" : "鳥友登入";
+  }
+  if (idEl) idEl.disabled = playerPortalMode === "setup" || playerPortalMode === "edit";
   if (playerPortalMode === "login") document.getElementById("portalPlayerPin").value = "";
+  if (playerPortalMode === "grant") {
+    document.getElementById("portalPlayerPin").value = "";
+    document.getElementById("portalSetupCode").value = "";
+    document.getElementById("portalNewPassword").value = "";
+  }
   setPlayerPortalStatus("");
 }
 
@@ -4859,40 +4887,48 @@ function showBirdfriendWaiting(id) {
   playerPortalSession = null;
   document.getElementById("portalPlayerId").disabled = false;
   document.getElementById("portalPlayerId").value = id;
+  document.getElementById("portalEntryFields").style.display = "block";
   document.getElementById("portalPasswordField").style.display = "block";
   document.getElementById("playerCodePanel").style.display = "none";
   document.getElementById("playerProfileFields").style.display = "none";
   document.getElementById("playerUploadPanel").style.display = "none";
+  document.getElementById("playerPortalSubmit").style.display = "block";
   document.getElementById("playerPortalSubmit").textContent = "鳥友登入";
-  setPlayerPortalStatus("帳號與密碼已建立，現在等待管理員核准。核准後直接用同一組帳號密碼登入鳥友影像館。", "ok");
+  document.getElementById("playerGrantTab")?.classList.remove("active");
+  document.getElementById("playerLoginTab")?.classList.add("active");
+  setPlayerPortalStatus("帳號與密碼已完成設定，目前等待管理員核准。核准後按『鳥友登入』即可進入影像館。", "ok");
 }
 
 function showPlayerProfile(id, data, user) {
   playerPortalSession = { id, uid:user.uid };
   playerPortalMode = "edit";
-  document.getElementById("portalPlayerId").disabled = true;
-  document.getElementById("portalPasswordField").style.display = "none";
+  document.getElementById("portalEntryFields").style.display = "none";
   document.getElementById("playerCodePanel").style.display = "none";
   document.getElementById("playerProfileFields").style.display = "block";
   document.getElementById("playerUploadPanel").style.display = "block";
   document.getElementById("portalDisplayName").value = data.displayName || data.id || id;
   document.getElementById("portalFavoriteBird").value = data.favoriteBird || "";
   document.getElementById("portalBio").value = data.bio || "";
+  document.getElementById("playerPortalSubmit").style.display = "block";
   document.getElementById("playerPortalSubmit").textContent = "儲存我的資料";
-  setPlayerPortalStatus("登入成功。你已通過管理員核准，可以上傳野生鳥類或寵物萌照。", "ok");
+  document.getElementById("playerGrantTab")?.classList.remove("active");
+  document.getElementById("playerLoginTab")?.classList.add("active");
+  setPlayerPortalStatus("登入成功。請直接選擇『野生鳥類』或『寵物萌照』上傳照片。", "ok");
   loadBirdfriendMyPhotos();
+  setTimeout(() => document.getElementById("playerUploadPanel")?.scrollIntoView({behavior:"smooth", block:"start"}), 50);
 }
 
 function openPlayerPortal() {
   hideHomeWelcome(); stopCaptureGame();
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-player-portal").classList.add("active");
-  setPlayerPortalMode("login");
+  setPlayerPortalMode("choice");
   const pendingId = localStorage.getItem(PLAYER_PENDING_ID_KEY) || "";
   if (pendingId) document.getElementById("portalPlayerId").value = pendingId;
 }
 document.getElementById("playerPortalBtn")?.addEventListener("click", openPlayerPortal);
 document.getElementById("playerPortalBackBtn")?.addEventListener("click", () => backToHome());
+document.getElementById("playerGrantTab")?.addEventListener("click", () => setPlayerPortalMode("grant"));
 document.getElementById("playerLoginTab")?.addEventListener("click", () => setPlayerPortalMode("login"));
 
 let birdfriendPhotoCategory = "wild";
@@ -5158,42 +5194,132 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
   try {
     const ref = db.collection("players").doc(id);
 
+    // 1) 明確的首次流程：只有按「取得授權」才建立/取得授權碼。
+    if (playerPortalMode === "grant") {
+      let snap = await ref.get();
+      let data = snap.exists ? (snap.data() || {}) : null;
+      if (data && (data.accountType === "game" || String(snap.id).startsWith("__game__"))) throw new Error("這是遊戲帳號，請另外建立鳥友帳號");
+      if (data && data.passwordSet === true) throw new Error("此鳥友帳號已完成首次授權，請改按『鳥友登入』並輸入密碼。");
+      if (data && data.accountStatus === "disabled") throw new Error("此鳥友帳號目前已停用");
+      if (data && data.accountStatus === "rejected") throw new Error("此鳥友帳號目前未獲核准，請聯絡管理員");
+
+      const setupCode = birdfriendNewCode();
+      const base = {
+        id,
+        accountType:"bird",
+        displayName:(data && data.displayName) || id,
+        favoriteBird:(data && data.favoriteBird) || "",
+        bio:(data && data.bio) || "",
+        accountStatus:(data && data.accountStatus) || "pending",
+        passwordSet:false,
+        setupCode,
+        setupCodeExpiresAt:firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (!snap.exists) {
+        base.score = 0; base.progress = {}; base.birdsDone = {};
+        base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      await ref.set(base, {merge:true});
+      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
+      playerPortalMode = "setup";
+      document.getElementById("portalPlayerId").disabled = true;
+      document.getElementById("portalEntryFields").style.display = "block";
+      document.getElementById("portalPasswordField").style.display = "none";
+      document.getElementById("playerCodePanel").style.display = "block";
+      document.getElementById("issuedPlayerCode").textContent = "你的授權碼：" + setupCode;
+      btn.textContent = "驗證授權並設定密碼";
+      setPlayerPortalStatus("授權碼已取得。請輸入這組 6 位授權碼並設定自己的密碼。", "ok");
+      return;
+    }
+
+    // 2) 輸入授權碼 + 自訂密碼。若之前已建立 Firebase Auth 但 Firestore 尚未完成，允許用同一密碼接續修復。
     if (playerPortalMode === "setup") {
       const snap = await ref.get();
-      if (!snap.exists) throw new Error("找不到鳥友帳號");
-      const data = snap.data();
+      if (!snap.exists) throw new Error("找不到鳥友帳號，請重新按『取得授權』");
+      const data = snap.data() || {};
       const enteredCode = document.getElementById("portalSetupCode").value.trim();
       const newPassword = document.getElementById("portalNewPassword").value;
       const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
       if (!/^\d{6}$/.test(enteredCode) || enteredCode !== String(data.setupCode || "")) throw new Error("六位授權碼不正確");
-      if (expiresAt && Date.now() > expiresAt) throw new Error("授權碼已過期，請重新登入取得新授權碼");
+      if (expiresAt && Date.now() > expiresAt) throw new Error("授權碼已過期，請重新按『取得授權』");
       if (newPassword.length < 6) throw new Error("密碼至少需要 6 位");
-      const newUid = await createBirdfriendAuthUser(id, newPassword);
+
+      const email = await playerEmailForId(id);
+      let user = null;
+      try {
+        const newUid = await createBirdfriendAuthUser(id, newPassword);
+        if (fbAuth.currentUser) await fbAuth.signOut();
+        await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        user = (await fbAuth.signInWithEmailAndPassword(email, newPassword)).user;
+        if (!user || user.uid !== newUid) throw new Error("鳥友帳號驗證失敗");
+      } catch (e) {
+        if (e && e.code === "auth/email-already-in-use") {
+          if (fbAuth.currentUser) await fbAuth.signOut();
+          await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+          user = (await fbAuth.signInWithEmailAndPassword(email, newPassword)).user;
+        } else throw e;
+      }
+      if (!user) throw new Error("鳥友帳號建立失敗");
+
       await ref.set({
-        ownerUid:newUid,
+        ownerUid:user.uid,
         passwordSet:true,
         setupCompletedAt:firebase.firestore.FieldValue.serverTimestamp(),
         setupCode:firebase.firestore.FieldValue.delete(),
         setupCodeExpiresAt:firebase.firestore.FieldValue.delete(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
+      const fresh = await ref.get();
+      const freshData = fresh.data() || {};
+      if (freshData.accountStatus === "approved") {
+        localStorage.removeItem(PLAYER_PENDING_ID_KEY);
+        showPlayerProfile(id, freshData, user);
+      } else {
+        localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
+        showBirdfriendWaiting(id);
+      }
+      return;
+    }
 
-      // V4.6 修正：設定密碼完成後，立刻讓主 Firebase Auth 以鳥友身分登入。
-      // 舊流程只在 secondary app 建立帳號後就刪除 session，之後容易又被當成首次註冊。
-      const setupEmail = await playerEmailForId(id);
+    // 3) 既有鳥友登入：只做「帳號+密碼驗證 -> 核准狀態 -> 直接進照片上傳」。絕不跳回授權碼。
+    if (playerPortalMode === "login") {
+      if (!password || password.length < 6) throw new Error("請輸入已設定的鳥友密碼");
+      const email = await playerEmailForId(id);
       if (fbAuth.currentUser) await fbAuth.signOut();
       await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      const setupCredential = await fbAuth.signInWithEmailAndPassword(setupEmail, newPassword);
-      if (!setupCredential.user || setupCredential.user.uid !== newUid) throw new Error("鳥友登入驗證失敗，請重新登入");
+      const user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+      if (!user) throw new Error("鳥友登入失敗");
 
-      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
-      showBirdfriendWaiting(id);
+      const snap = await ref.get();
+      if (!snap.exists) throw new Error("找不到這個鳥友帳號；第一次使用請按『取得授權』");
+      const data = snap.data() || {};
+      if (data.accountType === "game" || String(snap.id).startsWith("__game__")) throw new Error("這是遊戲帳號，不是鳥友帳號");
+      if (data.passwordSet !== true) throw new Error("此帳號尚未完成首次授權，請按『取得授權』完成設定");
+      if (data.accountStatus === "pending") { localStorage.setItem(PLAYER_PENDING_ID_KEY, id); showBirdfriendWaiting(id); return; }
+      if (data.accountStatus === "rejected") throw new Error("此鳥友帳號未獲核准，請聯絡管理員");
+      if (data.accountStatus === "disabled") throw new Error("此鳥友帳號目前已停用");
+      if (data.accountStatus !== "approved") throw new Error("此鳥友帳號尚未核准");
+
+      // 相容舊版：只要成功登入「此帳號對應的 Firebase Auth」，即可安全修正舊 ownerUid 綁定。
+      if (data.ownerUid !== user.uid) {
+        try {
+          await ref.set({ownerUid:user.uid, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true});
+          data.ownerUid = user.uid;
+        } catch (repairErr) {
+          throw new Error("帳號密碼已驗證成功，但舊資料綁定尚未更新。請管理員重新整理鳥友帳號後再試。");
+        }
+      }
+      localStorage.removeItem(PLAYER_PENDING_ID_KEY);
+      showPlayerProfile(id, data, user);
       return;
     }
 
     if (playerPortalMode === "edit") {
       const user = fbAuth.currentUser;
       if (!user || !playerPortalSession || playerPortalSession.uid !== user.uid) throw new Error("登入狀態已失效");
+      const ownSnap = await ref.get();
+      if (!ownSnap.exists || ownSnap.data().ownerUid !== user.uid) throw new Error("你只能修改自己的鳥友資料");
       await ref.set({
         displayName:document.getElementById("portalDisplayName").value.trim() || id,
         favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
@@ -5203,113 +5329,18 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
       setPlayerPortalStatus("你的個人資料已儲存。", "ok");
       return;
     }
-
-    // V4.6 修正：既有鳥友一定先驗證 Firebase Authentication，再讀取自己的 Firestore 資料。
-    // 不再把「讀取失敗」誤判成「首次帳號」，避免登入後又繞回授權碼流程。
-    let authenticatedUser = null;
-    let authError = null;
-    const email = await playerEmailForId(id);
-
-    if (password) {
-      if (password.length < 6) throw new Error("請輸入至少 6 位密碼");
-      try {
-        if (fbAuth.currentUser) await fbAuth.signOut();
-        await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        authenticatedUser = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
-      } catch (e) {
-        authError = e;
-      }
-    }
-
-    let snap;
-    try {
-      snap = await ref.get();
-    } catch (e) {
-      // 若 Firebase Auth 已驗證成功卻仍不能讀取，這是真正的 Firestore 權限問題，不能當成新帳號。
-      if (authenticatedUser) throw new Error("帳號已驗證，但目前沒有讀取鳥友資料的權限，請檢查 Firestore Rules");
-      throw new Error("目前無法讀取鳥友帳號資料，請稍後再試");
-    }
-
-    // 首次：只有在 Firestore 確定不存在、且 Firebase Auth 也沒有成功登入時，才建立新帳號。
-    if (!snap.exists) {
-      if (password && authError && !["auth/user-not-found","auth/invalid-credential","auth/invalid-login-credentials"].includes(authError.code)) throw authError;
-      const setupCode = birdfriendNewCode();
-      await ref.set({
-        id,
-        accountType:"bird",
-        displayName:id,
-        favoriteBird:"",
-        bio:"",
-        accountStatus:"pending",
-        passwordSet:false,
-        setupCode,
-        setupCodeExpiresAt:firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
-        score:0,
-        progress:{},
-        birdsDone:{},
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
-      playerPortalMode = "setup";
-      document.getElementById("portalPlayerId").disabled = true;
-      document.getElementById("portalPasswordField").style.display = "none";
-      document.getElementById("playerProfileFields").style.display = "none";
-      document.getElementById("playerUploadPanel").style.display = "none";
-      document.getElementById("playerCodePanel").style.display = "block";
-      document.getElementById("issuedPlayerCode").textContent = "你的授權碼：" + setupCode;
-      btn.textContent = "驗證並設定密碼";
-      setPlayerPortalStatus("首次帳號已建立。請輸入上方 6 位授權碼，再設定自己的密碼。完成後等待管理員核准。", "ok");
-      return;
-    }
-
-    const data = snap.data();
-    if (data.accountType === "game" || String(snap.id).startsWith("__game__")) throw new Error("這是遊戲帳號，請使用鳥友帳號登入");
-    if (data.accountStatus === "rejected") throw new Error("此鳥友帳號未獲核准，請聯絡管理員");
-    if (data.accountStatus === "disabled") throw new Error("此鳥友帳號目前已停用");
-
-    if (!data.passwordSet) {
-      let setupCode = String(data.setupCode || "");
-      const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
-      if (!/^\d{6}$/.test(setupCode) || (expiresAt && Date.now() > expiresAt)) {
-        setupCode = birdfriendNewCode();
-        await ref.set({setupCode, setupCodeExpiresAt:firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000), updatedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true});
-      }
-      playerPortalMode = "setup";
-      document.getElementById("portalPlayerId").disabled = true;
-      document.getElementById("portalPasswordField").style.display = "none";
-      document.getElementById("playerProfileFields").style.display = "none";
-      document.getElementById("playerUploadPanel").style.display = "none";
-      document.getElementById("playerCodePanel").style.display = "block";
-      document.getElementById("issuedPlayerCode").textContent = "你的授權碼：" + setupCode;
-      btn.textContent = "驗證並設定密碼";
-      setPlayerPortalStatus("請用這組 6 位授權碼完成密碼設定。設定完成後由管理員決定是否核准。", "ok");
-      return;
-    }
-
-    // passwordSet=true 就絕對不能再回到授權碼流程。
-    if (!password) throw new Error("此鳥友帳號已設定密碼，請輸入密碼登入");
-    if (!authenticatedUser) throw (authError || new Error("鳥友帳號或密碼不正確"));
-    const user = authenticatedUser;
-    const fresh = await ref.get();
-    if (!fresh.exists || fresh.data().ownerUid !== user.uid) throw new Error("鳥友帳號資料不相符");
-    const freshData = fresh.data();
-    if (freshData.accountStatus === "pending") { localStorage.setItem(PLAYER_PENDING_ID_KEY, id); showBirdfriendWaiting(id); return; }
-    if (freshData.accountStatus !== "approved") throw new Error(freshData.accountStatus === "disabled" ? "此鳥友帳號目前已停用" : "帳號尚未核准");
-    localStorage.removeItem(PLAYER_PENDING_ID_KEY);
-    showPlayerProfile(id, freshData, user);
   } catch (err) {
     const code = err && err.code;
     if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用電子郵件/密碼登入。", "error");
-    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("這個鳥友帳號已經設定過密碼，請回到登入畫面使用原密碼。", "error");
     else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials") setPlayerPortalStatus("鳥友帳號或密碼不正確。", "error");
     else setPlayerPortalStatus(String(err.message || err), "error");
     setTimeout(() => document.getElementById("playerPortalStatus")?.scrollIntoView({behavior:"smooth", block:"center"}), 0);
   } finally {
     btn.disabled = false;
-    if (playerPortalMode === "setup") btn.textContent = "驗證並設定密碼";
+    if (playerPortalMode === "grant") btn.textContent = "取得授權碼";
+    else if (playerPortalMode === "setup") btn.textContent = "驗證授權並設定密碼";
     else if (playerPortalMode === "edit") btn.textContent = "儲存我的資料";
-    else btn.textContent = "鳥友登入";
+    else if (playerPortalMode === "login") btn.textContent = "鳥友登入";
   }
 });
 
