@@ -1406,6 +1406,40 @@
   .birdfriend-condition-grid { grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:6px !important; }
   .birdfriend-condition-grid .chk-btn { min-height:42px !important; padding:5px 2px !important; font-size:11px !important; line-height:1.18 !important; border-radius:10px !important; }
   .birdfriend-custom-condition { margin-top:7px; }
+
+  /* V4.8 鳥友等級徽章與攝影署名 */
+  .birdfriend-member-stats {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin:0 0 16px; padding:14px; border:1px solid rgba(46,92,68,.16);
+    border-radius:18px; background:rgba(255,255,255,.78);
+  }
+  .birdfriend-badge-wrap { position:relative; display:inline-flex; align-items:center; gap:9px; min-width:150px; }
+  .birdfriend-badge {
+    display:inline-flex; align-items:center; gap:7px; padding:9px 13px; border-radius:999px;
+    font-size:17px; font-weight:900; line-height:1; box-shadow:0 4px 10px rgba(0,0,0,.10);
+    border:1px solid rgba(255,255,255,.75); white-space:nowrap;
+  }
+  .birdfriend-badge .medal { font-size:20px; line-height:1; }
+  .birdfriend-score-chip {
+    position:absolute; right:-5px; top:-11px; padding:4px 7px; border-radius:999px;
+    background:#d95b4f; color:#fff; font-size:10px; font-weight:900; box-shadow:0 2px 6px rgba(0,0,0,.16);
+  }
+  .birdfriend-badge.level-none { background:#f2f1ee; color:#777168; }
+  .birdfriend-badge.level-new { background:#f6c5d5; color:#8b3658; }
+  .birdfriend-badge.level-iron { background:#d9dde3; color:#4e5560; }
+  .birdfriend-badge.level-diamond { background:#bfe8f5; color:#0d6788; }
+  .birdfriend-badge.level-love { background:#ffe1a0; color:#8a5a00; }
+  .birdfriend-badge.level-super { background:#dcc7f6; color:#5f2d94; }
+  .birdfriend-stat-copy { text-align:right; font-size:13px; line-height:1.65; color:#57655d; }
+  .birdfriend-stat-copy strong { color:#234f3b; font-size:16px; }
+  .birdfriend-photo-wrap { position:relative; width:72px; height:72px; border-radius:10px; overflow:hidden; background:#eee; }
+  .birdfriend-photo-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+  .birdfriend-photo-credit {
+    position:absolute; left:3px; bottom:3px; max-width:calc(100% - 6px); padding:2px 5px;
+    border-radius:5px; background:rgba(0,0,0,.58); color:#fff; font-size:9px; font-weight:800;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .bird-icon .photo-credit { font-size:6px; padding:1px 3px; left:1px; bottom:1px; border-radius:3px; }
   .home-action-icon { width:34px; height:34px; flex:0 0 34px; display:grid; place-items:center; border-radius:11px; background:rgba(255,255,255,.56); font-size:19px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.55); }
   .home-action-copy { display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; }
   .home-action-copy small { margin-top:4px; font-size:10px; font-weight:600; opacity:.67; }
@@ -1480,7 +1514,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.6 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（長按三秒）" title="長按 3 秒進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（長按三秒）" title="長按 3 秒進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1606,6 +1640,7 @@
       </div>
       <div id="playerProfileFields" style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(46,92,68,.18);">
         <h3 style="margin:0 0 10px;font-size:20px;color:#2d5f49;">我的鳥友資料</h3>
+        <div id="birdfriendMemberStats" class="birdfriend-member-stats" aria-live="polite"></div>
         <div class="field"><label>顯示名稱</label><input id="portalDisplayName" type="text" maxlength="24" placeholder="顯示名稱"></div>
         <div class="field"><label>最喜歡的鳥</label><input id="portalFavoriteBird" type="text" maxlength="30" placeholder="例如：五色鳥"></div>
         <div class="field"><label>自我介紹</label><textarea id="portalBio" maxlength="160" rows="4" placeholder="最多 160 字"></textarea></div>
@@ -1676,7 +1711,7 @@
           <div class="capture-hint">條件全數答對！拖曳畫面移動對焦框追上縮圖，快點一下拍攝<span class="capture-tier-label" id="captureTierLabel">初級辨識</span></div>
           <div class="viewfinder-box" id="viewfinderBox">
             <div class="scene-bg" id="viewfinderScene"></div>
-            <div class="bird-icon capture-tier-1" id="birdIcon"><img id="captureBirdPhoto" alt="飛行中的鳥類縮圖"></div>
+            <div class="bird-icon capture-tier-1" id="birdIcon"><img id="captureBirdPhoto" alt="飛行中的鳥類縮圖"><div class="photo-credit" id="captureBirdPhotoCredit"></div></div>
             <div class="reticle" id="reticle">
               <div class="corner tl"></div><div class="corner tr"></div>
               <div class="corner bl"></div><div class="corner br"></div>
@@ -1980,8 +2015,12 @@ const CONDITIONS = [
 
 const LEVEL_REQUIRED = { 1: 3, 2: 6, 3: 10, 4: 15 };
 
-// V4.6 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
+// V4.8 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
 let communityBirds = [];
+function photographerCreditText(bird) {
+  const v = bird && (bird.photographer || bird.displayName || bird.playerId);
+  return String(v || "攝影者未署名").trim() || "攝影者未署名";
+}
 function isCommunityWildComplete(data) {
   if (!data || data.category !== "wild") return false;
   const c = data.conditions || {};
@@ -2000,7 +2039,7 @@ function communityRecordToBird(id, data) {
     challengeEligible: !isPet && complete,
     name: isPet ? (pet.nickname || pet.breed || "寵物萌照") : (data.wildName || data.photoName || "未命名野生鳥"),
     photoUrl: data.photoUrl || "",
-    photographer: data.displayName || data.playerId || "鳥友投稿",
+    photographer: data.photographer || data.displayName || data.playerId || "鳥友投稿",
     story: data.note || (isPet ? [pet.breed, pet.sex, pet.age, pet.talent].filter(Boolean).join(" · ") : ""),
     level: 1,
     requiredCorrect: complete ? 15 : 0,
@@ -2381,7 +2420,7 @@ function renderBirdGrid() {
     const done = (currentAnswered[b.id + "_done"] === true);
     const tile = document.createElement("div");
     tile.className = "bird-tile" + (done ? " done" : "");
-    const photoCredit = b.photographer ? `<div class="photo-credit">${b.photographer}</div>` : "";
+    const photoCredit = `<div class="photo-credit">${photographerCreditText(b)}</div>`;
     const thumbInner = (done && b.photoUrl)
       ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${photoCredit}</div>`
       : `<div class="mystery-placeholder">
@@ -2875,6 +2914,8 @@ function startCaptureGame(bird) {
       birdIcon.className = "bird-icon capture-tier-" + tierInfo.tier;
       capturePhoto.src = bird.photoUrl || mysteryImgForLevel(bird.level);
       capturePhoto.alt = bird.name + "飛行縮圖（" + tierInfo.label + "）";
+      const captureCredit = document.getElementById("captureBirdPhotoCredit");
+      if (captureCredit) { captureCredit.textContent = photographerCreditText(bird); captureCredit.style.display = "block"; }
       const tierLabel = document.getElementById("captureTierLabel");
       if (tierLabel) tierLabel.textContent = tierInfo.label;
       birdIcon.style.visibility = "visible";
@@ -3072,8 +3113,8 @@ function renderQuiz() {
       photoEl.src = bird.photoUrl;
       photoEl.classList.add("show");
       if (revealCredit) {
-        revealCredit.textContent = bird.photographer || "";
-        revealCredit.style.display = bird.photographer ? "block" : "none";
+        revealCredit.textContent = photographerCreditText(bird);
+        revealCredit.style.display = "block";
       }
     } else {
       photoEl.classList.remove("show");
@@ -4314,7 +4355,7 @@ function renderGalleryGrid() {
   getGalleryBirds().forEach((b, i) => {
     const tile = document.createElement("div");
     tile.className = "bird-tile";
-    const galleryCredit = b.photographer ? `<div class="photo-credit">${b.photographer}</div>` : "";
+    const galleryCredit = `<div class="photo-credit">${photographerCreditText(b)}</div>`;
     const thumbInner = b.photoUrl
       ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${galleryCredit}</div>`
       : `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(b.level))}</div>`;
@@ -4340,7 +4381,7 @@ function showGalleryDetail(birdId) {
   const photoBox = document.getElementById("galleryPhotoBox");
   photoBox.innerHTML = "";
   if (bird.photoUrl) {
-    const credit = bird.photographer ? `<div class="photo-credit">${bird.photographer}</div>` : "";
+    const credit = `<div class="photo-credit">${photographerCreditText(bird)}</div>`;
     photoBox.innerHTML = `<div class="thumb-photo-wrap"><img src="${bird.photoUrl}" style="width:100%;height:100%;object-fit:cover;">${credit}</div>`;
   } else {
     photoBox.innerHTML = `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(bird.level))}</div>`;
@@ -5163,6 +5204,48 @@ async function deleteBirdfriendOwnPhoto(item) {
   } catch(err) { setBirdfriendPhotoStatus(String(err.message || err), "error"); }
 }
 
+function birdfriendLevelForUploadCount(count) {
+  const n = Math.max(0, Number(count) || 0);
+  // 邊界不重疊：1–3 / 4–10 / 11–50 / 51–100 / 101+
+  if (n >= 101) return { key:"super", label:"超粉", icon:"♛", range:"上傳 101+" };
+  if (n >= 51) return { key:"love", label:"摯愛", icon:"♥", range:"上傳 51–100" };
+  if (n >= 11) return { key:"diamond", label:"鑽粉", icon:"◆", range:"上傳 11–50" };
+  if (n >= 4) return { key:"iron", label:"鐵粉", icon:"★", range:"上傳 4–10" };
+  if (n >= 1) return { key:"new", label:"新粉", icon:"♥", range:"上傳 1–3" };
+  return { key:"none", label:"未入級", icon:"○", range:"尚未上傳" };
+}
+
+async function readBirdfriendGameScore(id) {
+  if (!db || !id) return 0;
+  try {
+    const snap = await db.collection("players").doc(gamePlayerDocId(id)).get();
+    if (snap.exists) return Math.max(0, Number((snap.data() || {}).score) || 0);
+  } catch (err) { console.warn("鳥友級分讀取失敗", err); }
+  return 0;
+}
+
+async function renderBirdfriendMemberStats(uploadCount) {
+  const box = document.getElementById("birdfriendMemberStats");
+  if (!box || !playerPortalSession) return;
+  const level = birdfriendLevelForUploadCount(uploadCount);
+  const score = await readBirdfriendGameScore(playerPortalSession.id);
+  box.innerHTML = "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "birdfriend-badge-wrap";
+  const badge = document.createElement("div");
+  badge.className = "birdfriend-badge level-" + level.key;
+  const medal = document.createElement("span"); medal.className = "medal"; medal.textContent = level.icon;
+  const label = document.createElement("span"); label.textContent = level.label;
+  const chip = document.createElement("span"); chip.className = "birdfriend-score-chip"; chip.textContent = score + "級分";
+  badge.append(medal, label); wrap.append(badge, chip);
+
+  const copy = document.createElement("div");
+  copy.className = "birdfriend-stat-copy";
+  copy.innerHTML = `<strong>總分 ${score} 級分</strong><br>投稿 ${uploadCount} 張 · ${level.range}`;
+  box.append(wrap, copy);
+}
+
 async function loadBirdfriendMyPhotos() {
   const box = document.getElementById("birdfriendMyPhotos");
   if (!box || !playerPortalSession || !db) return;
@@ -5177,11 +5260,15 @@ async function loadBirdfriendMyPhotos() {
       return tb-ta;
     });
     box.innerHTML = "";
+    await renderBirdfriendMemberStats(rows.length);
     if (!rows.length) { box.innerHTML = '<div class="hint">目前還沒有上傳照片。</div>'; return; }
     rows.forEach(item => {
       const row = document.createElement("div");
       row.style.cssText = "display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;padding:10px;border:1px solid rgba(46,92,68,.16);border-radius:14px;background:#fff;";
-      const img = document.createElement("img"); img.src = item.photoUrl || ""; img.alt = item.category === "pet" ? (item.petData?.nickname || "寵物萌照") : (item.wildName || "野生鳥類"); img.style.cssText = "width:72px;height:72px;object-fit:cover;border-radius:10px;background:#eee;";
+      const imgWrap = document.createElement("div"); imgWrap.className = "birdfriend-photo-wrap";
+      const img = document.createElement("img"); img.src = item.photoUrl || ""; img.alt = item.category === "pet" ? (item.petData?.nickname || "寵物萌照") : (item.wildName || "野生鳥類");
+      const credit = document.createElement("div"); credit.className = "birdfriend-photo-credit"; credit.textContent = item.displayName || item.playerId || playerPortalSession.id || "攝影者未署名";
+      imgWrap.append(img, credit);
       const text = document.createElement("div");
       const cat = item.category === "pet" ? "寵物萌照" : "野生鳥類";
       const title = item.category === "pet" ? (item.petData?.nickname || item.petData?.breed || "未命名") : (item.wildName || item.photoName || "未命名");
@@ -5192,7 +5279,7 @@ async function loadBirdfriendMyPhotos() {
       const actions=document.createElement("div"); actions.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;";
       const edit=document.createElement("button"); edit.type="button"; edit.className="hint-btn"; edit.textContent="修改"; edit.onclick=()=>fillBirdfriendEditForm(item);
       const del=document.createElement("button"); del.type="button"; del.className="hint-btn"; del.textContent="刪除"; del.style.background="#c95750"; del.style.color="#fff"; del.onclick=()=>deleteBirdfriendOwnPhoto(item);
-      actions.append(edit,del); text.append(titleEl,meta,actions); row.append(img,text); box.appendChild(row);
+      actions.append(edit,del); text.append(titleEl,meta,actions); row.append(imgWrap,text); box.appendChild(row);
     });
   } catch (err) {
     box.innerHTML = '<div class="hint">照片清單讀取失敗：' + String(err.message || err) + '</div>';
@@ -5251,7 +5338,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
       if (oldData.storagePath && oldData.storagePath !== storagePath) { try { await fbStorageRef.child(oldData.storagePath).delete(); } catch (_) {} }
     }
 
-    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, status:"submitted", updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, photographer:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, status:"submitted", updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if (!editingId) data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     await ref.set(data,{merge:true});
     const count=payload.category === "wild" ? payload.completedCount : 0;
