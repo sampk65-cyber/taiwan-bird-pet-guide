@@ -1554,6 +1554,91 @@
 .v53-ai-log{margin-top:10px;max-height:150px;overflow:auto;border-radius:12px;background:rgba(255,255,255,.75);padding:8px 10px;font-size:11px;line-height:1.5;color:#4a5d52;}
 @media(max-width:640px){#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}#adminFormPanel .checkbox-grid .chk-btn{min-width:0!important;word-break:break-word!important;}.v53-ai-import-card{padding:13px}.v53-ai-import-btn{width:100%;}}
 
+/* ===== indexV6.0：管理員帳號清單改為單欄緊湊列 ===== */
+.admin-compact-card.expanded .player-review-list{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:5px;
+}
+.admin-compact-card .player-review-row{
+  width:100%;
+  min-height:42px;
+  box-sizing:border-box;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  padding:5px 7px;
+  border-radius:10px;
+}
+.admin-compact-card .player-review-row>div:first-child{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:hidden;
+}
+.admin-compact-card .player-review-name{
+  display:flex;
+  align-items:center;
+  flex:0 0 auto;
+  white-space:nowrap;
+  font-size:12px;
+}
+.admin-compact-card .player-review-meta{
+  min-width:0;
+  margin:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:9px;
+}
+.admin-compact-card .player-review-actions{display:flex;flex-wrap:nowrap;gap:3px}
+.admin-compact-card .player-review-actions button{
+  min-width:0;
+  padding:5px 7px;
+  border-radius:7px;
+  font-size:10px;
+  line-height:1.15;
+  white-space:nowrap;
+}
+.admin-compact-card .player-detail{
+  margin-top:2px;
+  padding:6px 8px;
+  font-size:9px;
+  line-height:1.45;
+}
+@media(max-width:520px){
+  .player-review-card,.player-list-card{padding:10px}
+  .admin-compact-card .player-review-row{grid-template-columns:minmax(0,1fr) auto}
+  .admin-compact-card .player-review-meta{display:none}
+  .admin-compact-card .player-status-badge,
+  .admin-compact-card .account-type-badge{padding:3px 5px;font-size:8px;margin-left:3px}
+  .admin-compact-card .player-review-actions button{padding:5px 6px;font-size:9px}
+}
+
+/* ===== indexV5.9：每鳥 1 張 AI＋3 張投稿圖片 PK ===== */
+.v59-pk-section{margin-top:18px;padding:15px;border:1.5px solid rgba(203,74,111,.2);border-radius:20px;background:linear-gradient(145deg,#fffafd,#fff5f8);box-shadow:0 7px 20px rgba(114,49,69,.07)}
+.v59-pk-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:11px}
+.v59-pk-title{font-size:19px;font-weight:900;color:#893653}
+.v59-pk-rule{font-size:11px;font-weight:800;color:#8b7a80;text-align:right}
+.v59-pk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v59-pk-card{position:relative;min-width:0;aspect-ratio:1/1;border:2px solid transparent;border-radius:16px;overflow:hidden;background:#ece9e6;box-shadow:0 4px 12px rgba(45,35,38,.09);cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.v59-pk-card:active{transform:scale(.985)}
+.v59-pk-card.selected{border-color:#e54b79;box-shadow:0 0 0 3px rgba(229,75,121,.13),0 6px 16px rgba(92,43,59,.13)}
+.v59-pk-card.empty{cursor:default;background:linear-gradient(145deg,#f1efeb,#e6e2dc);border:1.5px dashed #bcb4ad}
+.v59-pk-card img{width:100%;height:100%;object-fit:cover;display:block}
+.v59-pk-kind{position:absolute;left:7px;top:7px;max-width:calc(100% - 14px);padding:4px 7px;border-radius:999px;background:rgba(20,24,22,.66);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v59-pk-card.ai .v59-pk-kind{background:rgba(40,105,83,.82)}
+.v59-pk-heart{position:absolute;right:6px;bottom:6px;padding:3px 6px;border-radius:999px;background:rgba(20,20,20,.68);color:#fff;font-size:10px;font-weight:900;line-height:1.25}
+.v59-pk-card.selected .v59-pk-heart{background:#e54b79}
+.v59-pk-empty-copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#827a74;text-align:center;font-weight:900;font-size:13px}
+.v59-pk-empty-copy span{font-size:24px;opacity:.65}
+.v59-pk-status{min-height:18px;margin-top:9px;font-size:11px;font-weight:800;color:#7c6b71;text-align:center}
+.v59-pk-status.ok{color:#23704b}.v59-pk-status.error{color:#ad294e}
+.v59-pk-open{width:100%;margin-top:12px;border:0;border-radius:999px;padding:11px 15px;background:linear-gradient(135deg,#f06b94,#d94371);color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 6px 15px rgba(217,67,113,.22)}
+.v59-pk-modal-card{width:min(560px,calc(100vw - 24px));max-height:88vh;overflow:auto}
+.v59-pk-close{width:100%;margin-top:12px;border:1px solid #d8ccd0;border-radius:999px;padding:10px;background:#fff;color:#654d55;font:inherit;font-weight:900}
+@media(min-width:700px){.v59-pk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 
 /* V5.5: AI 接圖入口固定在修改資料最上方 */
 #v53AiImportCard{display:block!important;margin:10px 0 22px!important;border:2px solid rgba(46,112,73,.28)!important;box-shadow:0 8px 22px rgba(46,92,68,.10)}
@@ -1575,7 +1660,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV5.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.0 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1802,6 +1887,7 @@
         <div class="story-box" id="storyBox" style="display:none;">
           <div class="story-title" id="storyName"></div>
           <div id="storyText"></div>
+          <button type="button" class="v59-pk-open" id="quizBirdPkBtn">♡ 查看圖片 PK</button>
         </div>
       </div>
     </div>
@@ -1881,9 +1967,32 @@
           <div class="story-title" id="galleryBirdName"></div>
           <div id="galleryBirdStory"></div>
         </div>
+        <div class="v59-pk-section" id="galleryBirdPkSection">
+          <div class="v59-pk-head">
+            <div class="v59-pk-title">♡ 圖片 PK</div>
+            <div class="v59-pk-rule">1 張 AI＋3 張投稿<br>每帳號每鳥 1 票</div>
+          </div>
+          <div class="v59-pk-grid" id="galleryBirdPkGrid"></div>
+          <div class="v59-pk-status" id="galleryBirdPkStatus"></div>
+        </div>
         <div class="section-title" style="margin-top:20px;">條件資料一覽</div>
         <div id="galleryConditionList"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="v59BirdPkModal" style="display:none;">
+    <div class="modal-card v59-pk-modal-card">
+      <div class="v59-pk-head">
+        <div>
+          <div class="modal-title" id="v59BirdPkModalTitle">圖片 PK</div>
+          <div class="v59-pk-title" style="font-size:14px;">1 張 AI＋3 張投稿</div>
+        </div>
+        <div class="v59-pk-rule">每帳號每鳥 1 票<br>再次選擇可改投</div>
+      </div>
+      <div class="v59-pk-grid" id="v59BirdPkModalGrid"></div>
+      <div class="v59-pk-status" id="v59BirdPkModalStatus"></div>
+      <button type="button" class="v59-pk-close" id="v59BirdPkModalClose">關閉</button>
     </div>
   </div>
 
@@ -2137,6 +2246,16 @@ const CONDITIONS = [
 ];
 
 const LEVEL_REQUIRED = { 1: 3, 2: 6, 3: 10, 4: 15 };
+function syncBirdLevelRequirement(bird) {
+  if (!bird || bird.source === "birdfriend") return bird;
+  const level = Math.max(1, Math.min(4, Number(bird.level) || 1));
+  bird.level = level;
+  bird.requiredCorrect = LEVEL_REQUIRED[level];
+  return bird;
+}
+function syncAllBirdLevelRequirements() {
+  birds.forEach(syncBirdLevelRequirement);
+}
 
 // V5.3 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
 let communityBirds = [];
@@ -2500,7 +2619,7 @@ function ensureV50CoreBirds() {
 ensureV50CoreBirds();
 
 // ===== V5.3 可續作資料層：只寫入已由網路圖鑑確認的欄位；不確定一律空白 =====
-const V53_DATASET_VERSION = "2026-09-03-indexV5.8-images-006-020";
+const V53_DATASET_VERSION = "2026-09-03-indexV6.0-admin-level-fix";
 
 // ===== V5.5 7500格正式資料骨架（500種 × 15欄）=====
 // 規則：確定才填；不確定維持 []。這個物件永遠保留完整 7,500 個欄位。
@@ -2677,7 +2796,7 @@ function applyV58EmbeddedArt006020(){
     b.photographer='AI生成鳥圖';
     b.definitionPending=false;
     b.challengeEnabled=true;
-    b.requiredCorrect=15;
+    syncBirdLevelRequirement(b);
     b.v58Embedded=true;
   });
   if(typeof V53_IMAGE_MANIFEST!=='undefined'){
@@ -3940,13 +4059,11 @@ document.getElementById("adminAddModeBtn").onclick = () => {
   setAdminDataMode("add");
       settingsBirdLocation = null;
       syncSettingsLocationFields(null);
-  document.getElementById("adminFormPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 };
 
 document.getElementById("adminEditModeBtn").onclick = () => {
   setAdminDataMode("edit-list");
   renderAdminList();
-  document.getElementById("adminFormPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 };
 
 function loadBirdForEdit(birdId) {
@@ -3992,7 +4109,6 @@ function loadBirdForEdit(birdId) {
     }
   });
 
-  document.getElementById("view-admin").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function loadCommunityBirdForEdit(sourceDocId) {
@@ -4027,7 +4143,6 @@ function loadCommunityBirdForEdit(sourceDocId) {
     });
     if (customExtras.length > 0) document.getElementById("custom_" + cond.key).value = customExtras.join(", ");
   });
-  document.getElementById("view-admin").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 document.getElementById("cancelEditBtn").onclick = () => {
@@ -4373,6 +4488,8 @@ async function loadBirdsFromFirestore() {
         birds.push(data);
       }
     });
+    // V6.0：舊雲端資料即使曾被寫成 15 題，也一律依目前 L1–L4 校正。
+    syncAllBirdLevelRequirements();
   } catch (err) {
     console.error("從 Firestore 讀取鳥類資料失敗", err);
   }
@@ -4555,7 +4672,6 @@ function renderAdminList() {
       const addBtn = document.getElementById("adminAddModeBtn");
       const editBtn = document.getElementById("adminEditModeBtn");
       if (addBtn && editBtn) { addBtn.classList.remove("active"); editBtn.classList.add("active"); }
-      window.scrollTo({ top: 0, behavior: "smooth" });
     };
     list.appendChild(row);
   });
@@ -4575,7 +4691,6 @@ function renderAdminList() {
       const addBtn = document.getElementById("adminAddModeBtn");
       const editBtn = document.getElementById("adminEditModeBtn");
       if (addBtn && editBtn) { addBtn.classList.remove("active"); editBtn.classList.add("active"); }
-      window.scrollTo({ top: 0, behavior: "smooth" });
     };
     list.appendChild(row);
   });
@@ -4591,7 +4706,6 @@ document.getElementById("adminBirdCatalogSearch")?.addEventListener("keydown", e
   if(!b) return;
   loadBirdForEdit(b.id); editingBirdSource="official"; editingCommunityDocId=null; setAdminDataMode("add");
   document.getElementById("adminAddModeBtn")?.classList.remove("active"); document.getElementById("adminEditModeBtn")?.classList.add("active");
-  document.getElementById("adminFormPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
 });
 
 function renderExport() {
@@ -5197,10 +5311,12 @@ function renderGalleryGrid() {
 function showGalleryDetail(birdId) {
   const bird = findAnyBirdById(birdId);
   if (!bird) return;
+  v59GalleryBirdId = birdId;
   document.getElementById("galleryListPanel").style.display = "none";
   document.getElementById("galleryDetailPanel").style.display = "block";
   document.getElementById("galleryBirdName").textContent = bird.name;
   document.getElementById("galleryBirdStory").textContent = bird.story || "(尚未填寫解說文字)";
+  renderV59BirdPk(bird, "galleryBirdPkGrid", "galleryBirdPkStatus");
 
   const photoBox = document.getElementById("galleryPhotoBox");
   photoBox.innerHTML = "";
@@ -5628,8 +5744,10 @@ function renderScenePreview() {
   function isBelowHome() {
     const active = document.querySelector(".view.active");
     if (!active) return false;
-    if (active.id === "view-admin" || active.id === "view-preview" || active.id === "view-groups" ||
-        active.id === "view-challenge-menu" || active.id === "view-random-quiz" || active.id === "view-gallery" || active.id === "view-player-portal") return true;
+    // 管理者三個頁面已有上方分頁與「返回首頁」，不再疊加浮動回上一頁。
+    if (active.id === "view-admin" || active.id === "view-preview" || active.id === "view-groups") return false;
+    if (active.id === "view-challenge-menu" || active.id === "view-random-quiz" ||
+        active.id === "view-gallery" || active.id === "view-player-portal") return true;
     if (active.id === "view-game") {
       const quiz = document.getElementById("quiz-panel");
       const list = document.getElementById("bird-list-panel");
@@ -6604,6 +6722,222 @@ document.getElementById("refreshPlayerApplicationsBtn")?.addEventListener("click
 document.getElementById("refreshPlayerListBtn")?.addEventListener("click", loadPlayerList);
 document.getElementById("playerListSearch")?.addEventListener("input", renderPlayerList);
 document.getElementById("clearPlayerSearchBtn")?.addEventListener("click", () => { const el=document.getElementById("playerListSearch"); if(el) el.value=""; renderPlayerList(); });
+
+// ---------- indexV5.9：每鳥 1 張 AI＋3 張投稿圖片 PK ----------
+// 每一票使用「鳥種＋帳號」作為固定文件 ID；改投會覆寫同一文件，不會增加第二票。
+const V59_BIRD_IMAGE_VOTES_COLLECTION = "birdImageVotes";
+const v59PkCache = new Map();
+let v59GalleryBirdId = "";
+let v59ModalBirdId = "";
+let v59VoteBusy = false;
+
+function v59PkBirdKey(bird) {
+  if (!bird) return "";
+  const base = birds.find(function(x){ return x.id === bird.id; }) ||
+    birds.find(function(x){ return normalizeCoreBirdName(x.name) === normalizeCoreBirdName(bird.name); }) || bird;
+  return String(base.coreNo || base.id || bird.id || bird.name);
+}
+
+function v59PkBaseBird(bird) {
+  if (!bird) return null;
+  return birds.find(function(x){ return x.id === bird.id; }) ||
+    birds.find(function(x){ return normalizeCoreBirdName(x.name) === normalizeCoreBirdName(bird.name); }) || bird;
+}
+
+function v59PkVoter() {
+  if (currentPlayerId) {
+    return { key:"game_" + gamePlayerDocId(currentPlayerId), label:currentPlayerId, type:"game" };
+  }
+  if (playerPortalSession && fbAuth && fbAuth.currentUser && fbAuth.currentUser.uid === playerPortalSession.uid) {
+    return { key:"birdfriend_" + fbAuth.currentUser.uid, label:playerPortalSession.id || "鳥友", type:"birdfriend" };
+  }
+  return null;
+}
+
+function v59PkVoteDocId(birdKey, voterKey) {
+  return encodeURIComponent(String(birdKey)) + "__" + encodeURIComponent(String(voterKey));
+}
+
+function v59PkCandidates(bird) {
+  const base = v59PkBaseBird(bird);
+  const birdKey = v59PkBirdKey(base);
+  const aiSrc = base && (
+    (base.imageType && String(base.imageType).indexOf("ai_") === 0 && base.photoUrl) ||
+    (typeof V58_EMBEDDED_ART_006_020 !== "undefined" && V58_EMBEDDED_ART_006_020[String(base.coreNo || "").padStart(3,"0")] &&
+      V58_EMBEDDED_ART_006_020[String(base.coreNo || "").padStart(3,"0")].src) ||
+    ""
+  );
+  const items = [{
+    id:"ai_" + birdKey,
+    type:"ai",
+    src:aiSrc || "",
+    label:"AI 創作",
+    photographer:"AI 生成鳥圖"
+  }];
+  const posts = communityBirds.filter(function(x){
+    if (!x || x.category !== "wild" || !x.photoUrl) return false;
+    return (x.targetBirdId && base && x.targetBirdId === base.id) ||
+      normalizeCoreBirdName(x.name) === normalizeCoreBirdName(base && base.name);
+  }).sort(function(a,b){ return Number(b.uploadedAt || 0) - Number(a.uploadedAt || 0); }).slice(0,3);
+  posts.forEach(function(x, index){
+    items.push({
+      id:"photo_" + x.sourceDocId,
+      type:"photo",
+      src:x.originalPhotoUrl || x.photoUrl,
+      label:"投稿 " + (index + 1),
+      photographer:photographerCreditText(x)
+    });
+  });
+  while (items.length < 4) {
+    items.push({ id:"empty_" + items.length, type:"empty", src:"", label:"開放投稿", photographer:"" });
+  }
+  return items;
+}
+
+async function v59LoadPkState(bird, force) {
+  const birdKey = v59PkBirdKey(bird);
+  if (!force && v59PkCache.has(birdKey)) return v59PkCache.get(birdKey);
+  const state = { counts:{}, voterImageId:"", loaded:false };
+  if (!db) {
+    v59PkCache.set(birdKey, state);
+    return state;
+  }
+  try {
+    const snap = await db.collection(V59_BIRD_IMAGE_VOTES_COLLECTION).where("birdId","==",birdKey).get();
+    const voter = v59PkVoter();
+    snap.forEach(function(doc){
+      const data = doc.data() || {};
+      if (!data.imageId) return;
+      state.counts[data.imageId] = Number(state.counts[data.imageId] || 0) + 1;
+      if (voter && data.voterKey === voter.key) state.voterImageId = data.imageId;
+    });
+    state.loaded = true;
+  } catch (err) {
+    state.error = String(err.message || err);
+  }
+  v59PkCache.set(birdKey, state);
+  return state;
+}
+
+function v59SetPkStatus(statusId, text, type) {
+  const el = document.getElementById(statusId);
+  if (!el) return;
+  el.className = "v59-pk-status" + (type ? " " + type : "");
+  el.textContent = text || "";
+}
+
+async function renderV59BirdPk(bird, gridId, statusId, force) {
+  const grid = document.getElementById(gridId);
+  if (!grid || !bird) return;
+  grid.innerHTML = "";
+  v59SetPkStatus(statusId, "愛心票數載入中…", "");
+  const candidates = v59PkCandidates(bird);
+  const state = await v59LoadPkState(bird, !!force);
+  grid.innerHTML = "";
+  candidates.forEach(function(item){
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "v59-pk-card " + item.type +
+      (state.voterImageId === item.id ? " selected" : "") +
+      (!item.src ? " empty" : "");
+    card.setAttribute("aria-label", item.src ? (item.label + "，愛心 " + Number(state.counts[item.id] || 0)) : item.label);
+    if (item.src) {
+      const img = document.createElement("img");
+      img.src = item.src;
+      img.alt = bird.name + "・" + item.label;
+      img.loading = "lazy";
+      const kind = document.createElement("span");
+      kind.className = "v59-pk-kind";
+      kind.textContent = item.type === "ai" ? "AI 創作" : (item.label + "・" + item.photographer);
+      const heart = document.createElement("span");
+      heart.className = "v59-pk-heart";
+      heart.textContent = "♥ " + Number(state.counts[item.id] || 0);
+      card.append(img, kind, heart);
+      card.onclick = function(){ v59CastPkVote(bird, item.id); };
+    } else {
+      const empty = document.createElement("span");
+      empty.className = "v59-pk-empty-copy";
+      empty.innerHTML = "<span>＋</span>" + (item.type === "ai" ? "AI 圖準備中" : "開放投稿");
+      card.appendChild(empty);
+      card.disabled = true;
+    }
+    grid.appendChild(card);
+  });
+  if (state.error) {
+    v59SetPkStatus(statusId, "票數暫時無法讀取", "error");
+  } else if (state.voterImageId) {
+    v59SetPkStatus(statusId, "已投 1 票・點另一張可改投", "ok");
+  } else {
+    v59SetPkStatus(statusId, v59PkVoter() ? "點選喜歡的圖片投下愛心" : "登入遊戲帳號或鳥友帳號後即可投票", "");
+  }
+}
+
+function v59RefreshVisiblePk(bird, force) {
+  if (v59GalleryBirdId === bird.id) renderV59BirdPk(bird, "galleryBirdPkGrid", "galleryBirdPkStatus", force);
+  if (v59ModalBirdId === bird.id && document.getElementById("v59BirdPkModal").style.display !== "none") {
+    renderV59BirdPk(bird, "v59BirdPkModalGrid", "v59BirdPkModalStatus", force);
+  }
+}
+
+async function v59CastPkVote(bird, imageId) {
+  if (v59VoteBusy) return;
+  const voter = v59PkVoter();
+  if (!voter) {
+    const ids = ["galleryBirdPkStatus","v59BirdPkModalStatus"];
+    ids.forEach(function(id){ v59SetPkStatus(id, "請先登入遊戲帳號或鳥友帳號", "error"); });
+    return;
+  }
+  if (!db) {
+    v59SetPkStatus(v59ModalBirdId === bird.id ? "v59BirdPkModalStatus" : "galleryBirdPkStatus", "Firebase 尚未連線，暫時不能投票", "error");
+    return;
+  }
+  const birdKey = v59PkBirdKey(bird);
+  const state = await v59LoadPkState(bird, false);
+  if (state.voterImageId === imageId) return;
+  v59VoteBusy = true;
+  try {
+    await db.collection(V59_BIRD_IMAGE_VOTES_COLLECTION)
+      .doc(v59PkVoteDocId(birdKey, voter.key))
+      .set({
+        birdId:birdKey,
+        birdName:bird.name,
+        voterKey:voter.key,
+        voterType:voter.type,
+        voterLabel:voter.label,
+        imageId:imageId,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+    v59PkCache.delete(birdKey);
+    v59RefreshVisiblePk(bird, true);
+  } catch (err) {
+    const msg = "投票失敗：" + String(err.message || err);
+    ["galleryBirdPkStatus","v59BirdPkModalStatus"].forEach(function(id){ v59SetPkStatus(id, msg, "error"); });
+  } finally {
+    v59VoteBusy = false;
+  }
+}
+
+function openV59BirdPkModal(bird) {
+  if (!bird) return;
+  v59ModalBirdId = bird.id;
+  document.getElementById("v59BirdPkModalTitle").textContent = bird.name + "・圖片 PK";
+  document.getElementById("v59BirdPkModal").style.display = "flex";
+  renderV59BirdPk(bird, "v59BirdPkModalGrid", "v59BirdPkModalStatus", true);
+}
+
+document.getElementById("quizBirdPkBtn")?.addEventListener("click", function(){
+  openV59BirdPkModal(findAnyBirdById(currentBirdId));
+});
+document.getElementById("v59BirdPkModalClose")?.addEventListener("click", function(){
+  document.getElementById("v59BirdPkModal").style.display = "none";
+  v59ModalBirdId = "";
+});
+document.getElementById("v59BirdPkModal")?.addEventListener("click", function(event){
+  if (event.target === event.currentTarget) {
+    event.currentTarget.style.display = "none";
+    v59ModalBirdId = "";
+  }
+});
 
 
 // ---------- 初始化 ----------
