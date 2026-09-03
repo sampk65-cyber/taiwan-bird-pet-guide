@@ -83,6 +83,13 @@
     font-weight: 600;
     text-shadow: 0 1px 6px rgba(0,0,0,0.55);
   }
+  header.app-header .copyright-line {
+    margin-top: 7px;
+    color: rgba(255,255,255,0.9);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.35px;
+  }
 
   .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
   .tab-btn {
@@ -707,8 +714,39 @@
     width: 46px;
     height: 46px;
     left: 0; top: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.42);
   }
-  .bird-icon svg { width: 100%; height: 100%; }
+  .bird-icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.08);
+    transition: filter .18s ease, transform .18s ease;
+  }
+  .bird-icon.capture-tier-1 img { filter: blur(.15px) saturate(.95) contrast(.96); }
+  .bird-icon.capture-tier-2 img { filter: blur(1.15px) saturate(.62) contrast(.9); }
+  .bird-icon.capture-tier-3 img { filter: blur(2.1px) saturate(.3) brightness(.72) contrast(1.18); }
+  .bird-icon.captured-photo {
+    z-index: 4;
+    border-color: #fff;
+    box-shadow: 0 0 0 4px rgba(255,255,255,.32), 0 4px 18px rgba(0,0,0,.5);
+  }
+  .bird-icon.captured-photo img { filter: none; transform: scale(1); }
+  .capture-tier-label {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(45,126,82,.9);
+    font-weight: 700;
+    letter-spacing: .4px;
+  }
   .reticle {
     position: absolute;
     top: 0; left: 0;
@@ -1411,7 +1449,8 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.0</p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.3</p>
+        <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
     </div>
@@ -1467,13 +1506,13 @@
       <div class="modal-title">輸入挑戰者 ID</div>
       <input type="text" id="playerIdInput" placeholder="例如:小明、座號3號">
       <div class="field-error" id="loginError" style="display:none;">請輸入 ID</div>
-      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="playerPinInput" placeholder="設定/輸入 4 位數通行碼" style="margin-top:10px;">
-      <div class="hint" style="margin:4px 0 0;">第一次使用這個 ID 會自動設定成你的通行碼,之後要輸入一樣的碼才能繼續,別人才不能用同名字看到你的進度</div>
+      <input type="password" minlength="6" maxlength="64" id="playerPinInput" autocomplete="current-password" placeholder="輸入玩家密碼" style="margin-top:10px;">
+      <div class="hint" style="margin:4px 0 0;">請先在玩家介面提出申請，經管理員核准並完成六位認證碼驗證後，再使用帳號密碼登入。</div>
       <label style="display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:14px;font-weight:700;color:#355;">
         <input type="checkbox" id="rememberChallengeLogin" checked style="width:18px;height:18px;">
         記住登入，下次正式開始直接進入
       </label>
-      <div class="field-error" id="loginPinError" style="display:none;">通行碼錯誤,如果這不是你的 ID,請換一個名字</div>
+      <div class="field-error" id="loginPinError" style="display:none;">玩家帳號或密碼不正確</div>
       <div class="modal-btn-row">
         <button class="modal-btn-cancel" id="loginCancelBtn">取消</button>
         <button class="modal-btn-confirm" id="loginConfirmBtn">開始挑戰</button>
@@ -1486,13 +1525,19 @@
   <div class="view" id="view-player-portal">
     <div class="portal-card">
       <h2 class="portal-title">玩家介面</h2>
-      <p class="portal-subtitle">新玩家先申請帳號，經管理者同意後即可登入。登入後只能修改自己的個人資料。</p>
+      <p class="portal-subtitle">新玩家先申請帳號；管理員核准後，回到同一台裝置取得六位一次性認證碼，再自行設定密碼。</p>
       <div class="portal-switch">
         <button type="button" class="active" id="playerLoginTab">玩家登入</button>
         <button type="button" id="playerApplyTab">申請帳號</button>
       </div>
       <div class="field"><label>帳號</label><input id="portalPlayerId" type="text" maxlength="24" autocomplete="username" placeholder="輸入玩家帳號"></div>
-      <div class="field"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="4" maxlength="12" autocomplete="current-password" placeholder="4–12 位數密碼"></div>
+      <div class="field" id="portalPasswordField"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" placeholder="至少 6 位密碼"></div>
+      <div id="playerCodePanel" style="display:none;">
+        <div class="portal-status show ok" id="issuedPlayerCode" style="font-size:22px;font-weight:900;letter-spacing:5px;text-align:center;"></div>
+        <div class="hint">這是管理員核准後發給你的六位一次性認證碼。請在下方再次輸入，完成後立即失效。</div>
+        <div class="field"><label>六位一次性認證碼</label><input id="portalSetupCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="輸入上方六位數字"></div>
+        <div class="field"><label>設定永久密碼</label><input id="portalNewPassword" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="至少 6 位密碼"></div>
+      </div>
       <div id="playerProfileFields" style="display:none;">
         <div class="field"><label>顯示名稱</label><input id="portalDisplayName" type="text" maxlength="24" placeholder="遊戲中顯示的名稱"></div>
         <div class="field"><label>最喜歡的鳥</label><input id="portalFavoriteBird" type="text" maxlength="30" placeholder="例如：五色鳥"></div>
@@ -1561,18 +1606,10 @@
         <div id="qArea"></div>
 
         <div class="capture-panel" id="capturePanel" style="display:none;">
-          <div class="capture-hint">條件全數答對!拖曳畫面移動對焦框追上鳥,快點一下拍攝</div>
+          <div class="capture-hint">條件全數答對！拖曳畫面移動對焦框追上縮圖，快點一下拍攝<span class="capture-tier-label" id="captureTierLabel">初級辨識</span></div>
           <div class="viewfinder-box" id="viewfinderBox">
             <div class="scene-bg" id="viewfinderScene"></div>
-            <div class="bird-icon" id="birdIcon"><svg viewBox="0 0 100 100">
-              <path d="M32 50 Q10 38 12 58 Q14 76 34 66 Z" fill="#7FE3D8" stroke="#141821" stroke-width="3" stroke-linejoin="round"/>
-              <path d="M68 50 Q90 38 88 58 Q86 76 66 66 Z" fill="#7FE3D8" stroke="#141821" stroke-width="3" stroke-linejoin="round"/>
-              <path d="M50 18 C64 24 71 44 67 64 C64 82 57 90 50 90 C43 90 36 82 33 64 C29 44 36 24 50 18 Z" fill="#FFF6E5" stroke="#141821" stroke-width="3" stroke-linejoin="round"/>
-              <circle cx="44" cy="42" r="3" fill="#141821"/>
-              <circle cx="56" cy="42" r="3" fill="#141821"/>
-              <circle cx="42" cy="60" r="3" fill="#F4B942"/>
-              <circle cx="58" cy="66" r="3" fill="#D9484F"/>
-            </svg></div>
+            <div class="bird-icon capture-tier-1" id="birdIcon"><img id="captureBirdPhoto" alt="飛行中的鳥類縮圖"></div>
             <div class="reticle" id="reticle">
               <div class="corner tl"></div><div class="corner tr"></div>
               <div class="corner bl"></div><div class="corner br"></div>
@@ -2679,6 +2716,13 @@ let nextJitterAt = 0;
 let nextVanishAt = 0;
 const TAP_THRESHOLD = 8;
 
+function captureTierForBird(bird) {
+  const level = Number(bird && bird.level) || 1;
+  if (level <= 1) return { tier: 1, label: "初級辨識" };
+  if (level === 2) return { tier: 2, label: "中級辨識" };
+  return { tier: 3, label: "高級辨識" };
+}
+
 function startCaptureGame(bird) {
   stopCaptureGame();
   document.getElementById("captureStatus").textContent = "";
@@ -2707,6 +2751,13 @@ function startCaptureGame(bird) {
       reticleEl.style.top = reticlePos.y + "px";
 
       const birdIcon = document.getElementById("birdIcon");
+      const capturePhoto = document.getElementById("captureBirdPhoto");
+      const tierInfo = captureTierForBird(bird);
+      birdIcon.className = "bird-icon capture-tier-" + tierInfo.tier;
+      capturePhoto.src = bird.photoUrl || mysteryImgForLevel(bird.level);
+      capturePhoto.alt = bird.name + "飛行縮圖（" + tierInfo.label + "）";
+      const tierLabel = document.getElementById("captureTierLabel");
+      if (tierLabel) tierLabel.textContent = tierInfo.label;
       birdIcon.style.visibility = "visible";
 
       function loop(ts) {
@@ -2796,6 +2847,8 @@ function attemptCapture() {
   const statusEl = document.getElementById("captureStatus");
   if (!birdVanished && dist < HIT_RADIUS) {
     playHitSound();
+    const birdIcon = document.getElementById("birdIcon");
+    if (birdIcon) birdIcon.classList.add("captured-photo");
     if (!currentAnswered[bird.id]) currentAnswered[bird.id] = {};
     const alreadyCaptured = currentAnswered[bird.id + "_captured"] === true;
     currentAnswered[bird.id + "_captured"] = true;
@@ -3633,7 +3686,7 @@ function buildBirdsDoneMap() {
 }
 
 function saveProgress() {
-  if (!FIREBASE_ENABLED || !db || !currentPlayerId) return;
+  if (!FIREBASE_ENABLED || !db || !currentPlayerId || !fbAuth || !fbAuth.currentUser || fbAuth.currentUser.isAnonymous) return;
   const cleanProgress = JSON.parse(JSON.stringify(currentAnswered));
   db.collection("players").doc(currentPlayerId).set({
     id: currentPlayerId,
@@ -3642,6 +3695,11 @@ function saveProgress() {
     birdsDone: buildBirdsDoneMap(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true }).catch(err => console.error("儲存進度失敗", err));
+  db.collection("leaderboard").doc(fbAuth.currentUser.uid).set({
+    id: currentPlayerId,
+    score: totalScore,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true }).catch(err => console.error("儲存排行榜失敗", err));
 }
 
 async function backToHome() {
@@ -3673,19 +3731,19 @@ function showChallengeMenu() {
 }
 
 
-const CHALLENGE_SESSION_KEY = "birdGuideChallengeSessionV3";
+const CHALLENGE_SESSION_KEY = "birdGuideChallengeSessionV4";
 const CHALLENGE_REMEMBER_KEY = "birdGuideRememberChallengeLogin";
 
 function isChallengeLoginRemembered() {
   return localStorage.getItem(CHALLENGE_REMEMBER_KEY) !== "0";
 }
-function saveChallengeSession(id, pin) {
+function saveChallengeSession(id) {
   try {
     if (!isChallengeLoginRemembered()) {
       localStorage.removeItem(CHALLENGE_SESSION_KEY);
       return;
     }
-    if (id && pin) localStorage.setItem(CHALLENGE_SESSION_KEY, JSON.stringify({ id, pin, savedAt:Date.now() }));
+    if (id) localStorage.setItem(CHALLENGE_SESSION_KEY, JSON.stringify({ id, savedAt:Date.now() }));
   } catch (e) {}
 }
 function clearChallengeSession() {
@@ -3697,8 +3755,16 @@ function loadChallengeSession() {
     const raw = localStorage.getItem(CHALLENGE_SESSION_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    return (data && data.id && data.pin) ? data : null;
+    return (data && data.id) ? data : null;
   } catch (e) { return null; }
+}
+
+async function playerEmailForId(id) {
+  const normalized = id.normalize("NFKC").trim().toLocaleLowerCase("zh-Hant");
+  const bytes = new TextEncoder().encode(normalized);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return "p-" + hex + "@players.lanyhbirds.invalid";
 }
 
 function updateChallengeAccountBar() {
@@ -3718,6 +3784,7 @@ function updateChallengeAccountBar() {
 document.getElementById("switchChallengeAccountBtn")?.addEventListener("click", () => {
   clearChallengeSession();
   currentPlayerId = "";
+  if (fbAuth) fbAuth.signOut().catch(() => {});
   const idInput = document.getElementById("playerIdInput");
   const pinInput = document.getElementById("playerPinInput");
   if (idInput) idInput.value = "";
@@ -3755,12 +3822,17 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 
         if (savedSession) {
           document.getElementById("playerIdInput").value = savedSession.id;
-          document.getElementById("playerPinInput").value = savedSession.pin;
+          document.getElementById("playerPinInput").value = "";
           const rememberEl = document.getElementById("rememberChallengeLogin");
           if (rememberEl) rememberEl.checked = true;
-          // 已登入過且目前在線：直接驗證並進入，不再重複顯示登入視窗
-          document.getElementById("loginModalOverlay").style.display = "none";
-          setTimeout(() => document.getElementById("loginConfirmBtn")?.click(), 0);
+          if (fbAuth && fbAuth.currentUser && !fbAuth.currentUser.isAnonymous) {
+            // Firebase 已保留安全登入狀態，不需在瀏覽器保存玩家密碼。
+            document.getElementById("loginModalOverlay").style.display = "none";
+            setTimeout(() => document.getElementById("loginConfirmBtn")?.click(), 0);
+          } else {
+            document.getElementById("loginModalOverlay").style.display = "flex";
+            setTimeout(() => document.getElementById("playerPinInput")?.focus(), 0);
+          }
         } else {
           document.getElementById("playerIdInput").value = currentPlayerId || "";
           document.getElementById("playerPinInput").value = "";
@@ -3793,9 +3865,13 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
     return;
   }
   if (!pin) {
-    document.getElementById("loginPinError").textContent = "請設定/輸入 4 位數通行碼";
-    document.getElementById("loginPinError").style.display = "block";
-    return;
+    const saved = loadChallengeSession();
+    const hasFirebaseSession = fbAuth && fbAuth.currentUser && !fbAuth.currentUser.isAnonymous && saved && saved.id === id;
+    if (!hasFirebaseSession) {
+      document.getElementById("loginPinError").textContent = "請輸入玩家密碼";
+      document.getElementById("loginPinError").style.display = "block";
+      return;
+    }
   }
 
   const confirmBtn = document.getElementById("loginConfirmBtn");
@@ -3805,17 +3881,28 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
   let loginOk = true;
 
   try {
+    if (!fbAuth) throw new Error("Firebase Authentication 未連線");
+    const rememberEl = document.getElementById("rememberChallengeLogin");
+    const shouldRemember = rememberEl ? rememberEl.checked : true;
+    await fbAuth.setPersistence(shouldRemember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+    const expectedEmail = await playerEmailForId(id);
+    let user = fbAuth.currentUser;
+    if (!user || user.isAnonymous || user.email !== expectedEmail) {
+      if (user) await fbAuth.signOut();
+      const credential = await fbAuth.signInWithEmailAndPassword(expectedEmail, pin);
+      user = credential.user;
+    }
     const docRef = db.collection("players").doc(id);
     const doc = await docRef.get();
     if (doc.exists) {
       const data = doc.data();
-      if (data.accountStatus && data.accountStatus !== "approved") {
+      if (data.ownerUid !== user.uid) {
         loginOk = false;
-        document.getElementById("loginPinError").textContent = data.accountStatus === "pending" ? "帳號正在等待管理員審核" : "此帳號申請未獲核准，請聯絡管理員";
+        document.getElementById("loginPinError").textContent = "帳號驗證失敗";
         document.getElementById("loginPinError").style.display = "block";
-      } else if (data.pin && data.pin !== pin) {
+      } else if (data.accountStatus !== "approved" || data.passwordSet !== true) {
         loginOk = false;
-        document.getElementById("loginPinError").textContent = "通行碼錯誤,如果這不是你的 ID,請換一個名字";
+        document.getElementById("loginPinError").textContent = data.accountStatus === "pending" ? "帳號正在等待管理員審核" : "請先到玩家介面完成六位認證碼與密碼設定";
         document.getElementById("loginPinError").style.display = "block";
       } else {
         currentPlayerId = id;
@@ -3831,9 +3918,6 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
               currentAnswered[birdId + "_captured"] = true;
             }
           });
-        }
-        if (!data.pin) {
-          await docRef.set({ pin: pin }, { merge: true });
         }
       }
     } else {
@@ -3855,7 +3939,7 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
     const rememberEl = document.getElementById("rememberChallengeLogin");
     const shouldRemember = rememberEl ? rememberEl.checked : true;
     localStorage.setItem(CHALLENGE_REMEMBER_KEY, shouldRemember ? "1" : "0");
-    if (shouldRemember) saveChallengeSession(id, pin);
+    if (shouldRemember) saveChallengeSession(id);
     else clearChallengeSession();
 
     document.getElementById("loginModalOverlay").style.display = "none";
@@ -4164,7 +4248,7 @@ document.getElementById("leaderboardBtn").onclick = async () => {
   listEl.textContent = "載入中...";
   document.getElementById("leaderboardModalOverlay").style.display = "flex";
   try {
-    const snapshot = await db.collection("players").orderBy("score", "desc").limit(10).get();
+    const snapshot = await db.collection("leaderboard").orderBy("score", "desc").limit(10).get();
     if (snapshot.empty) {
       listEl.textContent = "還沒有任何挑戰紀錄";
       return;
@@ -4175,7 +4259,10 @@ document.getElementById("leaderboardBtn").onclick = async () => {
       const data = doc.data();
       const row = document.createElement("div");
       row.className = "leaderboard-row";
-      row.innerHTML = '<span class="rank">' + rank + '</span><span class="pname">' + data.id + '</span><span class="pscore">' + (data.score || 0) + '</span>';
+      const rankEl = document.createElement("span"); rankEl.className = "rank"; rankEl.textContent = rank;
+      const nameEl = document.createElement("span"); nameEl.className = "pname"; nameEl.textContent = data.id || "玩家";
+      const scoreEl = document.createElement("span"); scoreEl.className = "pscore"; scoreEl.textContent = data.score || 0;
+      row.append(rankEl, nameEl, scoreEl);
       listEl.appendChild(row);
       rank++;
     });
@@ -4587,7 +4674,8 @@ function renderScenePreview() {
 })();
 
 
-// ---------- V4.0 玩家申請、核准與個人資料 ----------
+// ---------- V4.2 玩家申請、同裝置認證碼與個人資料 ----------
+const PLAYER_PENDING_ID_KEY = "birdGuidePendingPlayerIdV4";
 let playerPortalMode = "login";
 let playerPortalSession = null;
 
@@ -4597,22 +4685,55 @@ function setPlayerPortalStatus(message, type = "info") {
   el.textContent = message || "";
   el.className = "portal-status" + (message ? " show " + type : "");
 }
+
 function setPlayerPortalMode(mode) {
   playerPortalMode = mode;
   playerPortalSession = null;
+  const isApply = mode === "apply";
   document.getElementById("playerLoginTab").classList.toggle("active", mode === "login");
-  document.getElementById("playerApplyTab").classList.toggle("active", mode === "apply");
-  document.getElementById("playerProfileFields").style.display = mode === "apply" ? "block" : "none";
-  document.getElementById("playerPortalSubmit").textContent = mode === "apply" ? "送出申請" : "登入";
+  document.getElementById("playerApplyTab").classList.toggle("active", isApply);
+  document.getElementById("playerProfileFields").style.display = isApply ? "block" : "none";
+  document.getElementById("portalPasswordField").style.display = isApply ? "none" : "block";
+  document.getElementById("playerCodePanel").style.display = "none";
+  document.getElementById("playerPortalSubmit").textContent = isApply ? "送出申請" : "登入／取得認證碼";
   document.getElementById("portalPlayerId").disabled = false;
-  document.getElementById("portalPlayerPin").disabled = false;
+  document.getElementById("portalPlayerPin").value = "";
   setPlayerPortalStatus("");
 }
+
+async function ensureAnonymousApplicant() {
+  if (!fbAuth) throw new Error("Firebase Authentication 未連線");
+  let user = fbAuth.currentUser;
+  if (user && !user.isAnonymous) {
+    await fbAuth.signOut();
+    user = null;
+  }
+  await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  if (!user) user = (await fbAuth.signInAnonymously()).user;
+  return user;
+}
+
+function showPlayerProfile(id, data, user) {
+  playerPortalSession = { id, uid:user.uid };
+  playerPortalMode = "edit";
+  document.getElementById("portalPlayerId").disabled = true;
+  document.getElementById("portalPasswordField").style.display = "none";
+  document.getElementById("playerCodePanel").style.display = "none";
+  document.getElementById("playerProfileFields").style.display = "block";
+  document.getElementById("portalDisplayName").value = data.displayName || data.id || id;
+  document.getElementById("portalFavoriteBird").value = data.favoriteBird || "";
+  document.getElementById("portalBio").value = data.bio || "";
+  document.getElementById("playerPortalSubmit").textContent = "儲存我的資料";
+  setPlayerPortalStatus("登入成功。你只能編輯自己的個人資料。", "ok");
+}
+
 function openPlayerPortal() {
   hideHomeWelcome(); stopCaptureGame();
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-player-portal").classList.add("active");
   setPlayerPortalMode("login");
+  const pendingId = localStorage.getItem(PLAYER_PENDING_ID_KEY) || "";
+  if (pendingId) document.getElementById("portalPlayerId").value = pendingId;
 }
 document.getElementById("playerPortalBtn")?.addEventListener("click", openPlayerPortal);
 document.getElementById("playerPortalBackBtn")?.addEventListener("click", () => backToHome());
@@ -4620,70 +4741,112 @@ document.getElementById("playerLoginTab")?.addEventListener("click", () => setPl
 document.getElementById("playerApplyTab")?.addEventListener("click", () => setPlayerPortalMode("apply"));
 
 document.getElementById("playerPortalSubmit")?.addEventListener("click", async () => {
-  if (playerPortalMode === "edit") return;
-  if (!FIREBASE_ENABLED || !db) { setPlayerPortalStatus("目前無法連接帳號資料庫", "error"); return; }
+  if (!FIREBASE_ENABLED || !db || !fbAuth) { setPlayerPortalStatus("目前無法連接帳號資料庫", "error"); return; }
   const id = document.getElementById("portalPlayerId").value.trim();
-  const pin = document.getElementById("portalPlayerPin").value.trim();
-  const displayName = document.getElementById("portalDisplayName").value.trim();
-  const favoriteBird = document.getElementById("portalFavoriteBird").value.trim();
-  const bio = document.getElementById("portalBio").value.trim();
+  const password = document.getElementById("portalPlayerPin").value;
+  const btn = document.getElementById("playerPortalSubmit");
   if (!/^[^/\\]{2,24}$/.test(id)) { setPlayerPortalStatus("帳號需為 2–24 個字，且不可包含斜線", "error"); return; }
-  if (pin.length < 4 || pin.length > 12) { setPlayerPortalStatus("密碼長度需為 4–12 位", "error"); return; }
-  const btn = document.getElementById("playerPortalSubmit"); btn.disabled = true; btn.textContent = "處理中…";
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.textContent = "處理中…";
   try {
     const ref = db.collection("players").doc(id);
-    const snap = await ref.get();
     if (playerPortalMode === "apply") {
-      if (snap.exists) { setPlayerPortalStatus("此帳號已存在，請改用其他帳號或直接登入", "error"); }
-      else {
-        await ref.set({ id, pin, displayName: displayName || id, favoriteBird, bio, accountStatus:"pending", score:0, progress:{}, createdAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
-        setPlayerPortalStatus("申請已送出，請等待管理員同意後再登入。", "info");
-      }
-    } else if (!snap.exists) {
-      setPlayerPortalStatus("找不到帳號，請先切換到「申請帳號」", "error");
-    } else {
+      const user = await ensureAnonymousApplicant();
+      await ref.set({
+        id,
+        ownerUid:user.uid,
+        displayName:document.getElementById("portalDisplayName").value.trim() || id,
+        favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
+        bio:document.getElementById("portalBio").value.trim(),
+        accountStatus:"pending",
+        passwordSet:false,
+        score:0,
+        progress:{},
+        birdsDone:{},
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
+      setPlayerPortalStatus("申請已送出。管理員核准後，請用同一台裝置回到玩家登入取得六位認證碼。", "ok");
+    } else if (playerPortalMode === "setup") {
+      const user = fbAuth.currentUser;
+      if (!user || !user.isAnonymous) throw new Error("申請裝置驗證已失效，請聯絡管理員");
+      const snap = await ref.get();
+      if (!snap.exists || snap.data().ownerUid !== user.uid) throw new Error("這不是原申請裝置");
       const data = snap.data();
-      if (data.pin !== pin) setPlayerPortalStatus("帳號或密碼不正確", "error");
-      else if (data.accountStatus === "pending") setPlayerPortalStatus("申請正在等待管理員審核", "info");
-      else if (data.accountStatus === "rejected") setPlayerPortalStatus("此申請未獲核准，請聯絡管理員", "error");
-      else {
-        playerPortalSession = { id, pin };
-        document.getElementById("portalPlayerId").disabled = true;
-        document.getElementById("portalDisplayName").value = data.displayName || data.id || id;
-        document.getElementById("portalFavoriteBird").value = data.favoriteBird || "";
-        document.getElementById("portalBio").value = data.bio || "";
-        document.getElementById("playerProfileFields").style.display = "block";
-        btn.textContent = "儲存我的資料";
-        playerPortalMode = "edit";
-        setPlayerPortalStatus("登入成功。你只能編輯這個帳號的個人資料。", "ok");
+      const enteredCode = document.getElementById("portalSetupCode").value.trim();
+      const newPassword = document.getElementById("portalNewPassword").value;
+      const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
+      if (!/^\d{6}$/.test(enteredCode) || enteredCode !== data.setupCode) throw new Error("六位認證碼不正確");
+      if (expiresAt && Date.now() > expiresAt) throw new Error("認證碼已過期，請管理員重新核准");
+      if (newPassword.length < 6) throw new Error("密碼至少需要 6 位");
+      const email = await playerEmailForId(id);
+      const credential = firebase.auth.EmailAuthProvider.credential(email, newPassword);
+      const linked = await user.linkWithCredential(credential);
+      await ref.set({
+        ownerUid:linked.user.uid,
+        passwordSet:true,
+        setupCompletedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        setupCode:firebase.firestore.FieldValue.delete(),
+        setupCodeExpiresAt:firebase.firestore.FieldValue.delete(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      localStorage.removeItem(PLAYER_PENDING_ID_KEY);
+      showPlayerProfile(id, {...data, passwordSet:true}, linked.user);
+    } else if (playerPortalMode === "edit") {
+      const user = fbAuth.currentUser;
+      if (!user || !playerPortalSession || playerPortalSession.uid !== user.uid) throw new Error("登入狀態已失效");
+      await ref.set({
+        displayName:document.getElementById("portalDisplayName").value.trim() || id,
+        favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
+        bio:document.getElementById("portalBio").value.trim(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge:true });
+      setPlayerPortalStatus("你的個人資料已儲存。", "ok");
+    } else {
+      const pendingId = localStorage.getItem(PLAYER_PENDING_ID_KEY);
+      let user = fbAuth.currentUser;
+      if (user && user.isAnonymous && pendingId === id) {
+        const snap = await ref.get();
+        if (!snap.exists || snap.data().ownerUid !== user.uid) throw new Error("找不到這台裝置提出的申請");
+        const data = snap.data();
+        if (data.accountStatus === "pending") throw new Error("申請正在等待管理員審核");
+        if (data.accountStatus === "rejected") throw new Error("此申請未獲核准，請聯絡管理員");
+        if (!data.passwordSet && data.setupCode) {
+          playerPortalMode = "setup";
+          document.getElementById("portalPlayerId").disabled = true;
+          document.getElementById("portalPasswordField").style.display = "none";
+          document.getElementById("playerProfileFields").style.display = "none";
+          document.getElementById("playerCodePanel").style.display = "block";
+          document.getElementById("issuedPlayerCode").textContent = "你的認證碼：" + data.setupCode;
+          btn.textContent = "驗證並設定密碼";
+          setPlayerPortalStatus("管理員已核准，請完成一次性認證。", "ok");
+          return;
+        }
       }
+      if (password.length < 6) throw new Error("請輸入至少 6 位的玩家密碼");
+      if (user) await fbAuth.signOut();
+      await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      const email = await playerEmailForId(id);
+      user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+      const snap = await ref.get();
+      if (!snap.exists || snap.data().ownerUid !== user.uid || snap.data().accountStatus !== "approved") throw new Error("帳號尚未核准或資料不相符");
+      showPlayerProfile(id, snap.data(), user);
     }
-    if (playerPortalMode === "edit" && playerPortalSession && btn.textContent !== "儲存我的資料") btn.textContent = "儲存我的資料";
-    else if (playerPortalMode === "edit" && playerPortalSession && snap.exists && document.getElementById("portalPlayerId").disabled) {
-      // 第一次登入只開啟編輯表單；再次按鈕才寫入自己的欄位。
-    }
-  } catch (err) { setPlayerPortalStatus("連線失敗：" + err.message, "error"); }
-  finally { btn.disabled = false; if (playerPortalMode === "apply") btn.textContent = "送出申請"; else if (playerPortalMode === "login") btn.textContent = "登入"; }
-});
-
-// 編輯狀態下，儲存前再次核對該帳號與密碼，且只更新個人欄位。
-document.getElementById("playerPortalSubmit")?.addEventListener("click", async (event) => {
-  if (playerPortalMode !== "edit" || !playerPortalSession || event.__profileHandled) return;
-  event.__profileHandled = true;
-  const id = playerPortalSession.id;
-  const pin = document.getElementById("portalPlayerPin").value.trim();
-  if (pin !== playerPortalSession.pin) { setPlayerPortalStatus("密碼已變更，請重新登入", "error"); return; }
-  try {
-    const ref = db.collection("players").doc(id); const snap = await ref.get();
-    if (!snap.exists || snap.data().pin !== pin || snap.data().accountStatus === "pending" || snap.data().accountStatus === "rejected") throw new Error("帳號驗證失敗");
-    await ref.set({
-      displayName:document.getElementById("portalDisplayName").value.trim() || id,
-      favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
-      bio:document.getElementById("portalBio").value.trim(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge:true });
-    setPlayerPortalStatus("你的個人資料已儲存。", "ok");
-  } catch (err) { setPlayerPortalStatus("無法儲存：" + err.message, "error"); }
+  } catch (err) {
+    const code = err && err.code;
+    if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用匿名登入。", "error");
+    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("此玩家帳號已完成設定，請直接登入。", "error");
+    else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") setPlayerPortalStatus("玩家帳號或密碼不正確。", "error");
+    else if (code === "permission-denied" || code === "firestore/permission-denied") setPlayerPortalStatus("此帳號已存在，或目前沒有申請權限。", "error");
+    else setPlayerPortalStatus(String(err.message || err), "error");
+  } finally {
+    btn.disabled = false;
+    if (playerPortalMode !== "setup" && playerPortalMode !== "edit") btn.textContent = playerPortalMode === "apply" ? "送出申請" : "登入／取得認證碼";
+    else if (playerPortalMode === "setup") btn.textContent = "驗證並設定密碼";
+    else btn.textContent = "儲存我的資料";
+  }
 });
 
 async function loadPlayerApplications() {
@@ -4715,7 +4878,24 @@ async function loadPlayerApplications() {
 }
 async function reviewPlayerApplication(docId, status) {
   if (!db || !(await requireAdminSession())) return;
-  try { await db.collection("players").doc(docId).set({ accountStatus:status, reviewedAt:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }); await loadPlayerApplications(); }
+  try {
+    const update = {
+      accountStatus:status,
+      reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy:currentAdminUser.uid
+    };
+    if (status === "approved") {
+      const random = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
+      update.setupCode = String(random).padStart(6, "0");
+      update.setupCodeExpiresAt = firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
+      update.passwordSet = false;
+    } else {
+      update.setupCode = firebase.firestore.FieldValue.delete();
+      update.setupCodeExpiresAt = firebase.firestore.FieldValue.delete();
+    }
+    await db.collection("players").doc(docId).set(update, { merge:true });
+    await loadPlayerApplications();
+  }
   catch (err) { alert("審核失敗：" + err.message); }
 }
 document.getElementById("refreshPlayerApplicationsBtn")?.addEventListener("click", loadPlayerApplications);
