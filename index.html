@@ -5177,6 +5177,15 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
         setupCodeExpiresAt:firebase.firestore.FieldValue.delete(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
+
+      // V4.6 修正：設定密碼完成後，立刻讓主 Firebase Auth 以鳥友身分登入。
+      // 舊流程只在 secondary app 建立帳號後就刪除 session，之後容易又被當成首次註冊。
+      const setupEmail = await playerEmailForId(id);
+      if (fbAuth.currentUser) await fbAuth.signOut();
+      await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      const setupCredential = await fbAuth.signInWithEmailAndPassword(setupEmail, newPassword);
+      if (!setupCredential.user || setupCredential.user.uid !== newUid) throw new Error("鳥友登入驗證失敗，請重新登入");
+
       localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
       showBirdfriendWaiting(id);
       return;
@@ -5195,11 +5204,35 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
       return;
     }
 
-    let snap = null;
-    try { snap = await ref.get(); } catch (e) { console.warn("讀取鳥友帳號失敗", e); }
+    // V4.6 修正：既有鳥友一定先驗證 Firebase Authentication，再讀取自己的 Firestore 資料。
+    // 不再把「讀取失敗」誤判成「首次帳號」，避免登入後又繞回授權碼流程。
+    let authenticatedUser = null;
+    let authError = null;
+    const email = await playerEmailForId(id);
 
-    // 首次：只輸入帳號即可，自動建立待審核帳號並發出 6 位授權碼。
-    if (!snap || !snap.exists) {
+    if (password) {
+      if (password.length < 6) throw new Error("請輸入至少 6 位密碼");
+      try {
+        if (fbAuth.currentUser) await fbAuth.signOut();
+        await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        authenticatedUser = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+      } catch (e) {
+        authError = e;
+      }
+    }
+
+    let snap;
+    try {
+      snap = await ref.get();
+    } catch (e) {
+      // 若 Firebase Auth 已驗證成功卻仍不能讀取，這是真正的 Firestore 權限問題，不能當成新帳號。
+      if (authenticatedUser) throw new Error("帳號已驗證，但目前沒有讀取鳥友資料的權限，請檢查 Firestore Rules");
+      throw new Error("目前無法讀取鳥友帳號資料，請稍後再試");
+    }
+
+    // 首次：只有在 Firestore 確定不存在、且 Firebase Auth 也沒有成功登入時，才建立新帳號。
+    if (!snap.exists) {
+      if (password && authError && !["auth/user-not-found","auth/invalid-credential","auth/invalid-login-credentials"].includes(authError.code)) throw authError;
       const setupCode = birdfriendNewCode();
       await ref.set({
         id,
@@ -5254,11 +5287,10 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
       return;
     }
 
-    if (password.length < 6) throw new Error("請輸入至少 6 位密碼");
-    const email = await playerEmailForId(id);
-    if (fbAuth.currentUser) await fbAuth.signOut();
-    await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+    // passwordSet=true 就絕對不能再回到授權碼流程。
+    if (!password) throw new Error("此鳥友帳號已設定密碼，請輸入密碼登入");
+    if (!authenticatedUser) throw (authError || new Error("鳥友帳號或密碼不正確"));
+    const user = authenticatedUser;
     const fresh = await ref.get();
     if (!fresh.exists || fresh.data().ownerUid !== user.uid) throw new Error("鳥友帳號資料不相符");
     const freshData = fresh.data();
@@ -5272,6 +5304,7 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
     else if (code === "auth/email-already-in-use") setPlayerPortalStatus("這個鳥友帳號已經設定過密碼，請回到登入畫面使用原密碼。", "error");
     else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials") setPlayerPortalStatus("鳥友帳號或密碼不正確。", "error");
     else setPlayerPortalStatus(String(err.message || err), "error");
+    setTimeout(() => document.getElementById("playerPortalStatus")?.scrollIntoView({behavior:"smooth", block:"center"}), 0);
   } finally {
     btn.disabled = false;
     if (playerPortalMode === "setup") btn.textContent = "驗證並設定密碼";
