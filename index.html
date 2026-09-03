@@ -1531,6 +1531,17 @@
 .v50-search-result{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d8e4dc;background:#fff;border-radius:12px;padding:9px 11px;font-weight:800;color:#315f48}
 .v50-search-result button{border:0;border-radius:999px;background:#377c57;color:white;padding:7px 12px;font-weight:800}
 .v50-ai-chip{display:inline-flex;padding:4px 8px;border-radius:999px;background:#e7f1eb;color:#35664e;font-size:11px;font-weight:800}
+
+/* V5.0 hotfix: 管理介面精簡、條件選框與鳥友一致 */
+#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important;}
+#adminFormPanel .checkbox-grid .chk-btn{font-size:11px!important;line-height:1.18!important;padding:5px 2px!important;min-height:52px!important;}
+#adminFormPanel .custom-input{min-height:54px!important;font-size:14px!important;}
+.admin-compact-card .player-review-list{display:none;}
+.admin-compact-card.expanded .player-review-list{display:flex;}
+.admin-compact-toggle{border:1px solid rgba(48,105,75,.22);background:#fff;border-radius:999px;padding:6px 12px;font-weight:800;color:#315f48;cursor:pointer;}
+.admin-compact-card .player-review-head{cursor:pointer;}
+@media(max-width:640px){#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}#adminFormPanel .checkbox-grid .chk-btn{min-width:0!important;word-break:break-word!important;}}
+
 </style>
 </head>
 <body>
@@ -1545,7 +1556,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.0 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.0R <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1890,13 +1901,13 @@
   <!-- ============ ADMIN VIEW ============ -->
   <div class="view" id="view-admin">
 
-    <div class="player-review-card">
-      <div class="player-review-head"><div><strong>鳥友影像館帳號審核</strong><div class="hint" style="margin:3px 0 0;">核准後，鳥友只能管理自己的個人資料與照片</div></div><button class="hint-btn" id="refreshPlayerApplicationsBtn">重新整理</button></div>
+    <div class="player-review-card admin-compact-card" id="playerApplicationCard">
+      <div class="player-review-head" id="playerApplicationHead"><div><strong>鳥友審核 <span id="pendingPlayerCount">0</span></strong></div><button class="admin-compact-toggle" id="togglePlayerApplicationsBtn" type="button">展開</button></div>
       <div class="player-review-list" id="playerApplicationList"><div class="hint">載入中...</div></div>
     </div>
 
-    <div class="player-list-card">
-      <div class="player-review-head"><div><strong>帳號列表管理</strong><div class="hint" style="margin:3px 0 0;">清楚區分「遊戲帳號」與「鳥友帳號」，測試帳號可直接刪除資料</div></div><button class="hint-btn" id="refreshPlayerListBtn">重新整理</button></div>
+    <div class="player-list-card admin-compact-card" id="playerListCard">
+      <div class="player-review-head" id="playerListHead"><div><strong>帳號管理 <span id="totalPlayerCount">0</span></strong></div><button class="admin-compact-toggle" id="togglePlayerListBtn" type="button">展開</button></div>
       <div class="player-list-toolbar"><input class="player-list-search" id="playerListSearch" type="search" placeholder="搜尋帳號或名稱"><button class="hint-btn" id="clearPlayerSearchBtn" type="button">清除</button></div>
       <div class="player-summary" id="playerListSummary"></div>
       <div class="player-review-list" id="playerList"><div class="hint">載入中...</div></div>
@@ -2122,13 +2133,17 @@ function communityRecordToBird(id, data) {
   };
 }
 function getBirdChallengePhotoUrl(bird){ return (bird && (bird.challengePhotoUrl || bird.originalPhotoUrl || bird.photoUrl)) || ""; }
+function normalizeCoreBirdName(v){return String(v||'').trim().replace(/\s+/g,'').toLocaleLowerCase('zh-Hant');}
 function getV50CoreBirdsWithReplacements(){
-  const mapped=new Map();
-  communityBirds.filter(b=>b.category==="wild"&&b.targetBirdId&&b.photoUrl).forEach(b=>{ const old=mapped.get(b.targetBirdId); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mapped.set(b.targetBirdId,b); });
-  return birds.map(b=>{ const r=mapped.get(b.id); if(!r) return b; return Object.assign({},b,{photoUrl:r.photoUrl,originalPhotoUrl:r.originalPhotoUrl||r.photoUrl,photographer:r.photographer||r.displayName||r.playerId||"鳥友投稿",imageType:"real_photo",photoStyle:r.photoStyle||"original",replacedByBirdfriend:true}); });
+  const mappedById=new Map(), mappedByName=new Map();
+  communityBirds.filter(b=>b.category==="wild"&&b.photoUrl).forEach(b=>{
+    if(b.targetBirdId){ const old=mappedById.get(b.targetBirdId); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mappedById.set(b.targetBirdId,b); }
+    const nk=normalizeCoreBirdName(b.name); if(nk){ const old=mappedByName.get(nk); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mappedByName.set(nk,b); }
+  });
+  return birds.map(b=>{ const r=mappedById.get(b.id)||mappedByName.get(normalizeCoreBirdName(b.name)); if(!r) return b; return Object.assign({},b,{photoUrl:r.photoUrl,originalPhotoUrl:r.originalPhotoUrl||r.photoUrl,photographer:r.photographer||r.displayName||r.playerId||"鳥友投稿",imageType:"real_photo",photoStyle:r.photoStyle||"original",replacedByBirdfriend:true,replacementSourceDocId:r.sourceDocId,definitionPending:b.definitionPending===true}); });
 }
-function getGalleryBirds() { const replacedIds=new Set(communityBirds.filter(b=>b.targetBirdId).map(b=>b.sourceDocId)); return getV50CoreBirdsWithReplacements().concat(communityBirds.filter(b=>!replacedIds.has(b.sourceDocId))); }
-function getChallengeBirds() { return getV50CoreBirdsWithReplacements().filter(b=>b.challengeEnabled!==false && b.imageType!=="ai_watercolor").concat(communityBirds.filter(b => b.challengeEligible === true && !b.targetBirdId)); }
+function getGalleryBirds() { const coreNames=new Set(birds.map(b=>normalizeCoreBirdName(b.name))); const replacedIds=new Set(communityBirds.filter(b=>b.targetBirdId||coreNames.has(normalizeCoreBirdName(b.name))).map(b=>b.sourceDocId)); return getV50CoreBirdsWithReplacements().concat(communityBirds.filter(b=>!replacedIds.has(b.sourceDocId))); }
+function getChallengeBirds() { return getV50CoreBirdsWithReplacements().filter(b=>b.challengeEnabled!==false && b.imageType!=="ai_watercolor" && b.imageType!=="placeholder_line" && b.definitionPending!==true).concat(communityBirds.filter(b => b.challengeEligible === true && !b.targetBirdId)); }
 function findAnyBirdById(id) { return getGalleryBirds().find(b => b.id === id) || null; }
 async function loadCommunityBirdsFromFirestore() {
   communityBirds = [];
@@ -2362,7 +2377,58 @@ let birds = [
 
 
 // ===== V5.0 臺灣鳥類 500 種核心名單 =====
-const TAIWAN_CORE_500_NAMES = ["麻雀", "五色鳥", "帝雉", "白腹秧雞", "樹鴨", "斑頭雁", "灰雁", "鴻雁", "白額雁", "小白額雁", "寒林豆雁", "凍原豆雁", "黑雁", "疣鼻天鵝", "小天鵝", "黃嘴天鵝", "瀆鳧", "花鳧", "棉鴨", "鴛鴦", "巴鴨", "白眉鴨", "琵嘴鴨", "赤膀鴨", "羅文鴨", "赤頸鴨", "葡萄胸鴨", "呂宋鴨", "花嘴鴨", "綠頭鴨", "尖尾鴨", "小水鴨", "赤嘴潛鴨", "帆背潛鴨", "紅頭潛鴨", "環頸潛鴨", "白眼潛鴨", "青頭潛鴨", "鳳頭潛鴨", "斑背潛鴨", "小斑背潛鴨", "斑臉海番鴨", "長尾鴨", "鵲鴨", "白秋沙", "川秋沙", "紅胸秋沙", "唐秋沙", "臺灣山鷓鴣", "環頸雉", "藍腹鷴", "藍孔雀", "臺灣竹雞", "小鵪鶉", "鵪鶉", "野鴿", "灰林鴿", "黑林鴿", "白喉林鴿", "金背鳩", "灰斑鳩", "紅鳩", "珠頸斑鳩", "斑尾鵑鳩", "長尾鳩", "翠翼鳩", "斑馬鳩", "橙胸綠鳩", "厚嘴綠鳩", "綠鳩", "紅頭綠鳩", "小綠鳩", "褐翅鴉鵑", "番鵑", "冠郭公", "斑翅鳳頭鵑", "噪鵑", "八聲杜鵑", "方尾烏鵑", "鷹鵑", "北方鷹鵑", "棕腹鷹鵑", "小杜鵑", "四聲杜鵑", "大杜鵑", "北方中杜鵑", "普通夜鷹", "南亞夜鷹", "白喉針尾雨燕", "灰喉針尾雨燕", "紫針尾雨燕", "短嘴金絲燕", "叉尾雨燕", "小雨燕", "西方秧雞", "東亞秧雞", "灰胸秧雞", "斑胸秧雞", "紅冠水雞", "白冠雞", "灰頭紫水雞", "白眉秧雞", "董雞", "菲律賓秧雞", "紅腳秧雞", "灰腳秧雞", "緋秧雞", "斑脇秧雞", "紅腳苦惡鳥", "小秧雞", "白鶴", "沙丘鶴", "白枕鶴", "簑羽鶴", "丹頂鶴", "灰鶴", "白頭鶴", "高蹺鴴", "黑領高蹺鴴", "反嘴鴴", "蠣鴴", "灰斑鴴", "太平洋金斑鴴", "環頸鴴", "小環頸鴴", "蒙古沙鴴", "鐵嘴沙鴴", "東方環頸鴴", "東方紅胸鴴", "青藏鴴", "劍鴴", "金眶鴴", "小辮鴴", "跳鴴", "灰頭麥雞", "鳳頭麥雞", "肉垂麥雞", "水雉", "彩鷸", "鷸鴕", "鶴鷸", "紅腳鷸", "小青足鷸", "青足鷸", "諾氏鷸", "白腰草鷸", "磯鷸", "鷹斑鷸", "美洲黃足鷸", "黃足鷸", "赤足鷸", "反嘴鷸", "翹嘴鷸", "小杓鷸", "中杓鷸", "美洲中杓鷸", "大杓鷸", "黦鷸", "小青腳鷸", "斑尾鷸", "黑尾鷸", "半蹼鷸", "短嘴半蹼鷸", "長嘴半蹼鷸", "針尾沙錐", "田鷸", "大地鷸", "中地鷸", "山鷸", "丘鷸", "澳洲鷸", "小濱鷸", "西濱鷸", "大濱鷸", "紅腹濱鷸", "流蘇鷸", "寬嘴鷸", "尖尾濱鷸", "彎嘴濱鷸", "高蹺濱鷸", "丹氏濱鷸", "長趾濱鷸", "紅胸濱鷸", "琵嘴鷸", "黃胸鷸", "三趾濱鷸", "黑腹濱鷸", "白腰濱鷸", "斑胸濱鷸", "磯濱鷸", "灰瓣蹼鷸", "紅頸瓣蹼鷸", "灰斑鷸", "翻石鷸", "燕鴴", "棕頭鷗", "紅嘴鷗", "黑頭鷗", "楔尾鷗", "小鷗", "遺鷗", "細嘴鷗", "三趾鷗", "海鷗", "黑尾鷗", "西伯利亞銀鷗", "蒙古銀鷗", "織女銀鷗", "灰背鷗", "北極賊鷗", "中賊鷗", "長尾賊鷗", "大賊鷗", "白燕鷗", "玄燕鷗", "白眉燕鷗", "小燕鷗", "鷗嘴燕鷗", "裏海燕鷗", "黑腹燕鷗", "黑浮鷗", "白翅黑燕鷗", "燕鷗", "蒼燕鷗", "紅燕鷗", "白嘴端燕鷗", "小鳳頭燕鷗", "鳳頭燕鷗", "黑嘴端鳳頭燕鷗", "小鸊鷉", "角鸊鷉", "赤頸鸊鷉", "冠鸊鷉", "黑頸鸊鷉", "白尾熱帶鳥", "紅嘴熱帶鳥", "紅尾熱帶鳥", "紅喉潛鳥", "黑喉潛鳥", "太平洋潛鳥", "白嘴潛鳥", "黑腳信天翁", "短尾信天翁", "黑背信天翁", "白額鸌", "大水薙鳥", "灰水薙鳥", "短尾水薙鳥", "長尾水薙鳥", "楔尾鸌", "克島圓尾鸌", "白頷圓尾鸌", "穴鳥", "熱帶細鸌", "黑腹軍艦鳥", "白斑軍艦鳥", "小軍艦鳥", "藍臉鰹鳥", "紅腳鰹鳥", "褐鰹鳥", "納茲卡鰹鳥", "鸕鶿", "海鸕鶿", "黑頸鸕鶿", "彩䴉", "埃及聖䴉", "黑頭白䴉", "朱鷺", "白琵鷺", "黑面琵鷺", "大麻鷺", "黃頸黑鷺", "栗小鷺", "秋小鷺", "黃小鷺", "夜鷺", "棕夜鷺", "黑冠麻鷺", "麻鷺", "岩鷺", "唐白鷺", "白鷺鷥", "中白鷺", "大白鷺", "蒼鷺", "紫鷺", "牛背鷺", "池鷺", "爪哇池鷺", "綠簑鷺", "栗頭鷺", "黑冠鷺", "鶚", "黑冠鵑隼", "鳳頭蜂鷹", "東方蜂鷹", "黑翅鳶", "禿鷲", "黑禿鷲", "白尾鷲", "蛇鵰", "大冠鷲", "熊鷹", "林鵰", "花鵰", "靴隼鵰", "白肩鵰", "金鵰", "白腹鵰", "鳳頭蒼鷹", "松雀鷹", "日本松雀鷹", "褐耳鷹", "赤腹鷹", "北雀鷹", "蒼鷹", "西方澤鵟", "東方澤鵟", "灰澤鵟", "花澤鵟", "黑鳶", "栗鳶", "白尾海鵰", "白腹海鵰", "灰面鵟鷹", "毛足鵟", "歐亞鵟", "大鵟", "東方鵟", "草鴞", "黃嘴角鴞", "領角鴞", "蘭嶼角鴞", "褐鷹鴞", "鵂鶹", "縱紋腹小鴞", "褐林鴞", "長耳鴞", "短耳鴞", "黃魚鴞", "鵰鴞", "佛法僧", "三寶鳥", "翠鳥", "赤翡翠", "黑頭翡翠", "白胸翡翠", "冠魚狗", "斑魚狗", "綠喉蜂虎", "栗喉蜂虎", "蜂虎", "戴勝", "地啄木", "小啄木", "大赤啄木", "棕腹啄木", "綠啄木", "紅隼", "紅腳隼", "灰背隼", "燕隼", "遊隼", "藍翅八色鳥", "八色鳥", "綠胸八色鳥", "灰喉山椒鳥", "長尾山椒鳥", "赤紅山椒鳥", "琉球山椒鳥", "黑翅山椒鳥", "大鵑鵙", "灰鵑鵙", "黑卷尾", "大卷尾", "小卷尾", "髮冠卷尾", "鴉嘴卷尾", "朱鸝", "黃鸝", "黑枕藍鶲", "紫綬帶", "阿穆爾綬帶", "虎紋伯勞", "紅頭伯勞", "紅背伯勞", "荒漠伯勞", "紅尾伯勞", "栗背伯勞", "棕背伯勞", "灰背伯勞", "西方灰伯勞", "楔尾伯勞", "松鴉", "灰喜鵲", "臺灣藍鵲", "樹鵲", "喜鵲", "星鴉", "東方寒鴉", "禿鼻鴉", "小嘴烏鴉", "巨嘴鴉", "玉頸鴉", "方尾鶲", "煤山雀", "黃腹山雀", "赤腹山雀", "雜色山雀", "青背山雀", "黃山雀", "大山雀", "遠東山雀", "百靈", "小雲雀", "雲雀", "短趾百靈", "蒙古百靈", "細紋葦鶯", "稻田葦鶯", "鈍翅葦鶯", "遠東葦鶯", "布氏葦鶯", "東方大葦鶯", "蒼眉蝗鶯", "庫頁島蝗鶯", "小蝗鶯", "北蝗鶯", "史氏蝗鶯", "矛斑蝗鶯", "臺灣叢樹鶯", "赤褐蝗鶯", "臺灣鷦眉", "小鷦眉", "棕沙燕", "灰沙燕", "岩燕", "洋燕", "家燕", "白腹毛腳燕", "東方毛腳燕", "東方金腰燕", "栗背短腳鵯", "棕耳鵯", "紅嘴黑鵯", "白環鸚嘴鵯", "白頭翁", "烏頭翁", "白喉紅臀鵯", "林柳鶯", "黃眉柳鶯", "淡眉柳鶯", "雲南柳鶯", "黃腰柳鶯", "巨嘴柳鶯", "棕眉柳鶯", "黃腹柳鶯", "褐色柳鶯", "棕腹柳鶯", "歐亞柳鶯", "嘰喳柳鶯", "冠羽柳鶯", "飯島柳鶯", "白眶鶲鶯", "比氏鶲鶯", "峨眉鶲鶯", "淡尾鶲鶯", "暗綠柳鶯", "雙斑綠柳鶯", "淡腳柳鶯", "庫頁島柳鶯", "日本柳鶯", "極北柳鶯", "勘察加柳鶯", "栗頭鶲鶯", "黑眉柳鶯", "克氏冠紋柳鶯", "哈氏冠紋柳鶯", "短尾鶯", "棕面鶯", "日本樹鶯", "遠東樹鶯", "小鶯", "深山鶯", "紅頭山雀", "白喉林鶯", "漠地林鶯", "褐頭花翼", "黃羽鸚嘴", "粉紅鸚嘴", "栗耳鳳眉", "冠羽畫眉", "紅脇繡眼", "斯氏繡眼", "日菲繡眼", "低地繡眼", "綠繡眼", "山紅頭", "小彎嘴", "大彎嘴"];
+const TAIWAN_CORE_500_NAMES = [
+  "麻雀", "五色鳥", "帝雉", "白腹秧雞", "綠繡眼", "樹鴨", "斑頭雁", "灰雁", "鴻雁", "白額雁",
+  "小白額雁", "寒林豆雁", "凍原豆雁", "黑雁", "疣鼻天鵝", "小天鵝", "黃嘴天鵝", "瀆鳧", "花鳧", "棉鴨",
+  "鴛鴦", "巴鴨", "白眉鴨", "琵嘴鴨", "赤膀鴨", "羅文鴨", "赤頸鴨", "葡萄胸鴨", "呂宋鴨", "花嘴鴨",
+  "綠頭鴨", "尖尾鴨", "小水鴨", "赤嘴潛鴨", "帆背潛鴨", "紅頭潛鴨", "環頸潛鴨", "白眼潛鴨", "青頭潛鴨", "鳳頭潛鴨",
+  "斑背潛鴨", "小斑背潛鴨", "斑臉海番鴨", "長尾鴨", "鵲鴨", "白秋沙", "川秋沙", "紅胸秋沙", "唐秋沙", "臺灣山鷓鴣",
+  "環頸雉", "藍腹鷴", "藍孔雀", "臺灣竹雞", "小鵪鶉", "鵪鶉", "野鴿", "灰林鴿", "黑林鴿", "白喉林鴿",
+  "金背鳩", "灰斑鳩", "紅鳩", "珠頸斑鳩", "斑尾鵑鳩", "長尾鳩", "翠翼鳩", "斑馬鳩", "橙胸綠鳩", "厚嘴綠鳩",
+  "綠鳩", "紅頭綠鳩", "小綠鳩", "褐翅鴉鵑", "番鵑", "冠郭公", "斑翅鳳頭鵑", "噪鵑", "八聲杜鵑", "方尾烏鵑",
+  "鷹鵑", "北方鷹鵑", "棕腹鷹鵑", "小杜鵑", "四聲杜鵑", "大杜鵑", "北方中杜鵑", "普通夜鷹", "南亞夜鷹", "白喉針尾雨燕",
+  "灰喉針尾雨燕", "紫針尾雨燕", "短嘴金絲燕", "叉尾雨燕", "小雨燕", "西方秧雞", "東亞秧雞", "灰胸秧雞", "斑胸秧雞", "紅冠水雞",
+  "白冠雞", "灰頭紫水雞", "白眉秧雞", "董雞", "菲律賓秧雞", "紅腳秧雞", "灰腳秧雞", "緋秧雞", "斑脇秧雞", "紅腳苦惡鳥",
+  "小秧雞", "白鶴", "沙丘鶴", "白枕鶴", "簑羽鶴", "丹頂鶴", "灰鶴", "白頭鶴", "高蹺鴴", "黑領高蹺鴴",
+  "反嘴鴴", "蠣鴴", "灰斑鴴", "太平洋金斑鴴", "環頸鴴", "小環頸鴴", "蒙古沙鴴", "鐵嘴沙鴴", "東方環頸鴴", "東方紅胸鴴",
+  "青藏鴴", "劍鴴", "金眶鴴", "小辮鴴", "跳鴴", "灰頭麥雞", "鳳頭麥雞", "肉垂麥雞", "水雉", "彩鷸",
+  "鷸鴕", "鶴鷸", "紅腳鷸", "小青足鷸", "青足鷸", "諾氏鷸", "白腰草鷸", "磯鷸", "鷹斑鷸", "美洲黃足鷸",
+  "黃足鷸", "赤足鷸", "反嘴鷸", "翹嘴鷸", "小杓鷸", "中杓鷸", "美洲中杓鷸", "大杓鷸", "黦鷸", "小青腳鷸",
+  "斑尾鷸", "黑尾鷸", "半蹼鷸", "短嘴半蹼鷸", "長嘴半蹼鷸", "針尾沙錐", "田鷸", "大地鷸", "中地鷸", "山鷸",
+  "丘鷸", "澳洲鷸", "小濱鷸", "西濱鷸", "大濱鷸", "紅腹濱鷸", "流蘇鷸", "寬嘴鷸", "尖尾濱鷸", "彎嘴濱鷸",
+  "高蹺濱鷸", "丹氏濱鷸", "長趾濱鷸", "紅胸濱鷸", "琵嘴鷸", "黃胸鷸", "三趾濱鷸", "黑腹濱鷸", "白腰濱鷸", "斑胸濱鷸",
+  "磯濱鷸", "灰瓣蹼鷸", "紅頸瓣蹼鷸", "灰斑鷸", "翻石鷸", "燕鴴", "棕頭鷗", "紅嘴鷗", "黑頭鷗", "楔尾鷗",
+  "小鷗", "遺鷗", "細嘴鷗", "三趾鷗", "海鷗", "黑尾鷗", "西伯利亞銀鷗", "蒙古銀鷗", "織女銀鷗", "灰背鷗",
+  "北極賊鷗", "中賊鷗", "長尾賊鷗", "大賊鷗", "白燕鷗", "玄燕鷗", "白眉燕鷗", "小燕鷗", "鷗嘴燕鷗", "裏海燕鷗",
+  "黑腹燕鷗", "黑浮鷗", "白翅黑燕鷗", "燕鷗", "蒼燕鷗", "紅燕鷗", "白嘴端燕鷗", "小鳳頭燕鷗", "鳳頭燕鷗", "黑嘴端鳳頭燕鷗",
+  "小鸊鷉", "角鸊鷉", "赤頸鸊鷉", "冠鸊鷉", "黑頸鸊鷉", "白尾熱帶鳥", "紅嘴熱帶鳥", "紅尾熱帶鳥", "紅喉潛鳥", "黑喉潛鳥",
+  "太平洋潛鳥", "白嘴潛鳥", "黑腳信天翁", "短尾信天翁", "黑背信天翁", "白額鸌", "大水薙鳥", "灰水薙鳥", "短尾水薙鳥", "長尾水薙鳥",
+  "楔尾鸌", "克島圓尾鸌", "白頷圓尾鸌", "穴鳥", "熱帶細鸌", "黑腹軍艦鳥", "白斑軍艦鳥", "小軍艦鳥", "藍臉鰹鳥", "紅腳鰹鳥",
+  "褐鰹鳥", "納茲卡鰹鳥", "鸕鶿", "海鸕鶿", "黑頸鸕鶿", "彩䴉", "埃及聖䴉", "黑頭白䴉", "朱鷺", "白琵鷺",
+  "黑面琵鷺", "大麻鷺", "黃頸黑鷺", "栗小鷺", "秋小鷺", "黃小鷺", "夜鷺", "棕夜鷺", "黑冠麻鷺", "麻鷺",
+  "岩鷺", "唐白鷺", "白鷺鷥", "中白鷺", "大白鷺", "蒼鷺", "紫鷺", "牛背鷺", "池鷺", "爪哇池鷺",
+  "綠簑鷺", "栗頭鷺", "黑冠鷺", "鶚", "黑冠鵑隼", "鳳頭蜂鷹", "東方蜂鷹", "黑翅鳶", "禿鷲", "黑禿鷲",
+  "白尾鷲", "蛇鵰", "大冠鷲", "熊鷹", "林鵰", "花鵰", "靴隼鵰", "白肩鵰", "金鵰", "白腹鵰",
+  "鳳頭蒼鷹", "松雀鷹", "日本松雀鷹", "褐耳鷹", "赤腹鷹", "北雀鷹", "蒼鷹", "西方澤鵟", "東方澤鵟", "灰澤鵟",
+  "花澤鵟", "黑鳶", "栗鳶", "白尾海鵰", "白腹海鵰", "灰面鵟鷹", "毛足鵟", "歐亞鵟", "大鵟", "東方鵟",
+  "草鴞", "黃嘴角鴞", "領角鴞", "蘭嶼角鴞", "褐鷹鴞", "鵂鶹", "縱紋腹小鴞", "褐林鴞", "長耳鴞", "短耳鴞",
+  "黃魚鴞", "鵰鴞", "佛法僧", "三寶鳥", "翠鳥", "赤翡翠", "黑頭翡翠", "白胸翡翠", "冠魚狗", "斑魚狗",
+  "綠喉蜂虎", "栗喉蜂虎", "蜂虎", "戴勝", "地啄木", "小啄木", "大赤啄木", "棕腹啄木", "綠啄木", "紅隼",
+  "紅腳隼", "灰背隼", "燕隼", "遊隼", "藍翅八色鳥", "八色鳥", "綠胸八色鳥", "灰喉山椒鳥", "長尾山椒鳥", "赤紅山椒鳥",
+  "琉球山椒鳥", "黑翅山椒鳥", "大鵑鵙", "灰鵑鵙", "黑卷尾", "大卷尾", "小卷尾", "髮冠卷尾", "鴉嘴卷尾", "朱鸝",
+  "黃鸝", "黑枕藍鶲", "紫綬帶", "阿穆爾綬帶", "虎紋伯勞", "紅頭伯勞", "紅背伯勞", "荒漠伯勞", "紅尾伯勞", "栗背伯勞",
+  "棕背伯勞", "灰背伯勞", "西方灰伯勞", "楔尾伯勞", "松鴉", "灰喜鵲", "臺灣藍鵲", "樹鵲", "喜鵲", "星鴉",
+  "東方寒鴉", "禿鼻鴉", "小嘴烏鴉", "巨嘴鴉", "玉頸鴉", "方尾鶲", "煤山雀", "黃腹山雀", "赤腹山雀", "雜色山雀",
+  "青背山雀", "黃山雀", "大山雀", "遠東山雀", "百靈", "小雲雀", "雲雀", "短趾百靈", "蒙古百靈", "細紋葦鶯",
+  "稻田葦鶯", "鈍翅葦鶯", "遠東葦鶯", "布氏葦鶯", "東方大葦鶯", "蒼眉蝗鶯", "庫頁島蝗鶯", "小蝗鶯", "北蝗鶯", "史氏蝗鶯",
+  "矛斑蝗鶯", "臺灣叢樹鶯", "赤褐蝗鶯", "臺灣鷦眉", "小鷦眉", "棕沙燕", "灰沙燕", "岩燕", "洋燕", "家燕",
+  "白腹毛腳燕", "東方毛腳燕", "東方金腰燕", "栗背短腳鵯", "棕耳鵯", "紅嘴黑鵯", "白環鸚嘴鵯", "白頭翁", "烏頭翁", "白喉紅臀鵯",
+  "林柳鶯", "黃眉柳鶯", "淡眉柳鶯", "雲南柳鶯", "黃腰柳鶯", "巨嘴柳鶯", "棕眉柳鶯", "黃腹柳鶯", "褐色柳鶯", "棕腹柳鶯",
+  "歐亞柳鶯", "嘰喳柳鶯", "冠羽柳鶯", "飯島柳鶯", "白眶鶲鶯", "比氏鶲鶯", "峨眉鶲鶯", "淡尾鶲鶯", "暗綠柳鶯", "雙斑綠柳鶯",
+  "淡腳柳鶯", "庫頁島柳鶯", "日本柳鶯", "極北柳鶯", "勘察加柳鶯", "栗頭鶲鶯", "黑眉柳鶯", "克氏冠紋柳鶯", "哈氏冠紋柳鶯", "短尾鶯",
+  "棕面鶯", "日本樹鶯", "遠東樹鶯", "小鶯", "深山鶯", "紅頭山雀", "白喉林鶯", "漠地林鶯", "褐頭花翼", "黃羽鸚嘴",
+  "粉紅鸚嘴", "栗耳鳳眉", "冠羽畫眉", "紅脇繡眼", "斯氏繡眼", "日菲繡眼", "低地繡眼", "山紅頭", "小彎嘴", "大彎嘴"
+];
 const CORE500_EXISTING_NAMES = new Set(birds.map(b => b.name));
 function makeV50AiWatercolorPlaceholder(name, no) {
   const hue=(no*37)%360;
@@ -2375,13 +2441,13 @@ function ensureV50CoreBirds() {
     if(nameMap.has(name)) return;
     const no=idx+1;
     const id='tw500_'+String(no).padStart(3,'0');
-    birds.push({id,name,level:1,requiredCorrect:3,speed:90,season:'春',conditions:{elevation:['待確認'],family:['待確認'],habitat:['待確認'],diet:['待確認'],predator:['待確認'],population:['待確認'],disturbance:['待確認'],residency:['待確認'],activity:['待確認'],nestType:['待確認'],size:['待確認'],feature:['待確認'],eggColor:['待確認'],eggCount:['待確認'],originStatus:['原生種']},story:'V5.0 核心鳥種。AI 水彩示意圖僅供圖鑑建檔，待鳥友或管理者提供真實照片後替換。',photoUrl:makeV50AiWatercolorPlaceholder(name,no),imageType:'ai_watercolor',aiLabel:'AI水彩示意圖',challengeEnabled:false,coreCatalog:true,coreNo:no});
+    birds.push({id,name,level:1,previewLevel:((no-1)%4)+1,definitionPending:true,requiredCorrect:3,speed:90,season:'春',conditions:{elevation:['待確認'],family:['待確認'],habitat:['待確認'],diet:['待確認'],predator:['待確認'],population:['待確認'],disturbance:['待確認'],residency:['待確認'],activity:['待確認'],nestType:['待確認'],size:['待確認'],feature:['待確認'],eggColor:['待確認'],eggCount:['待確認'],originStatus:['原生種']},story:'V5.0 核心鳥種骨架。資料與等級待真實定義；有真實照片後由鳥友或管理者替換。',photoUrl:'',imageType:'placeholder_line',challengeEnabled:false,coreCatalog:true,coreNo:no});
   });
   // 若舊版已有同名鳥種，仍只保留一筆；核心清單總數固定 500。
   const wanted=new Set(TAIWAN_CORE_500_NAMES);
   const core=[]; const extras=[]; const seen=new Set();
   birds.forEach(b=>{ if(wanted.has(b.name)&&!seen.has(b.name)){core.push(b);seen.add(b.name)} else if(!wanted.has(b.name)) extras.push(b); });
-  TAIWAN_CORE_500_NAMES.forEach((name,idx)=>{ const b=core.find(x=>x.name===name); if(b){b.coreCatalog=true;b.coreNo=idx+1;} });
+  TAIWAN_CORE_500_NAMES.forEach((name,idx)=>{ const b=core.find(x=>x.name===name); if(b){b.coreCatalog=true;b.coreNo=idx+1;if(b.imageType!=='placeholder_line') b.definitionPending=false;} });
   birds=[...TAIWAN_CORE_500_NAMES.map(n=>core.find(b=>b.name===n)).filter(Boolean),...extras];
 }
 ensureV50CoreBirds();
@@ -2527,14 +2593,14 @@ function renderBirdGrid() {
     const thumbInner = (done && b.photoUrl)
       ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${photoCredit}</div>`
       : `<div class="mystery-placeholder">
-          ${buildMysteryBirdImg(mysteryImgForLevel(b.level))}
+          ${buildMysteryBirdImg(mysteryImgForLevel(b.definitionPending ? (b.previewLevel || 1) : b.level))}
           <div class="mystery-qmark">?</div>
         </div>`;
     tile.innerHTML = `
       <div class="index">No. ${String(originalIndex + 1).padStart(3, "0")}</div>
       <div class="thumb">${thumbInner}</div>
       <div class="name">${b.name}</div>
-      <div class="level">${done ? "已解鎖" : (b.source === "birdfriend" ? "鳥友投稿 · 15項完整" : "LV." + b.level + " " + LEVEL_LABEL[b.level])}</div>
+      <div class="level">${done ? "已解鎖" : (b.source === "birdfriend" ? "鳥友投稿 · 15項完整" : (b.definitionPending ? "等真實定義" : "LV." + b.level + " " + LEVEL_LABEL[b.level]))}</div>
     `;
     tile.onclick = () => openQuiz(b.id);
     grid.appendChild(tile);
@@ -3598,13 +3664,13 @@ document.getElementById("adminAddModeBtn").onclick = () => {
   setAdminDataMode("add");
       settingsBirdLocation = null;
       syncSettingsLocationFields(null);
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("adminFormPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 };
 
 document.getElementById("adminEditModeBtn").onclick = () => {
   setAdminDataMode("edit-list");
   renderAdminList();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("adminFormPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 };
 
 function loadBirdForEdit(birdId) {
@@ -3804,6 +3870,8 @@ document.getElementById("saveBirdBtn").onclick = async () => {
         bird.season = season;
         bird.conditions = conditions;
         bird.story = story;
+        bird.definitionPending = false;
+        delete bird.previewLevel;
         if (photoUrl) {
           bird.photoUrl = photoUrl;
           bird.imageType = "real_photo";
@@ -4042,7 +4110,7 @@ function renderAdminList() {
     shown++;
     const row = document.createElement("div");
     row.className = "list-row list-row-clickable";
-    row.innerHTML = `<span><span class="idx">No. ${String(b.coreNo || i + 1).padStart(3, "0")}</span>${b.name}</span><span class="tag">${b.imageType==="ai_watercolor"?"AI水彩・待真照":"真實照片"} ・ LV.${b.level}</span>`;
+    row.innerHTML = `<span><span class="idx">No. ${String(b.coreNo || i + 1).padStart(3, "0")}</span>${b.name}</span><span class="tag">${b.definitionPending?"資料待定":(b.imageType==="ai_watercolor"?"AI水彩・待真照":"真實照片")} ・ ${b.definitionPending?"等級待定":"LV."+b.level}</span>`;
     row.onclick = () => {
       loadBirdForEdit(b.id);
       editingBirdSource = "official";
@@ -4058,7 +4126,8 @@ function renderAdminList() {
 
   const stat=document.getElementById("adminBirdCatalogSearchStatus");
   if(stat) stat.textContent=q ? `找到 ${shown} 種核心／正式鳥類` : `核心名單 500 種；可直接搜尋後更換照片`;
-  const wildCommunity = communityBirds.filter(b => b.category === "wild" && (!q || String(b.name||"").toLocaleLowerCase("zh-Hant").includes(q)));
+  const coreNamesForAdmin=new Set(birds.map(b=>normalizeCoreBirdName(b.name)));
+  const wildCommunity = communityBirds.filter(b => b.category === "wild" && !b.targetBirdId && !coreNamesForAdmin.has(normalizeCoreBirdName(b.name)) && (!q || String(b.name||"").toLocaleLowerCase("zh-Hant").includes(q)));
   wildCommunity.forEach((b) => {
     const completed = CONDITIONS.filter(cond => Array.isArray((b.conditions || {})[cond.key]) && (b.conditions || {})[cond.key].length > 0).length;
     const row = document.createElement("div");
@@ -4077,6 +4146,17 @@ function renderAdminList() {
 }
 
 document.getElementById("adminBirdCatalogSearch")?.addEventListener("input", renderAdminList);
+document.getElementById("adminBirdCatalogSearch")?.addEventListener("keydown", e=>{
+  if(e.key!=="Enter") return;
+  e.preventDefault();
+  const q=(e.currentTarget.value||"").trim().toLocaleLowerCase("zh-Hant");
+  if(!q) return;
+  const b=birds.find(x=>String(x.name||"").toLocaleLowerCase("zh-Hant").includes(q));
+  if(!b) return;
+  loadBirdForEdit(b.id); editingBirdSource="official"; editingCommunityDocId=null; setAdminDataMode("add");
+  document.getElementById("adminAddModeBtn")?.classList.remove("active"); document.getElementById("adminEditModeBtn")?.classList.add("active");
+  document.getElementById("adminFormPanel")?.scrollIntoView({behavior:"smooth",block:"start"});
+});
 
 function renderExport() {
   document.getElementById("exportBox").textContent = JSON.stringify(birds, null, 2);
@@ -4666,12 +4746,12 @@ function renderGalleryGrid() {
     const galleryCredit = `<div class="photo-credit">${photographerCreditText(b)}</div>`;
     const thumbInner = b.photoUrl
       ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${galleryCredit}</div>`
-      : `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(b.level))}</div>`;
+      : `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(b.definitionPending ? (b.previewLevel || 1) : b.level))}</div>`;
     tile.innerHTML = `
       <div class="index">No. ${String(i + 1).padStart(3, "0")}</div>
       <div class="thumb">${thumbInner}</div>
       <div class="name">${b.name}</div>
-      <div class="level">${b.source === "birdfriend" ? (b.category === "pet" ? "寵物萌照 · 僅圖鑑" : (b.challengeEligible ? "鳥友野生鳥 · 可挑戰" : "鳥友野生鳥 · 僅圖鑑")) : ("LV." + b.level + " " + LEVEL_LABEL[b.level])}</div>
+      <div class="level">${b.source === "birdfriend" ? (b.category === "pet" ? "寵物萌照 · 僅圖鑑" : (b.challengeEligible ? "鳥友野生鳥 · 可挑戰" : "鳥友野生鳥 · 僅圖鑑")) : ((b.definitionPending ? "等真實定義" : "LV." + b.level + " " + LEVEL_LABEL[b.level]))}</div>
     `;
     tile.onclick = () => showGalleryDetail(b.id);
     grid.appendChild(tile);
@@ -5867,6 +5947,7 @@ async function loadPlayerApplications() {
     const pending = [];
     snapshot.forEach(doc => { const data = doc.data(); if (data.accountType !== "game" && !String(doc.id).startsWith("__game__") && data.accountStatus === "pending") pending.push({ docId:doc.id, ...data }); });
     list.innerHTML = "";
+    const pc=document.getElementById("pendingPlayerCount"); if(pc) pc.textContent=String(pending.length);
     if (!pending.length) { list.innerHTML = '<div class="hint">目前沒有待審核申請</div>'; return; }
     pending.forEach(player => {
       const row = document.createElement("div"); row.className = "player-review-row";
@@ -5928,6 +6009,7 @@ function renderPlayerList() {
   if (!list) return;
   const keyword = String(document.getElementById("playerListSearch")?.value || "").trim().toLowerCase();
   const all = cachedAdminPlayers || [];
+  const tc=document.getElementById("totalPlayerCount"); if(tc) tc.textContent=String(all.length);
   const players = all.filter(p => !keyword || String(p.id || p.docId || "").toLowerCase().includes(keyword) || String(p.displayName || "").toLowerCase().includes(keyword) || accountTypeText(p).includes(keyword));
   if (summary) {
     const count = st => all.filter(p => (p.accountStatus || "pending") === st).length;
@@ -5993,6 +6075,12 @@ function renderPlayerList() {
     row.append(info, actions, detail); list.appendChild(row);
   });
 }
+
+function toggleAdminCompactCard(cardId,btnId){const c=document.getElementById(cardId),b=document.getElementById(btnId);if(!c||!b)return;c.classList.toggle("expanded");b.textContent=c.classList.contains("expanded")?"收起":"展開";}
+document.getElementById("togglePlayerApplicationsBtn")?.addEventListener("click",e=>{e.stopPropagation();toggleAdminCompactCard("playerApplicationCard","togglePlayerApplicationsBtn");});
+document.getElementById("togglePlayerListBtn")?.addEventListener("click",e=>{e.stopPropagation();toggleAdminCompactCard("playerListCard","togglePlayerListBtn");});
+document.getElementById("playerApplicationHead")?.addEventListener("click",()=>toggleAdminCompactCard("playerApplicationCard","togglePlayerApplicationsBtn"));
+document.getElementById("playerListHead")?.addEventListener("click",()=>toggleAdminCompactCard("playerListCard","togglePlayerListBtn"));
 async function loadPlayerList() {
   const list = document.getElementById("playerList");
   if (!list) return;
