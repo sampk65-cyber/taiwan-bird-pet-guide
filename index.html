@@ -1449,7 +1449,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.3</p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.4</p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1506,7 +1506,7 @@
       <div class="modal-title">輸入挑戰者 ID</div>
       <input type="text" id="playerIdInput" placeholder="例如:小明、座號3號">
       <div class="field-error" id="loginError" style="display:none;">請輸入 ID</div>
-      <input type="password" minlength="6" maxlength="64" id="playerPinInput" autocomplete="current-password" placeholder="輸入玩家密碼" style="margin-top:10px;">
+      <input type="password" minlength="6" maxlength="64" id="playerPinInput" autocomplete="current-password" placeholder="玩家密碼（舊帳號可用原通行碼）" style="margin-top:10px;">
       <div class="hint" style="margin:4px 0 0;">請先在玩家介面提出申請，經管理員核准並完成六位認證碼驗證後，再使用帳號密碼登入。</div>
       <label style="display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:14px;font-weight:700;color:#355;">
         <input type="checkbox" id="rememberChallengeLogin" checked style="width:18px;height:18px;">
@@ -3868,7 +3868,7 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
     const saved = loadChallengeSession();
     const hasFirebaseSession = fbAuth && fbAuth.currentUser && !fbAuth.currentUser.isAnonymous && saved && saved.id === id;
     if (!hasFirebaseSession) {
-      document.getElementById("loginPinError").textContent = "請輸入玩家密碼";
+      document.getElementById("loginPinError").textContent = "請輸入玩家密碼（舊帳號可使用原通行碼）";
       document.getElementById("loginPinError").style.display = "block";
       return;
     }
@@ -3877,71 +3877,88 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
   const confirmBtn = document.getElementById("loginConfirmBtn");
   confirmBtn.disabled = true;
   confirmBtn.textContent = "載入中...";
-
-  let loginOk = true;
+  let loginOk = false;
 
   try {
-    if (!fbAuth) throw new Error("Firebase Authentication 未連線");
-    const rememberEl = document.getElementById("rememberChallengeLogin");
-    const shouldRemember = rememberEl ? rememberEl.checked : true;
-    await fbAuth.setPersistence(shouldRemember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
-    const expectedEmail = await playerEmailForId(id);
-    let user = fbAuth.currentUser;
-    if (!user || user.isAnonymous || user.email !== expectedEmail) {
-      if (user) await fbAuth.signOut();
-      const credential = await fbAuth.signInWithEmailAndPassword(expectedEmail, pin);
-      user = credential.user;
-    }
+    if (!db) throw new Error("Firestore 未連線");
     const docRef = db.collection("players").doc(id);
-    const doc = await docRef.get();
-    if (doc.exists) {
-      const data = doc.data();
-      if (data.ownerUid !== user.uid) {
-        loginOk = false;
-        document.getElementById("loginPinError").textContent = "帳號驗證失敗";
-        document.getElementById("loginPinError").style.display = "block";
-      } else if (data.accountStatus !== "approved" || data.passwordSet !== true) {
-        loginOk = false;
-        document.getElementById("loginPinError").textContent = data.accountStatus === "pending" ? "帳號正在等待管理員審核" : "請先到玩家介面完成六位認證碼與密碼設定";
-        document.getElementById("loginPinError").style.display = "block";
-      } else {
-        currentPlayerId = id;
-        currentAnswered = {};
-        totalScore = data.score || 0;
-        if (data.progress && typeof data.progress === "object") {
-          currentAnswered = data.progress;
-        } else if (data.birdsDone) {
-          const birdsDone = data.birdsDone;
-          Object.keys(birdsDone).forEach(birdId => {
-            if (birdsDone[birdId]) {
-              currentAnswered[birdId + "_done"] = true;
-              currentAnswered[birdId + "_captured"] = true;
-            }
-          });
-        }
+    let preSnap = null;
+    let preData = null;
+    try {
+      preSnap = await docRef.get();
+      if (preSnap.exists) preData = preSnap.data();
+    } catch (readErr) {
+      console.warn("登入前讀取玩家資料失敗，改採 Firebase Auth 驗證", readErr);
+    }
+
+    // V4.4：保留 V4.1 原本的正式開始測試方式。
+    // 舊玩家若仍有 pin 且尚未完成新版 passwordSet，可直接用原通行碼進入。
+    if (preData && preData.accountStatus !== "pending" && preData.accountStatus !== "rejected" &&
+        preData.passwordSet !== true && preData.pin && String(preData.pin) === pin) {
+      currentPlayerId = id;
+      currentAnswered = (preData.progress && typeof preData.progress === "object") ? preData.progress : {};
+      totalScore = preData.score || 0;
+      if ((!preData.progress || typeof preData.progress !== "object") && preData.birdsDone) {
+        Object.keys(preData.birdsDone).forEach(birdId => {
+          if (preData.birdsDone[birdId]) {
+            currentAnswered[birdId + "_done"] = true;
+            currentAnswered[birdId + "_captured"] = true;
+          }
+        });
       }
+      loginOk = true;
     } else {
-      loginOk = false;
-      document.getElementById("loginPinError").textContent = "找不到帳號，請先到首頁的玩家介面申請";
-      document.getElementById("loginPinError").style.display = "block";
+      if (preData && preData.accountStatus === "pending") throw new Error("帳號正在等待管理員審核");
+      if (preData && preData.accountStatus === "rejected") throw new Error("此帳號申請未獲核准，請聯絡管理員");
+      if (preData && preData.passwordSet !== true) throw new Error("請先到玩家介面取得六位認證碼並設定密碼");
+      if (!fbAuth) throw new Error("Firebase Authentication 未連線");
+
+      const rememberEl = document.getElementById("rememberChallengeLogin");
+      const shouldRemember = rememberEl ? rememberEl.checked : true;
+      await fbAuth.setPersistence(shouldRemember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+      const expectedEmail = await playerEmailForId(id);
+      let user = fbAuth.currentUser;
+      if (!user || user.isAnonymous || user.email !== expectedEmail) {
+        if (user) await fbAuth.signOut();
+        user = (await fbAuth.signInWithEmailAndPassword(expectedEmail, pin)).user;
+      }
+      const snap = await docRef.get();
+      if (!snap.exists) throw new Error("找不到帳號，請先到首頁的玩家介面申請");
+      const data = snap.data();
+      if (data.ownerUid !== user.uid) throw new Error("帳號驗證失敗");
+      if (data.accountStatus !== "approved" || data.passwordSet !== true) throw new Error("請先到玩家介面完成六位認證碼與密碼設定");
+      currentPlayerId = id;
+      currentAnswered = (data.progress && typeof data.progress === "object") ? data.progress : {};
+      totalScore = data.score || 0;
+      if ((!data.progress || typeof data.progress !== "object") && data.birdsDone) {
+        Object.keys(data.birdsDone).forEach(birdId => {
+          if (data.birdsDone[birdId]) {
+            currentAnswered[birdId + "_done"] = true;
+            currentAnswered[birdId + "_captured"] = true;
+          }
+        });
+      }
+      loginOk = true;
     }
   } catch (err) {
-    console.error("讀取進度失敗", err);
-    loginOk = false;
-    document.getElementById("loginPinError").textContent = "連線失敗,請再試一次:" + err.message;
+    console.error("玩家登入失敗", err);
+    const code = err && err.code;
+    let msg = String(err && err.message ? err.message : err);
+    if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials") {
+      msg = "玩家帳號或密碼不正確";
+    }
+    document.getElementById("loginPinError").textContent = msg;
     document.getElementById("loginPinError").style.display = "block";
   }
 
   confirmBtn.disabled = false;
   confirmBtn.textContent = "開始挑戰";
-
   if (loginOk) {
     const rememberEl = document.getElementById("rememberChallengeLogin");
     const shouldRemember = rememberEl ? rememberEl.checked : true;
     localStorage.setItem(CHALLENGE_REMEMBER_KEY, shouldRemember ? "1" : "0");
     if (shouldRemember) saveChallengeSession(id);
     else clearChallengeSession();
-
     document.getElementById("loginModalOverlay").style.display = "none";
     updateChallengeAccountBar();
     speakGuide("請選取模式");
@@ -4747,7 +4764,6 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
   const btn = document.getElementById("playerPortalSubmit");
   if (!/^[^/\\]{2,24}$/.test(id)) { setPlayerPortalStatus("帳號需為 2–24 個字，且不可包含斜線", "error"); return; }
   btn.disabled = true;
-  const originalLabel = btn.textContent;
   btn.textContent = "處理中…";
   try {
     const ref = db.collection("players").doc(id);
@@ -4768,32 +4784,64 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       });
       localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
-      setPlayerPortalStatus("申請已送出。管理員核准後，請用同一台裝置回到玩家登入取得六位認證碼。", "ok");
+      setPlayerPortalStatus("申請已送出。管理員核准後，回到『玩家登入』按『登入／取得認證碼』。", "ok");
+
     } else if (playerPortalMode === "setup") {
-      const user = fbAuth.currentUser;
-      if (!user || !user.isAnonymous) throw new Error("申請裝置驗證已失效，請聯絡管理員");
+      // V4.4：不再強制目前 Auth 必須仍是原匿名帳號。
+      // 管理員登入同一台裝置後，匿名 session 會被取代；這正是 V4.3 無法完成認證的原因。
       const snap = await ref.get();
-      if (!snap.exists || snap.data().ownerUid !== user.uid) throw new Error("這不是原申請裝置");
+      if (!snap.exists) throw new Error("找不到玩家帳號");
       const data = snap.data();
+      if (data.accountStatus !== "approved") throw new Error("帳號尚未核准");
       const enteredCode = document.getElementById("portalSetupCode").value.trim();
       const newPassword = document.getElementById("portalNewPassword").value;
       const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
-      if (!/^\d{6}$/.test(enteredCode) || enteredCode !== data.setupCode) throw new Error("六位認證碼不正確");
+      if (!/^\d{6}$/.test(enteredCode) || enteredCode !== String(data.setupCode || "")) throw new Error("六位認證碼不正確");
       if (expiresAt && Date.now() > expiresAt) throw new Error("認證碼已過期，請管理員重新核准");
       if (newPassword.length < 6) throw new Error("密碼至少需要 6 位");
+
       const email = await playerEmailForId(id);
-      const credential = firebase.auth.EmailAuthProvider.credential(email, newPassword);
-      const linked = await user.linkWithCredential(credential);
+      let newUid = null;
+      let secondaryApp = null;
+      const current = fbAuth.currentUser;
+
+      // 原匿名申請者仍在時，沿用原 uid；若已被管理員登入取代，使用 secondary app 建立玩家帳號，避免登出管理員再造成權限中斷。
+      if (current && current.isAnonymous && data.ownerUid === current.uid) {
+        const credential = firebase.auth.EmailAuthProvider.credential(email, newPassword);
+        const linked = await current.linkWithCredential(credential);
+        newUid = linked.user.uid;
+      } else {
+        const appName = "player-setup-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+        secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, appName);
+        const secondaryAuth = secondaryApp.auth();
+        try {
+          const created = await secondaryAuth.createUserWithEmailAndPassword(email, newPassword);
+          newUid = created.user.uid;
+        } finally {
+          try { await secondaryAuth.signOut(); } catch (e) {}
+          try { await secondaryApp.delete(); } catch (e) {}
+        }
+      }
+
       await ref.set({
-        ownerUid:linked.user.uid,
+        ownerUid:newUid,
         passwordSet:true,
         setupCompletedAt:firebase.firestore.FieldValue.serverTimestamp(),
         setupCode:firebase.firestore.FieldValue.delete(),
         setupCodeExpiresAt:firebase.firestore.FieldValue.delete(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
+
       localStorage.removeItem(PLAYER_PENDING_ID_KEY);
-      showPlayerProfile(id, {...data, passwordSet:true}, linked.user);
+      // 完成後正式切換成玩家登入，之後「正式開始」就能使用同一組帳密。
+      if (!fbAuth.currentUser || fbAuth.currentUser.uid !== newUid) {
+        if (fbAuth.currentUser) await fbAuth.signOut();
+        await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await fbAuth.signInWithEmailAndPassword(email, newPassword);
+      }
+      const fresh = await ref.get();
+      showPlayerProfile(id, fresh.exists ? fresh.data() : {...data, passwordSet:true, ownerUid:newUid}, fbAuth.currentUser);
+
     } else if (playerPortalMode === "edit") {
       const user = fbAuth.currentUser;
       if (!user || !playerPortalSession || playerPortalSession.uid !== user.uid) throw new Error("登入狀態已失效");
@@ -4804,42 +4852,46 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
       }, { merge:true });
       setPlayerPortalStatus("你的個人資料已儲存。", "ok");
+
     } else {
-      const pendingId = localStorage.getItem(PLAYER_PENDING_ID_KEY);
-      let user = fbAuth.currentUser;
-      if (user && user.isAnonymous && pendingId === id) {
-        const snap = await ref.get();
-        if (!snap.exists || snap.data().ownerUid !== user.uid) throw new Error("找不到這台裝置提出的申請");
+      // V4.4：先直接讀取申請文件。只要管理員已核准且存在 setupCode，就顯示給玩家；
+      // 不再限定目前 Firebase Auth 必須是「原匿名申請者」，因此管理員剛登入核准後也能正常取碼。
+      let snap = null;
+      try { snap = await ref.get(); } catch (e) { console.warn("登入前讀取玩家資料失敗", e); }
+      if (snap && snap.exists) {
         const data = snap.data();
         if (data.accountStatus === "pending") throw new Error("申請正在等待管理員審核");
         if (data.accountStatus === "rejected") throw new Error("此申請未獲核准，請聯絡管理員");
-        if (!data.passwordSet && data.setupCode) {
+        if (data.accountStatus === "approved" && !data.passwordSet && data.setupCode) {
+          const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
+          if (expiresAt && Date.now() > expiresAt) throw new Error("認證碼已過期，請管理員重新核准");
           playerPortalMode = "setup";
           document.getElementById("portalPlayerId").disabled = true;
           document.getElementById("portalPasswordField").style.display = "none";
           document.getElementById("playerProfileFields").style.display = "none";
           document.getElementById("playerCodePanel").style.display = "block";
-          document.getElementById("issuedPlayerCode").textContent = "你的認證碼：" + data.setupCode;
+          document.getElementById("issuedPlayerCode").textContent = "你的認證碼：" + String(data.setupCode);
           btn.textContent = "驗證並設定密碼";
-          setPlayerPortalStatus("管理員已核准，請完成一次性認證。", "ok");
+          setPlayerPortalStatus("管理員已核准。認證碼已顯示，請在下方輸入同一組六位數字並設定永久密碼。", "ok");
           return;
         }
       }
+
       if (password.length < 6) throw new Error("請輸入至少 6 位的玩家密碼");
-      if (user) await fbAuth.signOut();
-      await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
       const email = await playerEmailForId(id);
-      user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
-      const snap = await ref.get();
+      if (fbAuth.currentUser) await fbAuth.signOut();
+      await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      const user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+      snap = await ref.get();
       if (!snap.exists || snap.data().ownerUid !== user.uid || snap.data().accountStatus !== "approved") throw new Error("帳號尚未核准或資料不相符");
       showPlayerProfile(id, snap.data(), user);
     }
   } catch (err) {
     const code = err && err.code;
-    if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用匿名登入。", "error");
-    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("此玩家帳號已完成設定，請直接登入。", "error");
-    else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") setPlayerPortalStatus("玩家帳號或密碼不正確。", "error");
-    else if (code === "permission-denied" || code === "firestore/permission-denied") setPlayerPortalStatus("此帳號已存在，或目前沒有申請權限。", "error");
+    if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用匿名登入與電子郵件/密碼登入。", "error");
+    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("此玩家帳號已建立。若先前已完成設定，請切回『玩家登入』直接輸入密碼。", "error");
+    else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials") setPlayerPortalStatus("玩家帳號或密碼不正確。", "error");
+    else if (code === "permission-denied" || code === "firestore/permission-denied") setPlayerPortalStatus("目前 Firestore 權限不允許讀取這個玩家帳號。請先保持管理員登入後再取得認證碼。", "error");
     else setPlayerPortalStatus(String(err.message || err), "error");
   } finally {
     btn.disabled = false;
