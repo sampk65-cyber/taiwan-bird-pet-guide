@@ -1442,6 +1442,10 @@
   .player-detail { display:none; grid-column:1 / -1; margin-top:7px; padding:9px 10px; border-radius:10px; background:#f7faf8; border:1px solid #e2ebe4; color:#5e6e64; font:600 10px/1.65 var(--font-sans); white-space:pre-line; }
   .player-detail.show { display:block; }
   .view-player-btn { background:#55758e; } .disable-player-btn { background:#7b7f86; } .restore-player-btn { background:#43805a; }
+  .delete-player-btn { background:#c4544d; }
+  .account-type-badge { display:inline-flex; align-items:center; padding:4px 7px; border-radius:999px; font:800 9px var(--font-sans); margin-left:5px; }
+  .account-type-game { color:#38576b; background:#e5f0f6; }
+  .account-type-bird { color:#5d4d24; background:#f5edcf; }
   @media(max-width:380px){
     .home-action-btn { min-height:55px; padding:9px; font-size:13px; }
     .home-action-icon { width:30px; height:30px; flex-basis:30px; font-size:17px; }
@@ -1758,8 +1762,8 @@
     </div>
 
     <div class="player-list-card">
-      <div class="player-review-head"><div><strong>玩家列表管理</strong><div class="hint" style="margin:3px 0 0;">查看全部玩家、狀態與分數，可停用或恢復帳號</div></div><button class="hint-btn" id="refreshPlayerListBtn">重新整理</button></div>
-      <div class="player-list-toolbar"><input class="player-list-search" id="playerListSearch" type="search" placeholder="搜尋帳號或玩家名稱"><button class="hint-btn" id="clearPlayerSearchBtn" type="button">清除</button></div>
+      <div class="player-review-head"><div><strong>帳號列表管理</strong><div class="hint" style="margin:3px 0 0;">清楚區分「遊戲帳號」與「鳥友帳號」，測試帳號可直接刪除資料</div></div><button class="hint-btn" id="refreshPlayerListBtn">重新整理</button></div>
+      <div class="player-list-toolbar"><input class="player-list-search" id="playerListSearch" type="search" placeholder="搜尋帳號或名稱"><button class="hint-btn" id="clearPlayerSearchBtn" type="button">清除</button></div>
       <div class="player-summary" id="playerListSummary"></div>
       <div class="player-review-list" id="playerList"><div class="hint">載入中...</div></div>
     </div>
@@ -4941,7 +4945,7 @@ async function loadPlayerApplications() {
   try {
     const snapshot = await db.collection("players").get();
     const pending = [];
-    snapshot.forEach(doc => { const data = doc.data(); if (data.accountStatus === "pending") pending.push({ docId:doc.id, ...data }); });
+    snapshot.forEach(doc => { const data = doc.data(); if (data.accountType !== "game" && !String(doc.id).startsWith("__game__") && data.accountStatus === "pending") pending.push({ docId:doc.id, ...data }); });
     list.innerHTML = "";
     if (!pending.length) { list.innerHTML = '<div class="hint">目前沒有待審核申請</div>'; return; }
     pending.forEach(player => {
@@ -4996,51 +5000,78 @@ function playerTimeText(value) {
     return d && !isNaN(d.getTime()) ? d.toLocaleString("zh-TW", {hour12:false}) : "—";
   } catch (_) { return "—"; }
 }
+function accountTypeOf(player) {
+  return (player.accountType === "game" || String(player.docId || "").startsWith("__game__")) ? "game" : "bird";
+}
+function accountTypeText(player) {
+  return accountTypeOf(player) === "game" ? "遊戲帳號" : "鳥友帳號";
+}
 function renderPlayerList() {
   const list = document.getElementById("playerList");
   const summary = document.getElementById("playerListSummary");
   if (!list) return;
   const keyword = String(document.getElementById("playerListSearch")?.value || "").trim().toLowerCase();
   const all = cachedAdminPlayers || [];
-  const players = all.filter(p => !keyword || String(p.id || p.docId || "").toLowerCase().includes(keyword) || String(p.displayName || "").toLowerCase().includes(keyword));
+  const players = all.filter(p => !keyword || String(p.id || p.docId || "").toLowerCase().includes(keyword) || String(p.displayName || "").toLowerCase().includes(keyword) || accountTypeText(p).includes(keyword));
   if (summary) {
     const count = st => all.filter(p => (p.accountStatus || "pending") === st).length;
-    summary.innerHTML = `<span>全部 ${all.length}</span><span>已核准 ${count("approved")}</span><span>待審核 ${count("pending")}</span><span>已停用 ${count("disabled")}</span><span>已拒絕 ${count("rejected")}</span>`;
+    const gameCount = all.filter(p => accountTypeOf(p) === "game").length;
+    const birdCount = all.filter(p => accountTypeOf(p) === "bird").length;
+    summary.innerHTML = `<span>全部 ${all.length}</span><span>遊戲帳號 ${gameCount}</span><span>鳥友帳號 ${birdCount}</span><span>已核准 ${count("approved")}</span><span>待審核 ${count("pending")}</span><span>已停用 ${count("disabled")}</span>`;
   }
   list.innerHTML = "";
-  if (!players.length) { list.innerHTML = '<div class="hint">沒有符合條件的玩家</div>'; return; }
+  if (!players.length) { list.innerHTML = '<div class="hint">沒有符合條件的帳號</div>'; return; }
   players.forEach(player => {
-    const status = player.accountStatus || "pending";
+    const type = accountTypeOf(player);
+    const status = type === "game" ? "approved" : (player.accountStatus || "pending");
     const row = document.createElement("div"); row.className = "player-review-row";
     const info = document.createElement("div");
     const name = document.createElement("div"); name.className = "player-review-name";
     name.append(document.createTextNode(player.displayName || player.id || player.docId));
-    const badge = document.createElement("span"); badge.className = "player-status-badge " + playerStatusClass(status); badge.textContent = playerStatusText(status); name.appendChild(badge);
+    const typeBadge = document.createElement("span"); typeBadge.className = "account-type-badge " + (type === "game" ? "account-type-game" : "account-type-bird"); typeBadge.textContent = type === "game" ? "遊戲" : "鳥友"; name.appendChild(typeBadge);
+    if (type === "bird") {
+      const badge = document.createElement("span"); badge.className = "player-status-badge " + playerStatusClass(status); badge.textContent = playerStatusText(status); name.appendChild(badge);
+    }
     const score = player.progress && Number.isFinite(Number(player.progress.score)) ? Number(player.progress.score) : 0;
-    const meta = document.createElement("div"); meta.className = "player-review-meta"; meta.textContent = "帳號：" + (player.id || player.docId) + " · 分數：" + score;
+    const rawId = player.id || player.docId || "";
+    const visibleId = type === "game" && String(rawId).startsWith("__game__") ? decodeURIComponent(String(rawId).slice(8)) : rawId;
+    const meta = document.createElement("div"); meta.className = "player-review-meta";
+    meta.textContent = (type === "game" ? "遊戲帳號：" : "鳥友帳號：") + visibleId + " · 分數：" + score;
     info.append(name, meta);
     const actions = document.createElement("div"); actions.className = "player-review-actions";
     const view = document.createElement("button"); view.className = "view-player-btn"; view.textContent = "查看";
     const detail = document.createElement("div"); detail.className = "player-detail";
-    detail.textContent = [
-      "帳號：" + (player.id || player.docId),
-      "玩家名稱：" + (player.displayName || "—"),
-      "喜歡的鳥：" + (player.favoriteBird || "—"),
-      "自我介紹：" + (player.bio || "—"),
+    const detailLines = [
+      "帳號類型：" + accountTypeText(player),
+      "帳號：" + visibleId,
+      "名稱：" + (player.displayName || "—"),
       "建立時間：" + playerTimeText(player.createdAt),
       "最後更新：" + playerTimeText(player.updatedAt),
-      "密碼設定：" + (player.passwordSet ? "已完成" : "尚未完成"),
       "分數：" + score
-    ].join("\n");
+    ];
+    if (type === "bird") {
+      detailLines.splice(3, 0,
+        "喜歡的鳥：" + (player.favoriteBird || "—"),
+        "自我介紹：" + (player.bio || "—")
+      );
+      detailLines.splice(detailLines.length - 1, 0, "密碼設定：" + (player.passwordSet ? "已完成" : "尚未完成"));
+    }
+    detail.textContent = detailLines.join("\n");
     view.onclick = () => { detail.classList.toggle("show"); view.textContent = detail.classList.contains("show") ? "收合" : "查看"; };
     actions.appendChild(view);
-    if (status === "pending") {
-      const approve = document.createElement("button"); approve.className = "approve-btn"; approve.textContent = "核准"; approve.onclick = () => reviewPlayerApplication(player.docId, "approved"); actions.appendChild(approve);
-    } else if (status === "approved") {
-      const disable = document.createElement("button"); disable.className = "disable-player-btn"; disable.textContent = "停用"; disable.onclick = () => setPlayerAccountStatus(player.docId, "disabled"); actions.appendChild(disable);
-    } else {
-      const restore = document.createElement("button"); restore.className = "restore-player-btn"; restore.textContent = "恢復"; restore.onclick = () => setPlayerAccountStatus(player.docId, "approved"); actions.appendChild(restore);
+
+    if (type === "bird") {
+      if (status === "pending") {
+        const approve = document.createElement("button"); approve.className = "approve-btn"; approve.textContent = "核准"; approve.onclick = () => reviewPlayerApplication(player.docId, "approved"); actions.appendChild(approve);
+      } else if (status === "approved") {
+        const disable = document.createElement("button"); disable.className = "disable-player-btn"; disable.textContent = "停用"; disable.onclick = () => setPlayerAccountStatus(player.docId, "disabled"); actions.appendChild(disable);
+      } else {
+        const restore = document.createElement("button"); restore.className = "restore-player-btn"; restore.textContent = "恢復"; restore.onclick = () => setPlayerAccountStatus(player.docId, "approved"); actions.appendChild(restore);
+      }
     }
+    const del = document.createElement("button"); del.className = "delete-player-btn"; del.textContent = "刪除";
+    del.onclick = () => deleteManagedAccount(player);
+    actions.appendChild(del);
     row.append(info, actions, detail); list.appendChild(row);
   });
 }
@@ -5053,8 +5084,12 @@ async function loadPlayerList() {
   try {
     const snapshot = await db.collection("players").get();
     const rows = [];
-    snapshot.forEach(doc => { const data = doc.data() || {}; if (data.accountType !== "game" && !String(doc.id).startsWith("__game__")) rows.push({docId:doc.id, ...data}); });
-    rows.sort((a,b) => String(a.displayName || a.id || a.docId).localeCompare(String(b.displayName || b.id || b.docId), "zh-Hant"));
+    snapshot.forEach(doc => { const data = doc.data() || {}; rows.push({docId:doc.id, ...data}); });
+    rows.sort((a,b) => {
+      const ta = accountTypeOf(a) === "game" ? 0 : 1, tb = accountTypeOf(b) === "game" ? 0 : 1;
+      if (ta !== tb) return ta - tb;
+      return String(a.displayName || a.id || a.docId).localeCompare(String(b.displayName || b.id || b.docId), "zh-Hant");
+    });
     cachedAdminPlayers = rows;
     renderPlayerList();
   } catch (err) { list.innerHTML = '<div class="hint">讀取失敗：' + String(err.message || err) + '</div>'; }
@@ -5062,7 +5097,7 @@ async function loadPlayerList() {
 async function setPlayerAccountStatus(docId, status) {
   if (!db || !(await requireAdminSession())) return;
   const action = status === "disabled" ? "停用" : "恢復";
-  if (!confirm(`確定要${action}玩家「${docId}」嗎？`)) return;
+  if (!confirm(`確定要${action}鳥友帳號「${docId}」嗎？`)) return;
   try {
     const ref = db.collection("players").doc(docId);
     const snap = await ref.get();
@@ -5078,6 +5113,24 @@ async function setPlayerAccountStatus(docId, status) {
     await loadPlayerApplications();
     await loadPlayerList();
   } catch (err) { alert(action + "失敗：" + String(err.message || err)); }
+}
+async function deleteManagedAccount(player) {
+  if (!db || !(await requireAdminSession())) return;
+  const type = accountTypeOf(player);
+  const rawId = player.id || player.docId || "";
+  const visibleId = type === "game" && String(rawId).startsWith("__game__") ? decodeURIComponent(String(rawId).slice(8)) : rawId;
+  const warning = type === "game"
+    ? `確定刪除遊戲帳號「${visibleId}」嗎？\n\n這會刪除這個遊戲帳號的資料與分數，無法復原。`
+    : `確定刪除鳥友帳號「${visibleId}」的資料嗎？\n\n這會刪除 Firestore 內的鳥友資料，無法復原。若此鳥友已完成 Firebase 登入帳號設定，Authentication 帳號仍需到 Firebase Console 才能永久刪除。`;
+  if (!confirm(warning)) return;
+  try {
+    await db.collection("players").doc(player.docId).delete();
+    await loadPlayerApplications();
+    await loadPlayerList();
+    alert(type === "game" ? "遊戲帳號已刪除。" : "鳥友資料已刪除。");
+  } catch (err) {
+    alert("刪除失敗：" + String(err.message || err));
+  }
 }
 document.getElementById("refreshPlayerApplicationsBtn")?.addEventListener("click", async () => { await loadPlayerApplications(); await loadPlayerList(); });
 document.getElementById("refreshPlayerListBtn")?.addEventListener("click", loadPlayerList);
