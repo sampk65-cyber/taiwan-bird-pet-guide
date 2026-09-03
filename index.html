@@ -1543,11 +1543,14 @@
     <div class="portal-card">
       <h2 class="portal-title">鳥友影像館</h2>
       <p class="portal-subtitle">分享你的鳥兒照片，一起豐富台灣野鳥寵鳥圖鑑。加入影像館後，可分享與管理你拍攝的鳥類照片。</p>
+      <div id="birdfriendAuthStatusBar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:11px 14px;border-radius:14px;background:#f4f4f1;font-weight:800;color:#59625d;">
+        <span>鳥友帳號狀態</span><span id="birdfriendAuthStatusBadge" style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:#ece7df;color:#7a746b;">未認證</span>
+      </div>
       <div class="hint" id="birdfriendEntryGuide" style="margin:0 0 16px;line-height:1.8;font-size:16px;">
         <strong>第一次使用：</strong>請按「取得授權」，取得 6 位授權碼並設定自己的密碼。<br>
         <strong>已完成授權／已核准：</strong>請直接按「鳥友登入」，輸入帳號與密碼。
       </div>
-      <div class="portal-switch" style="grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="portal-switch" id="birdfriendAuthSwitch" style="grid-template-columns:1fr 1fr;gap:10px;">
         <button type="button" id="playerGrantTab">取得授權</button>
         <button type="button" id="playerLoginTab">鳥友登入</button>
       </div>
@@ -1563,10 +1566,10 @@
       </div>
       <div id="playerUploadPanel" style="display:none;margin-top:22px;padding-top:20px;border-top:1px solid rgba(46,92,68,.18);">
         <h3 style="margin:0 0 8px;font-size:22px;color:#2d5f49;">分享鳥兒照片</h3>
-        <div class="hint" style="margin-bottom:14px;">野生鳥類可依 1–15 項圖鑑條件建檔；15 項完整才會列入題目與總挑戰。未完整野生鳥與所有寵物萌照只在圖鑑模式瀏覽。</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-          <button type="button" class="hint-btn birdfriend-category-btn active" data-category="wild" style="padding:12px;">野生鳥類</button>
-          <button type="button" class="hint-btn birdfriend-category-btn" data-category="pet" style="padding:12px;">寵物萌照</button>
+        <div class="hint" style="margin-bottom:16px;">野生鳥類依 1–15 項圖鑑條件建檔；15 項完整才會列入題目與總挑戰。未完整野生鳥與所有寵鳥萌照只在圖鑑模式瀏覽。</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+          <button type="button" class="birdfriend-category-btn active" data-category="wild" style="min-height:84px;border:2px solid #3d825c;border-radius:18px;padding:14px 10px;background:#e8f5ec;color:#23613f;font-size:20px;font-weight:900;box-shadow:0 5px 14px rgba(45,95,73,.08);">野生鳥類<small style="display:block;font-size:12px;font-weight:700;margin-top:5px;opacity:.78;">1–15 項圖鑑資料</small></button>
+          <button type="button" class="birdfriend-category-btn" data-category="pet" style="min-height:84px;border:2px solid #d98ca7;border-radius:18px;padding:14px 10px;background:#fff0f5;color:#a8496a;font-size:20px;font-weight:900;box-shadow:0 5px 14px rgba(168,73,106,.08);">寵鳥萌照<small style="display:block;font-size:12px;font-weight:700;margin-top:5px;opacity:.78;">6 項寵鳥資料</small></button>
         </div>
         <input type="hidden" id="birdfriendEditingPhotoId" value="">
         <div id="birdfriendWildFields">
@@ -4827,8 +4830,24 @@ function setPlayerPortalStatus(message, type = "info") {
   el.className = "portal-status" + (message ? " show " + type : "");
 }
 
+function setBirdfriendAuthState(loggedIn) {
+  const badge = document.getElementById("birdfriendAuthStatusBadge");
+  if (!badge) return;
+  badge.textContent = loggedIn ? "已登入" : "未認證";
+  badge.style.background = loggedIn ? "#dff3e6" : "#ece7df";
+  badge.style.color = loggedIn ? "#2f7650" : "#7a746b";
+}
+
+function setBirdfriendAuthControlsVisible(visible) {
+  const guide = document.getElementById("birdfriendEntryGuide");
+  const sw = document.getElementById("birdfriendAuthSwitch");
+  if (guide) guide.style.display = visible ? "block" : "none";
+  if (sw) sw.style.display = visible ? "grid" : "none";
+}
+
 function setPlayerPortalMode(mode) {
   playerPortalMode = ["choice","grant","setup","login","edit"].includes(mode) ? mode : "choice";
+  if (playerPortalMode !== "edit") { setBirdfriendAuthState(false); setBirdfriendAuthControlsVisible(true); }
   if (playerPortalMode !== "edit") playerPortalSession = null;
   const grantTab = document.getElementById("playerGrantTab");
   const loginTab = document.getElementById("playerLoginTab");
@@ -4883,6 +4902,8 @@ async function createBirdfriendAuthUser(id, password) {
 }
 
 function showBirdfriendWaiting(id) {
+  setBirdfriendAuthState(false);
+  setBirdfriendAuthControlsVisible(true);
   playerPortalMode = "login";
   playerPortalSession = null;
   document.getElementById("portalPlayerId").disabled = false;
@@ -4900,6 +4921,8 @@ function showBirdfriendWaiting(id) {
 }
 
 function showPlayerProfile(id, data, user) {
+  setBirdfriendAuthState(true);
+  setBirdfriendAuthControlsVisible(false);
   playerPortalSession = { id, uid:user.uid };
   playerPortalMode = "edit";
   document.getElementById("portalEntryFields").style.display = "none";
@@ -4913,7 +4936,7 @@ function showPlayerProfile(id, data, user) {
   document.getElementById("playerPortalSubmit").textContent = "儲存我的資料";
   document.getElementById("playerGrantTab")?.classList.remove("active");
   document.getElementById("playerLoginTab")?.classList.add("active");
-  setPlayerPortalStatus("登入成功。請直接選擇『野生鳥類』或『寵物萌照』上傳照片。", "ok");
+  setPlayerPortalStatus("已登入。請選擇『野生鳥類』或『寵鳥萌照』開始上傳。", "ok");
   loadBirdfriendMyPhotos();
   setTimeout(() => document.getElementById("playerUploadPanel")?.scrollIntoView({behavior:"smooth", block:"start"}), 50);
 }
@@ -4922,7 +4945,9 @@ function openPlayerPortal() {
   hideHomeWelcome(); stopCaptureGame();
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-player-portal").classList.add("active");
-  setPlayerPortalMode("choice");
+  setBirdfriendAuthState(false);
+  setBirdfriendAuthControlsVisible(true);
+  setPlayerPortalMode("login");
   const pendingId = localStorage.getItem(PLAYER_PENDING_ID_KEY) || "";
   if (pendingId) document.getElementById("portalPlayerId").value = pendingId;
 }
@@ -4950,6 +4975,9 @@ function renderBirdfriendWildConditionFields() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "chk-btn";
+      btn.style.fontSize = "13px";
+      btn.style.lineHeight = "1.25";
+      btn.style.padding = "9px 6px";
       btn.dataset.value = opt;
       btn.textContent = opt;
       btn.onclick = () => btn.classList.toggle("selected");
@@ -4983,7 +5011,17 @@ function birdfriendWildCompletedCount(conditions) {
 }
 
 function syncBirdfriendCategoryUI() {
-  document.querySelectorAll(".birdfriend-category-btn").forEach(b => b.classList.toggle("active", b.dataset.category === birdfriendPhotoCategory));
+  document.querySelectorAll(".birdfriend-category-btn").forEach(b => {
+    const active = b.dataset.category === birdfriendPhotoCategory;
+    b.classList.toggle("active", active);
+    if (b.dataset.category === "wild") {
+      b.style.background = active ? "#d9f0e1" : "#f5fbf7";
+      b.style.boxShadow = active ? "0 0 0 3px rgba(61,130,92,.16),0 6px 16px rgba(45,95,73,.10)" : "none";
+    } else {
+      b.style.background = active ? "#ffe1eb" : "#fff6f9";
+      b.style.boxShadow = active ? "0 0 0 3px rgba(217,140,167,.18),0 6px 16px rgba(168,73,106,.10)" : "none";
+    }
+  });
   const wild = document.getElementById("birdfriendWildFields");
   const pet = document.getElementById("birdfriendPetFields");
   if (wild) wild.style.display = birdfriendPhotoCategory === "wild" ? "block" : "none";
@@ -5141,7 +5179,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
       talent:document.getElementById("birdfriendPetTalent").value.trim()
     };
     const missing = [["品種",petData.breed],["小名",petData.nickname],["性別",petData.sex],["食性",petData.diet],["年齡",petData.age],["特殊才華",petData.talent]].find(x=>!x[1]);
-    if (missing) { setBirdfriendPhotoStatus("寵物萌照請完成 6 項資料：缺少「" + missing[0] + "」。", "error"); return; }
+    if (missing) { setBirdfriendPhotoStatus("寵鳥萌照請完成 6 項資料：缺少「" + missing[0] + "」。", "error"); return; }
     payload={category:"pet", petData, photoName:petData.nickname, conditions:{}, completedCount:0, challengeEligible:false};
   }
 
@@ -5175,7 +5213,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     resetBirdfriendUploadForm();
     await loadCommunityBirdsFromFirestore();
     await loadBirdfriendMyPhotos();
-    setBirdfriendPhotoStatus(payload.category === "wild" ? (count===15 ? "儲存完成：15/15 完整，可列入題目與總挑戰。" : `儲存完成：目前 ${count}/15，僅在圖鑑模式瀏覽。`) : "寵物萌照儲存完成，只在圖鑑模式瀏覽。", "ok");
+    setBirdfriendPhotoStatus(payload.category === "wild" ? (count===15 ? "儲存完成：15/15 完整，可列入題目與總挑戰。" : `儲存完成：目前 ${count}/15，僅在圖鑑模式瀏覽。`) : "寵鳥萌照儲存完成，只在圖鑑模式瀏覽。", "ok");
   } catch (err) {
     setBirdfriendPhotoStatus("儲存失敗：" + String(err.message || err), "error");
   } finally { btn.disabled = false; btn.textContent = birdfriendEditingRecord ? "儲存修改" : "儲存照片與資料"; }
