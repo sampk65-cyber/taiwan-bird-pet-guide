@@ -1514,7 +1514,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（長按三秒）" title="長按 3 秒進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -3370,9 +3370,13 @@ function setAdminDataMode(mode) {
 }
 
 let editingBirdId = null;
+let editingBirdSource = "official";
+let editingCommunityDocId = null;
 
 function resetAdminForm() {
   editingBirdId = null;
+  editingBirdSource = "official";
+  editingCommunityDocId = null;
   document.getElementById("formSectionTitle").textContent = "新增資料";
   document.getElementById("saveBirdBtn").textContent = "存入圖鑑資料庫";
   document.getElementById("cancelEditBtn").style.display = "none";
@@ -3449,6 +3453,41 @@ function loadBirdForEdit(birdId) {
   document.getElementById("view-admin").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function loadCommunityBirdForEdit(sourceDocId) {
+  const bird = communityBirds.find(b => b.sourceDocId === sourceDocId && b.category === "wild");
+  if (!bird) return;
+  editingBirdId = bird.id;
+  editingBirdSource = "community";
+  editingCommunityDocId = sourceDocId;
+
+  document.getElementById("formSectionTitle").textContent = "編輯鳥友野生鳥：" + bird.name;
+  document.getElementById("saveBirdBtn").textContent = "更新這筆鳥友投稿";
+  document.getElementById("cancelEditBtn").style.display = "block";
+  document.getElementById("photoFieldLabel").textContent = "上傳照片(不選則保留鳥友原本照片)";
+  document.getElementById("f_name").value = bird.name || "";
+  document.getElementById("f_level").value = "4";
+  document.getElementById("f_speed").value = bird.speed || "";
+  document.getElementById("f_season").value = bird.season || "春";
+  document.getElementById("f_photographer").value = bird.photographer || "";
+  document.getElementById("f_story").value = bird.story || "";
+  document.getElementById("f_photo").value = "";
+  settingsBirdLocation = null;
+  syncSettingsLocationFields(null);
+
+  document.querySelectorAll(".chk-btn.selected").forEach(el => el.classList.remove("selected"));
+  document.querySelectorAll(".custom-input").forEach(el => el.value = "");
+  CONDITIONS.forEach(cond => {
+    const acceptedValues = (bird.conditions && bird.conditions[cond.key]) || [];
+    const customExtras = [];
+    acceptedValues.forEach(val => {
+      const btn = document.querySelector('.checkbox-grid[data-key="' + cond.key + '"] .chk-btn[data-value="' + CSS.escape(val) + '"]');
+      if (btn) btn.classList.add("selected"); else customExtras.push(val);
+    });
+    if (customExtras.length > 0) document.getElementById("custom_" + cond.key).value = customExtras.join(", ");
+  });
+  document.getElementById("view-admin").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 document.getElementById("cancelEditBtn").onclick = () => {
   resetAdminForm();
 };
@@ -3503,7 +3542,14 @@ document.getElementById("saveBirdBtn").onclick = async () => {
     try {
       const compressedBlob = await compressImageFile(photoFile, 1920, 0.9);
       saveBtn.textContent = "照片上傳中...";
-      const fileRef = fbStorageRef.child("birds/" + Date.now() + "_" + photoFile.name.replace(/\.[^.]+$/, "") + ".jpg");
+      let uploadPath = "birds/" + Date.now() + "_" + photoFile.name.replace(/\.[^.]+$/, "") + ".jpg";
+      if (editingBirdSource === "community" && editingCommunityDocId) {
+        const communityBird = communityBirds.find(b => b.sourceDocId === editingCommunityDocId);
+        const ownerUid = communityBird && communityBird.ownerUid;
+        if (!ownerUid) throw new Error("找不到鳥友投稿擁有者，無法更換照片");
+        uploadPath = "birdfriendPhotos/" + ownerUid + "/" + Date.now() + "_admin.jpg";
+      }
+      const fileRef = fbStorageRef.child(uploadPath);
       const snapshot = await fileRef.put(compressedBlob);
       photoUrl = await snapshot.ref.getDownloadURL();
     } catch (err) {
@@ -3520,21 +3566,40 @@ document.getElementById("saveBirdBtn").onclick = async () => {
   const season = document.getElementById("f_season").value;
 
   if (editingBirdId) {
-    const bird = birds.find(b => b.id === editingBirdId);
-    if (bird) {
-      bird.name = name;
-      bird.level = level;
-      bird.requiredCorrect = LEVEL_REQUIRED[level];
-      bird.speed = speed;
-      bird.season = season;
-      bird.conditions = conditions;
-      bird.story = story;
-      if (photoUrl) bird.photoUrl = photoUrl;
-      if (photographer) bird.photographer = photographer; else delete bird.photographer;
-      if (settingsBirdLocation) bird.location = JSON.parse(JSON.stringify(settingsBirdLocation));
-      else delete bird.location;
-      bird.uploadedAt = Date.now();
-      await saveBirdToFirestore(bird);
+    if (editingBirdSource === "community" && editingCommunityDocId) {
+      const original = communityBirds.find(b => b.sourceDocId === editingCommunityDocId);
+      if (!original) { alert("找不到這筆鳥友投稿，請重新整理後再試。"); return; }
+      const completedCount = CONDITIONS.filter(cond => Array.isArray(conditions[cond.key]) && conditions[cond.key].length > 0).length;
+      const updateData = {
+        wildName: name,
+        photoName: name,
+        conditions,
+        completedCount,
+        challengeEligible: completedCount === 15,
+        note: story,
+        photographer: photographer || original.photographer || "鳥友投稿",
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (photoUrl) updateData.photoUrl = photoUrl;
+      await db.collection("birdfriendPhotos").doc(editingCommunityDocId).set(updateData, { merge:true });
+      await loadCommunityBirdsFromFirestore();
+    } else {
+      const bird = birds.find(b => b.id === editingBirdId);
+      if (bird) {
+        bird.name = name;
+        bird.level = level;
+        bird.requiredCorrect = LEVEL_REQUIRED[level];
+        bird.speed = speed;
+        bird.season = season;
+        bird.conditions = conditions;
+        bird.story = story;
+        if (photoUrl) bird.photoUrl = photoUrl;
+        if (photographer) bird.photographer = photographer; else delete bird.photographer;
+        if (settingsBirdLocation) bird.location = JSON.parse(JSON.stringify(settingsBirdLocation));
+        else delete bird.location;
+        bird.uploadedAt = Date.now();
+        await saveBirdToFirestore(bird);
+      }
     }
   } else {
     const newBird = {
@@ -3757,13 +3822,29 @@ function renderAdminList() {
     row.innerHTML = `<span><span class="idx">No. ${String(i + 1).padStart(3, "0")}</span>${b.name}</span><span class="tag">LV.${b.level} ・ 需答對 ${b.requiredCorrect} 項</span>`;
     row.onclick = () => {
       loadBirdForEdit(b.id);
+      editingBirdSource = "official";
+      editingCommunityDocId = null;
       setAdminDataMode("add");
       const addBtn = document.getElementById("adminAddModeBtn");
       const editBtn = document.getElementById("adminEditModeBtn");
-      if (addBtn && editBtn) {
-        addBtn.classList.remove("active");
-        editBtn.classList.add("active");
-      }
+      if (addBtn && editBtn) { addBtn.classList.remove("active"); editBtn.classList.add("active"); }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    list.appendChild(row);
+  });
+
+  const wildCommunity = communityBirds.filter(b => b.category === "wild");
+  wildCommunity.forEach((b) => {
+    const completed = CONDITIONS.filter(cond => Array.isArray((b.conditions || {})[cond.key]) && (b.conditions || {})[cond.key].length > 0).length;
+    const row = document.createElement("div");
+    row.className = "list-row list-row-clickable";
+    row.innerHTML = `<span><span class="idx">鳥友投稿</span>${b.name}</span><span class="tag">${completed}/15${completed === 15 ? " ・ 可列入挑戰" : " ・ 僅圖鑑"}</span>`;
+    row.onclick = () => {
+      loadCommunityBirdForEdit(b.sourceDocId);
+      setAdminDataMode("add");
+      const addBtn = document.getElementById("adminAddModeBtn");
+      const editBtn = document.getElementById("adminEditModeBtn");
+      if (addBtn && editBtn) { addBtn.classList.remove("active"); editBtn.classList.add("active"); }
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
     list.appendChild(row);
@@ -4534,7 +4615,7 @@ function speakGreeting(text) {
   } catch (e) { /* 語音不可用時忽略 */ }
 }
 
-function enterSettings() {
+async function enterSettings() {
   if (!settingsUnlocked || !currentAdminUser) return;
   hideHomeWelcome();
   stopCaptureGame();
@@ -4548,6 +4629,7 @@ function enterSettings() {
   document.getElementById("settingsSubnav").style.display = "flex";
   document.querySelectorAll("#settingsSubnav .tab-btn[data-view]").forEach(b => b.classList.remove("active"));
   document.querySelector('#settingsSubnav .tab-btn[data-view="admin"]').classList.add("active");
+  try { await loadCommunityBirdsFromFirestore(); renderAdminList(); } catch (_) {}
   loadPlayerApplications();
   loadPlayerList();
   speakGreeting("管理者你好，要管理鳥類、族群，還是審核玩家？");
@@ -4621,25 +4703,28 @@ async function openSettingsLogin() {
   setTimeout(() => (emailInput?.value ? passwordInput : emailInput)?.focus(), 0);
 }
 
-(function initHiddenAdminLongPress(){
+(function initHiddenAdminFiveTap(){
   const btn = document.getElementById("settingsBtn");
   if (!btn) return;
-  let timer = null;
-  let fired = false;
-  const clearHold = () => { if (timer) clearTimeout(timer); timer = null; };
-  const beginHold = (e) => {
-    if (e && e.button != null && e.button !== 0) return;
-    fired = false;
-    clearHold();
-    timer = setTimeout(() => {
-      fired = true;
-      try { navigator.vibrate?.(50); } catch (_) {}
+  let tapCount = 0;
+  let lastTapAt = 0;
+  let resetTimer = null;
+  const reset = () => { tapCount = 0; lastTapAt = 0; if (resetTimer) clearTimeout(resetTimer); resetTimer = null; };
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = Date.now();
+    if (lastTapAt && now - lastTapAt > 1100) tapCount = 0;
+    lastTapAt = now;
+    tapCount += 1;
+    try { navigator.vibrate?.(tapCount >= 5 ? 60 : 15); } catch (_) {}
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(reset, 1400);
+    if (tapCount >= 5) {
+      reset();
       openSettingsLogin();
-    }, 3000);
-  };
-  btn.addEventListener("pointerdown", beginHold);
-  ["pointerup","pointercancel","pointerleave"].forEach(ev => btn.addEventListener(ev, clearHold));
-  btn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); });
+    }
+  });
   btn.addEventListener("contextmenu", (e) => e.preventDefault());
 })();
 
