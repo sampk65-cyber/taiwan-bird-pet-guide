@@ -1466,7 +1466,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.5</p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.6</p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1524,7 +1524,7 @@
       <input type="text" id="playerIdInput" placeholder="例如:小明、座號3號">
       <div class="field-error" id="loginError" style="display:none;">請輸入 ID</div>
       <input type="password" minlength="6" maxlength="64" id="playerPinInput" autocomplete="current-password" placeholder="玩家密碼（舊帳號可用原通行碼）" style="margin-top:10px;">
-      <div class="hint" style="margin:4px 0 0;">想分享鳥照嗎？加入「鳥友影像館」後即可上傳與管理自己的照片；管理員核准後完成六位認證碼驗證，再使用帳號密碼登入。</div>
+      <div class="hint" style="margin:4px 0 0;">遊戲開始只需要遊戲 ID＋4 位通行碼。想分享鳥照，請從首頁進入「鳥友影像館」；首次登入會自動取得授權碼並設定密碼，管理員核准後即可上傳照片。</div>
       <label style="display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:14px;font-weight:700;color:#355;">
         <input type="checkbox" id="rememberChallengeLogin" checked style="width:18px;height:18px;">
         記住登入，下次遊戲開始直接進入
@@ -1544,14 +1544,15 @@
       <h2 class="portal-title">鳥友影像館</h2>
       <p class="portal-subtitle">分享你的鳥兒照片，一起豐富台灣野鳥寵鳥圖鑑。加入影像館後，可分享與管理你拍攝的鳥類照片。</p>
       <div class="portal-switch">
-        <button type="button" class="active" id="playerLoginTab">鳥友登入</button>
-        <button type="button" id="playerApplyTab">加入影像館</button>
+        <button type="button" class="active" id="playerLoginTab" style="width:100%;">鳥友登入</button>
+        <button type="button" id="playerApplyTab" style="display:none;">首次註冊</button>
       </div>
-      <div class="field"><label>帳號</label><input id="portalPlayerId" type="text" maxlength="24" autocomplete="username" placeholder="輸入鳥友帳號"></div>
-      <div class="field" id="portalPasswordField"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" placeholder="至少 6 位密碼"></div>
+      <div class="hint" style="margin:0 0 16px;line-height:1.7;">首次使用：只要輸入想使用的鳥友帳號並按「鳥友登入」，系統會自動產生 6 位授權碼；完成密碼設定後等待管理員核准。已核准鳥友直接輸入帳號密碼登入。</div>
+      <div class="field"><label>帳號</label><input id="portalPlayerId" type="text" maxlength="24" autocomplete="username" placeholder="首次使用先輸入新帳號"></div>
+      <div class="field" id="portalPasswordField"><label>密碼</label><input id="portalPlayerPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" placeholder="已有帳號請輸入密碼；首次可先留空"></div>
       <div id="playerCodePanel" style="display:none;">
         <div class="portal-status show ok" id="issuedPlayerCode" style="font-size:22px;font-weight:900;letter-spacing:5px;text-align:center;"></div>
-        <div class="hint">這是管理員核准後發給你的六位一次性認證碼。請在下方再次輸入，完成後立即失效。</div>
+        <div class="hint">這是首次建立鳥友帳號時由系統自動產生的 6 位授權碼。請在下方再次輸入並設定自己的密碼；完成後等待管理員核准。</div>
         <div class="field"><label>六位一次性認證碼</label><input id="portalSetupCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="輸入上方六位數字"></div>
         <div class="field"><label>設定永久密碼</label><input id="portalNewPassword" type="password" minlength="6" maxlength="64" autocomplete="new-password" placeholder="至少 6 位密碼"></div>
       </div>
@@ -1559,6 +1560,33 @@
         <div class="field"><label>顯示名稱</label><input id="portalDisplayName" type="text" maxlength="24" placeholder="遊戲中顯示的名稱"></div>
         <div class="field"><label>最喜歡的鳥</label><input id="portalFavoriteBird" type="text" maxlength="30" placeholder="例如：五色鳥"></div>
         <div class="field"><label>自我介紹</label><textarea id="portalBio" maxlength="160" rows="4" placeholder="最多 160 字"></textarea></div>
+      </div>
+      <div id="playerUploadPanel" style="display:none;margin-top:22px;padding-top:20px;border-top:1px solid rgba(46,92,68,.18);">
+        <h3 style="margin:0 0 8px;font-size:22px;color:#2d5f49;">分享鳥兒照片</h3>
+        <div class="hint" style="margin-bottom:14px;">野生鳥類可依 1–15 項圖鑑條件建檔；15 項完整才會列入題目與總挑戰。未完整野生鳥與所有寵物萌照只在圖鑑模式瀏覽。</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <button type="button" class="hint-btn birdfriend-category-btn active" data-category="wild" style="padding:12px;">野生鳥類</button>
+          <button type="button" class="hint-btn birdfriend-category-btn" data-category="pet" style="padding:12px;">寵物萌照</button>
+        </div>
+        <input type="hidden" id="birdfriendEditingPhotoId" value="">
+        <div id="birdfriendWildFields">
+          <div class="field"><label>鳥名</label><input id="birdfriendWildName" type="text" maxlength="40" placeholder="例如：五色鳥"></div>
+          <div id="birdfriendWildConditionFields"></div>
+        </div>
+        <div id="birdfriendPetFields" style="display:none;">
+          <div class="field"><label>品種</label><input id="birdfriendPetBreed" type="text" maxlength="40" placeholder="例如：玄鳳鸚鵡"></div>
+          <div class="field"><label>小名</label><input id="birdfriendPetNickname" type="text" maxlength="40" placeholder="例如：豆豆"></div>
+          <div class="field"><label>性別</label><select id="birdfriendPetSex"><option value="">請選擇</option><option>公</option><option>母</option><option>未知</option></select></div>
+          <div class="field"><label>食性</label><input id="birdfriendPetDiet" type="text" maxlength="60" placeholder="例如：種子、蔬果、配方飼料"></div>
+          <div class="field"><label>年齡</label><input id="birdfriendPetAge" type="text" maxlength="30" placeholder="例如：2 歲"></div>
+          <div class="field"><label>特殊才華</label><textarea id="birdfriendPetTalent" maxlength="180" rows="3" placeholder="例如：會說你好、會唱歌、會自己回籠"></textarea></div>
+        </div>
+        <div class="field"><label>選擇照片</label><input id="birdfriendPhotoFile" type="file" accept="image/*"></div>
+        <div class="field"><label>補充說明（選填）</label><textarea id="birdfriendPhotoNote" maxlength="180" rows="3" placeholder="拍攝地點、日期或想分享的故事"></textarea></div>
+        <button class="save-btn" type="button" id="birdfriendPhotoUploadBtn">儲存照片與資料</button>
+        <button class="hint-btn" type="button" id="birdfriendCancelEditBtn" style="display:none;width:100%;margin-top:8px;padding:11px;">取消修改</button>
+        <div class="portal-status" id="birdfriendPhotoStatus"></div>
+        <div id="birdfriendMyPhotos" style="display:grid;gap:10px;margin-top:16px;"></div>
       </div>
       <div class="portal-status" id="playerPortalStatus"></div>
       <button class="save-btn" type="button" id="playerPortalSubmit">登入</button>
@@ -1930,6 +1958,49 @@ const CONDITIONS = [
 
 const LEVEL_REQUIRED = { 1: 3, 2: 6, 3: 10, 4: 15 };
 
+// V4.6 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
+let communityBirds = [];
+function isCommunityWildComplete(data) {
+  if (!data || data.category !== "wild") return false;
+  const c = data.conditions || {};
+  return CONDITIONS.every(cond => Array.isArray(c[cond.key]) && c[cond.key].length > 0);
+}
+function communityRecordToBird(id, data) {
+  const complete = isCommunityWildComplete(data);
+  const isPet = data.category === "pet";
+  const pet = data.petData || {};
+  return {
+    id: "birdfriend__" + id,
+    sourceDocId: id,
+    source: "birdfriend",
+    ownerUid: data.ownerUid || "",
+    category: data.category || "wild",
+    challengeEligible: !isPet && complete,
+    name: isPet ? (pet.nickname || pet.breed || "寵物萌照") : (data.wildName || data.photoName || "未命名野生鳥"),
+    photoUrl: data.photoUrl || "",
+    photographer: data.displayName || data.playerId || "鳥友投稿",
+    story: data.note || (isPet ? [pet.breed, pet.sex, pet.age, pet.talent].filter(Boolean).join(" · ") : ""),
+    level: 1,
+    requiredCorrect: complete ? 15 : 0,
+    speed: 80,
+    season: "春",
+    conditions: data.conditions || {},
+    petData: pet,
+    uploadedAt: data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : null
+  };
+}
+function getGalleryBirds() { return birds.concat(communityBirds); }
+function getChallengeBirds() { return birds.concat(communityBirds.filter(b => b.challengeEligible === true)); }
+function findAnyBirdById(id) { return getGalleryBirds().find(b => b.id === id) || null; }
+async function loadCommunityBirdsFromFirestore() {
+  communityBirds = [];
+  if (!FIREBASE_ENABLED || !db) return;
+  try {
+    const snap = await db.collection("birdfriendPhotos").get();
+    snap.forEach(doc => communityBirds.push(communityRecordToBird(doc.id, doc.data())));
+  } catch (err) { console.warn("鳥友影像館資料讀取失敗", err); }
+}
+
 // 完成分數:依這隻鳥「需答對題數」落在哪個區間決定一次性獎勵分數
 // 1-3題→1分 / 4-6題→2分 / 7-9題→3分 / 10-12題→5分 / 13-15題→7分
 function weightForRequiredCorrect(rc) {
@@ -1942,7 +2013,7 @@ function weightForRequiredCorrect(rc) {
 let totalScore = 0;
 
 function getMaxScore() {
-  return birds.reduce((sum, b) => sum + weightForRequiredCorrect(b.requiredCorrect), 0);
+  return getChallengeBirds().reduce((sum, b) => sum + weightForRequiredCorrect(b.requiredCorrect), 0);
 }
 
 function updateScoreBar() {
@@ -2279,7 +2350,8 @@ function renderBirdGrid() {
     ? normalizeBirdSearchText(searchInput.value)
     : "";
 
-  const visibleBirds = birds
+  const challengeBirds = GAME_MODE === "challenge" ? getChallengeBirds() : birds;
+  const visibleBirds = challengeBirds
     .map((b, originalIndex) => ({ b, originalIndex }))
     .filter(({ b }) => birdMatchesSearch(b, keyword));
 
@@ -2298,7 +2370,7 @@ function renderBirdGrid() {
       <div class="index">No. ${String(originalIndex + 1).padStart(3, "0")}</div>
       <div class="thumb">${thumbInner}</div>
       <div class="name">${b.name}</div>
-      <div class="level">${done ? "已解鎖" : "LV." + b.level + " " + LEVEL_LABEL[b.level]}</div>
+      <div class="level">${done ? "已解鎖" : (b.source === "birdfriend" ? "鳥友投稿 · 15項完整" : "LV." + b.level + " " + LEVEL_LABEL[b.level])}</div>
     `;
     tile.onclick = () => openQuiz(b.id);
     grid.appendChild(tile);
@@ -2637,7 +2709,7 @@ function buildWingedEggBadgeSVG(variantValue) {
   const wingTint = `hsl(${((hue + 196) % 360).toFixed(2)} 58% 93%)`;
   const wingEdge = `hsl(${((hue + 205) % 360).toFixed(2)} 48% 64%)`;
 
-  const bird = currentBirdId ? birds.find(b => b.id === currentBirdId) : null;
+  const bird = currentBirdId ? findAnyBirdById(currentBirdId) : null;
   const level = Math.max(1, Math.min(4, Number(bird?.level || 1)));
 
   const crownColors = {
@@ -2857,7 +2929,7 @@ function moveReticleTo(clientX, clientY) {
 }
 
 function attemptCapture() {
-  const bird = birds.find(b => b.id === currentBirdId);
+  const bird = findAnyBirdById(currentBirdId);
   if (!bird || captureAnimId === null) return;
 
   playShutterClick();
@@ -2922,8 +2994,8 @@ viewfinderEl.addEventListener("pointerup", () => {
 viewfinderEl.addEventListener("pointercancel", () => { dragging = false; });
 
 function renderQuiz() {
-  const bird = birds.find(b => b.id === currentBirdId);
-  document.getElementById("quizLevelTag").textContent = (GAME_MODE === "explain" ? "遊戲解說 · " : "正式挑戰 · ") + "LV." + bird.level + " " + LEVEL_LABEL[bird.level];
+  const bird = findAnyBirdById(currentBirdId);
+  document.getElementById("quizLevelTag").textContent = bird.source === "birdfriend" ? "鳥友投稿 · 15項完整" : ((GAME_MODE === "explain" ? "遊戲解說 · " : "正式挑戰 · ") + "LV." + bird.level + " " + LEVEL_LABEL[bird.level]);
   document.getElementById("requiredCount").textContent = bird.requiredCorrect;
 
   const elevationValue = Array.isArray(bird.conditions.elevation) ? bird.conditions.elevation[0] : bird.conditions.elevation;
@@ -3703,7 +3775,7 @@ function activateMode(mode) {
 
 function buildBirdsDoneMap() {
   const map = {};
-  birds.forEach(b => {
+  getChallengeBirds().forEach(b => {
     if (currentAnswered[b.id + "_done"] === true) map[b.id] = true;
   });
   return map;
@@ -4086,7 +4158,7 @@ function showRandomQuizSetup() {
 function generateRandomQuiz(n) {
   const pool = [];
   const activeGroup = selectedGroupId ? birdGroups.find(g => g.id === selectedGroupId) : null;
-  const sourceBirds = activeGroup ? birds.filter(b => (activeGroup.birdIds || []).includes(b.id)) : birds;
+  const sourceBirds = activeGroup ? birds.filter(b => (activeGroup.birdIds || []).includes(b.id)) : getChallengeBirds();
   sourceBirds.forEach(b => {
     CONDITIONS.forEach(cond => {
       const accepted = b.conditions[cond.key];
@@ -4216,7 +4288,7 @@ function showGallery() {
 function renderGalleryGrid() {
   const grid = document.getElementById("galleryGrid");
   grid.innerHTML = "";
-  birds.forEach((b, i) => {
+  getGalleryBirds().forEach((b, i) => {
     const tile = document.createElement("div");
     tile.className = "bird-tile";
     const galleryCredit = b.photographer ? `<div class="photo-credit">${b.photographer}</div>` : "";
@@ -4227,7 +4299,7 @@ function renderGalleryGrid() {
       <div class="index">No. ${String(i + 1).padStart(3, "0")}</div>
       <div class="thumb">${thumbInner}</div>
       <div class="name">${b.name}</div>
-      <div class="level">LV.${b.level} ${LEVEL_LABEL[b.level]}</div>
+      <div class="level">${b.source === "birdfriend" ? (b.category === "pet" ? "寵物萌照 · 僅圖鑑" : (b.challengeEligible ? "鳥友野生鳥 · 可挑戰" : "鳥友野生鳥 · 僅圖鑑")) : ("LV." + b.level + " " + LEVEL_LABEL[b.level])}</div>
     `;
     tile.onclick = () => showGalleryDetail(b.id);
     grid.appendChild(tile);
@@ -4235,7 +4307,7 @@ function renderGalleryGrid() {
 }
 
 function showGalleryDetail(birdId) {
-  const bird = birds.find(b => b.id === birdId);
+  const bird = findAnyBirdById(birdId);
   if (!bird) return;
   document.getElementById("galleryListPanel").style.display = "none";
   document.getElementById("galleryDetailPanel").style.display = "block";
@@ -4253,13 +4325,24 @@ function showGalleryDetail(birdId) {
 
   const listEl = document.getElementById("galleryConditionList");
   listEl.innerHTML = "";
-  CONDITIONS.forEach(cond => {
-    const values = (bird.conditions[cond.key] || []).join("、");
-    const row = document.createElement("div");
-    row.className = "gallery-condition-row";
-    row.innerHTML = `<span class="gc-label">${cond.label}</span><span class="gc-value">${values || "-"}</span>`;
-    listEl.appendChild(row);
-  });
+  if (bird.source === "birdfriend" && bird.category === "pet") {
+    const pet = bird.petData || {};
+    [["品種",pet.breed],["小名",pet.nickname],["性別",pet.sex],["食性",pet.diet],["年齡",pet.age],["特殊才華",pet.talent]].forEach(([label,value]) => {
+      const row = document.createElement("div");
+      row.className = "gallery-condition-row";
+      const l=document.createElement("span"); l.className="gc-label"; l.textContent=label;
+      const v=document.createElement("span"); v.className="gc-value"; v.textContent=value || "-";
+      row.append(l,v); listEl.appendChild(row);
+    });
+  } else {
+    CONDITIONS.forEach((cond,index) => {
+      const values = (bird.conditions[cond.key] || []).join("、");
+      const row = document.createElement("div");
+      row.className = "gallery-condition-row";
+      row.innerHTML = `<span class="gc-label">${bird.source === "birdfriend" ? ((index+1) + ". ") : ""}${cond.label}</span><span class="gc-value">${values || "-"}</span>`;
+      listEl.appendChild(row);
+    });
+  }
 
   const locationRow = document.createElement("div");
   locationRow.className = "gallery-condition-row";
@@ -4739,30 +4822,49 @@ function setPlayerPortalStatus(message, type = "info") {
 }
 
 function setPlayerPortalMode(mode) {
-  playerPortalMode = mode;
-  playerPortalSession = null;
-  const isApply = mode === "apply";
-  document.getElementById("playerLoginTab").classList.toggle("active", mode === "login");
-  document.getElementById("playerApplyTab").classList.toggle("active", isApply);
-  document.getElementById("playerProfileFields").style.display = isApply ? "block" : "none";
-  document.getElementById("portalPasswordField").style.display = isApply ? "none" : "block";
-  document.getElementById("playerCodePanel").style.display = "none";
-  document.getElementById("playerPortalSubmit").textContent = isApply ? "送出申請" : "登入／取得認證碼";
-  document.getElementById("portalPlayerId").disabled = false;
-  document.getElementById("portalPlayerPin").value = "";
+  playerPortalMode = mode === "setup" || mode === "edit" ? mode : "login";
+  if (playerPortalMode !== "edit") playerPortalSession = null;
+  document.getElementById("playerLoginTab").classList.add("active");
+  document.getElementById("playerProfileFields").style.display = playerPortalMode === "edit" ? "block" : "none";
+  document.getElementById("playerUploadPanel").style.display = playerPortalMode === "edit" ? "block" : "none";
+  document.getElementById("portalPasswordField").style.display = playerPortalMode === "login" ? "block" : "none";
+  document.getElementById("playerCodePanel").style.display = playerPortalMode === "setup" ? "block" : "none";
+  document.getElementById("playerPortalSubmit").textContent = playerPortalMode === "setup" ? "驗證並設定密碼" : (playerPortalMode === "edit" ? "儲存我的資料" : "鳥友登入");
+  document.getElementById("portalPlayerId").disabled = playerPortalMode !== "login";
+  if (playerPortalMode === "login") document.getElementById("portalPlayerPin").value = "";
   setPlayerPortalStatus("");
 }
 
-async function ensureAnonymousApplicant() {
-  if (!fbAuth) throw new Error("Firebase Authentication 未連線");
-  let user = fbAuth.currentUser;
-  if (user && !user.isAnonymous) {
-    await fbAuth.signOut();
-    user = null;
+function birdfriendNewCode() {
+  const random = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
+  return String(random).padStart(6, "0");
+}
+
+async function createBirdfriendAuthUser(id, password) {
+  const email = await playerEmailForId(id);
+  const appName = "birdfriend-setup-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  const secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, appName);
+  const secondaryAuth = secondaryApp.auth();
+  try {
+    const created = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    return created.user.uid;
+  } finally {
+    try { await secondaryAuth.signOut(); } catch (_) {}
+    try { await secondaryApp.delete(); } catch (_) {}
   }
-  await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-  if (!user) user = (await fbAuth.signInAnonymously()).user;
-  return user;
+}
+
+function showBirdfriendWaiting(id) {
+  playerPortalMode = "login";
+  playerPortalSession = null;
+  document.getElementById("portalPlayerId").disabled = false;
+  document.getElementById("portalPlayerId").value = id;
+  document.getElementById("portalPasswordField").style.display = "block";
+  document.getElementById("playerCodePanel").style.display = "none";
+  document.getElementById("playerProfileFields").style.display = "none";
+  document.getElementById("playerUploadPanel").style.display = "none";
+  document.getElementById("playerPortalSubmit").textContent = "鳥友登入";
+  setPlayerPortalStatus("帳號與密碼已建立，現在等待管理員核准。核准後直接用同一組帳號密碼登入鳥友影像館。", "ok");
 }
 
 function showPlayerProfile(id, data, user) {
@@ -4772,11 +4874,13 @@ function showPlayerProfile(id, data, user) {
   document.getElementById("portalPasswordField").style.display = "none";
   document.getElementById("playerCodePanel").style.display = "none";
   document.getElementById("playerProfileFields").style.display = "block";
+  document.getElementById("playerUploadPanel").style.display = "block";
   document.getElementById("portalDisplayName").value = data.displayName || data.id || id;
   document.getElementById("portalFavoriteBird").value = data.favoriteBird || "";
   document.getElementById("portalBio").value = data.bio || "";
   document.getElementById("playerPortalSubmit").textContent = "儲存我的資料";
-  setPlayerPortalStatus("登入成功。你只能編輯自己的個人資料。", "ok");
+  setPlayerPortalStatus("登入成功。你已通過管理員核准，可以上傳野生鳥類或寵物萌照。", "ok");
+  loadBirdfriendMyPhotos();
 }
 
 function openPlayerPortal() {
@@ -4790,7 +4894,259 @@ function openPlayerPortal() {
 document.getElementById("playerPortalBtn")?.addEventListener("click", openPlayerPortal);
 document.getElementById("playerPortalBackBtn")?.addEventListener("click", () => backToHome());
 document.getElementById("playerLoginTab")?.addEventListener("click", () => setPlayerPortalMode("login"));
-document.getElementById("playerApplyTab")?.addEventListener("click", () => setPlayerPortalMode("apply"));
+
+let birdfriendPhotoCategory = "wild";
+let birdfriendEditingRecord = null;
+
+function renderBirdfriendWildConditionFields() {
+  const box = document.getElementById("birdfriendWildConditionFields");
+  if (!box) return;
+  box.innerHTML = "";
+  CONDITIONS.forEach((cond, index) => {
+    const field = document.createElement("div");
+    field.className = "field";
+    const label = document.createElement("label");
+    label.textContent = (index + 1) + ". " + cond.label + "（可複選）";
+    const grid = document.createElement("div");
+    grid.className = "checkbox-grid birdfriend-condition-grid";
+    grid.dataset.key = cond.key;
+    cond.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chk-btn";
+      btn.dataset.value = opt;
+      btn.textContent = opt;
+      btn.onclick = () => btn.classList.toggle("selected");
+      grid.appendChild(btn);
+    });
+    const custom = document.createElement("input");
+    custom.type = "text";
+    custom.className = "birdfriend-custom-condition";
+    custom.dataset.key = cond.key;
+    custom.placeholder = "其他答案可自行輸入，多個請用逗號分開";
+    field.append(label, grid, custom);
+    box.appendChild(field);
+  });
+}
+
+function collectBirdfriendWildConditions() {
+  const conditions = {};
+  CONDITIONS.forEach(cond => {
+    const vals = Array.from(document.querySelectorAll('.birdfriend-condition-grid[data-key="' + cond.key + '"] .chk-btn.selected')).map(el => el.dataset.value);
+    const custom = document.querySelector('.birdfriend-custom-condition[data-key="' + cond.key + '"]');
+    if (custom && custom.value.trim()) {
+      custom.value.split(/[,，]/).map(v => v.trim()).filter(Boolean).forEach(v => { if (!vals.includes(v)) vals.push(v); });
+    }
+    conditions[cond.key] = vals;
+  });
+  return conditions;
+}
+
+function birdfriendWildCompletedCount(conditions) {
+  return CONDITIONS.filter(cond => Array.isArray(conditions?.[cond.key]) && conditions[cond.key].length > 0).length;
+}
+
+function syncBirdfriendCategoryUI() {
+  document.querySelectorAll(".birdfriend-category-btn").forEach(b => b.classList.toggle("active", b.dataset.category === birdfriendPhotoCategory));
+  const wild = document.getElementById("birdfriendWildFields");
+  const pet = document.getElementById("birdfriendPetFields");
+  if (wild) wild.style.display = birdfriendPhotoCategory === "wild" ? "block" : "none";
+  if (pet) pet.style.display = birdfriendPhotoCategory === "pet" ? "block" : "none";
+}
+
+document.querySelectorAll(".birdfriend-category-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (birdfriendEditingRecord && birdfriendEditingRecord.category !== btn.dataset.category) {
+      if (!confirm("切換類型會取消目前的修改，確定要切換嗎？")) return;
+      resetBirdfriendUploadForm();
+    }
+    birdfriendPhotoCategory = btn.dataset.category === "pet" ? "pet" : "wild";
+    syncBirdfriendCategoryUI();
+  });
+});
+
+function setBirdfriendPhotoStatus(message, type="info") {
+  const el = document.getElementById("birdfriendPhotoStatus");
+  if (!el) return;
+  el.textContent = message || "";
+  el.className = "portal-status" + (message ? " show " + type : "");
+}
+
+function resetBirdfriendUploadForm() {
+  birdfriendEditingRecord = null;
+  const editId = document.getElementById("birdfriendEditingPhotoId"); if (editId) editId.value = "";
+  ["birdfriendWildName","birdfriendPetBreed","birdfriendPetNickname","birdfriendPetDiet","birdfriendPetAge","birdfriendPetTalent","birdfriendPhotoNote"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
+  const sex=document.getElementById("birdfriendPetSex"); if(sex) sex.value="";
+  const file=document.getElementById("birdfriendPhotoFile"); if(file) file.value="";
+  document.querySelectorAll(".birdfriend-condition-grid .chk-btn.selected").forEach(el => el.classList.remove("selected"));
+  document.querySelectorAll(".birdfriend-custom-condition").forEach(el => el.value="");
+  const btn=document.getElementById("birdfriendPhotoUploadBtn"); if(btn) btn.textContent="儲存照片與資料";
+  const cancel=document.getElementById("birdfriendCancelEditBtn"); if(cancel) cancel.style.display="none";
+  setBirdfriendPhotoStatus("");
+}
+
+function fillBirdfriendEditForm(item) {
+  birdfriendEditingRecord = item;
+  birdfriendPhotoCategory = item.category === "pet" ? "pet" : "wild";
+  syncBirdfriendCategoryUI();
+  const idEl=document.getElementById("birdfriendEditingPhotoId"); if(idEl) idEl.value=item.id;
+  document.getElementById("birdfriendPhotoNote").value = item.note || "";
+  if (birdfriendPhotoCategory === "wild") {
+    document.getElementById("birdfriendWildName").value = item.wildName || item.photoName || "";
+    document.querySelectorAll(".birdfriend-condition-grid .chk-btn.selected").forEach(el => el.classList.remove("selected"));
+    document.querySelectorAll(".birdfriend-custom-condition").forEach(el => el.value="");
+    CONDITIONS.forEach(cond => {
+      const values = item.conditions?.[cond.key] || [];
+      const extras=[];
+      values.forEach(v => {
+        const btn = Array.from(document.querySelectorAll('.birdfriend-condition-grid[data-key="' + cond.key + '"] .chk-btn')).find(b => b.dataset.value === v);
+        if (btn) btn.classList.add("selected"); else extras.push(v);
+      });
+      const custom=document.querySelector('.birdfriend-custom-condition[data-key="' + cond.key + '"]'); if(custom) custom.value=extras.join(", ");
+    });
+  } else {
+    const pet=item.petData || {};
+    document.getElementById("birdfriendPetBreed").value=pet.breed || "";
+    document.getElementById("birdfriendPetNickname").value=pet.nickname || "";
+    document.getElementById("birdfriendPetSex").value=pet.sex || "";
+    document.getElementById("birdfriendPetDiet").value=pet.diet || "";
+    document.getElementById("birdfriendPetAge").value=pet.age || "";
+    document.getElementById("birdfriendPetTalent").value=pet.talent || "";
+  }
+  document.getElementById("birdfriendPhotoUploadBtn").textContent="儲存修改";
+  document.getElementById("birdfriendCancelEditBtn").style.display="block";
+  setBirdfriendPhotoStatus("正在修改自己的投稿；不選新照片會保留原照片。", "info");
+  document.getElementById("playerUploadPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+document.getElementById("birdfriendCancelEditBtn")?.addEventListener("click", resetBirdfriendUploadForm);
+
+async function assertOwnBirdfriendRecord(docId) {
+  if (!playerPortalSession || !fbAuth?.currentUser || fbAuth.currentUser.uid !== playerPortalSession.uid) throw new Error("登入狀態已失效，請重新登入");
+  const ref=db.collection("birdfriendPhotos").doc(docId);
+  const snap=await ref.get();
+  if (!snap.exists) throw new Error("找不到這筆照片資料");
+  const data=snap.data();
+  if (data.ownerUid !== playerPortalSession.uid) throw new Error("你只能修改自己的照片與資料");
+  return {ref,data};
+}
+
+async function deleteBirdfriendOwnPhoto(item) {
+  if (!confirm("確定刪除這筆自己的照片與資料嗎？刪除後無法復原。")) return;
+  try {
+    const {ref,data}=await assertOwnBirdfriendRecord(item.id);
+    await ref.delete();
+    if (data.storagePath && fbStorageRef) { try { await fbStorageRef.child(data.storagePath).delete(); } catch (_) {} }
+    resetBirdfriendUploadForm();
+    await loadCommunityBirdsFromFirestore();
+    await loadBirdfriendMyPhotos();
+    setBirdfriendPhotoStatus("已刪除自己的照片與資料。", "ok");
+  } catch(err) { setBirdfriendPhotoStatus(String(err.message || err), "error"); }
+}
+
+async function loadBirdfriendMyPhotos() {
+  const box = document.getElementById("birdfriendMyPhotos");
+  if (!box || !playerPortalSession || !db) return;
+  box.innerHTML = '<div class="hint">載入我的照片中…</div>';
+  try {
+    const snap = await db.collection("birdfriendPhotos").where("ownerUid", "==", playerPortalSession.uid).get();
+    const rows = [];
+    snap.forEach(doc => rows.push({id:doc.id, ...doc.data()}));
+    rows.sort((a,b) => {
+      const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return tb-ta;
+    });
+    box.innerHTML = "";
+    if (!rows.length) { box.innerHTML = '<div class="hint">目前還沒有上傳照片。</div>'; return; }
+    rows.forEach(item => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;padding:10px;border:1px solid rgba(46,92,68,.16);border-radius:14px;background:#fff;";
+      const img = document.createElement("img"); img.src = item.photoUrl || ""; img.alt = item.category === "pet" ? (item.petData?.nickname || "寵物萌照") : (item.wildName || "野生鳥類"); img.style.cssText = "width:72px;height:72px;object-fit:cover;border-radius:10px;background:#eee;";
+      const text = document.createElement("div");
+      const cat = item.category === "pet" ? "寵物萌照" : "野生鳥類";
+      const title = item.category === "pet" ? (item.petData?.nickname || item.petData?.breed || "未命名") : (item.wildName || item.photoName || "未命名");
+      const count = item.category === "wild" ? birdfriendWildCompletedCount(item.conditions || {}) : 0;
+      const eligibility = item.category === "wild" ? (count === 15 ? "15/15 完整 · 可列入挑戰" : `${count}/15 · 僅圖鑑`) : "僅圖鑑";
+      const titleEl=document.createElement("strong"); titleEl.textContent=cat + " · " + title;
+      const meta=document.createElement("div"); meta.className="hint"; meta.style.marginTop="4px"; meta.textContent=eligibility;
+      const actions=document.createElement("div"); actions.style.cssText="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;";
+      const edit=document.createElement("button"); edit.type="button"; edit.className="hint-btn"; edit.textContent="修改"; edit.onclick=()=>fillBirdfriendEditForm(item);
+      const del=document.createElement("button"); del.type="button"; del.className="hint-btn"; del.textContent="刪除"; del.style.background="#c95750"; del.style.color="#fff"; del.onclick=()=>deleteBirdfriendOwnPhoto(item);
+      actions.append(edit,del); text.append(titleEl,meta,actions); row.append(img,text); box.appendChild(row);
+    });
+  } catch (err) {
+    box.innerHTML = '<div class="hint">照片清單讀取失敗：' + String(err.message || err) + '</div>';
+  }
+}
+
+document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", async () => {
+  const btn = document.getElementById("birdfriendPhotoUploadBtn");
+  const file = document.getElementById("birdfriendPhotoFile")?.files?.[0];
+  const note = document.getElementById("birdfriendPhotoNote")?.value.trim() || "";
+  const editingId = document.getElementById("birdfriendEditingPhotoId")?.value || "";
+  if (!playerPortalSession || !fbAuth?.currentUser || fbAuth.currentUser.uid !== playerPortalSession.uid) { setBirdfriendPhotoStatus("登入狀態已失效，請重新登入。", "error"); return; }
+  if (!editingId && !file) { setBirdfriendPhotoStatus("請先選擇一張照片。", "error"); return; }
+
+  let payload={};
+  if (birdfriendPhotoCategory === "wild") {
+    const wildName=document.getElementById("birdfriendWildName").value.trim();
+    if (!wildName) { setBirdfriendPhotoStatus("野生鳥類請先填寫鳥名。", "error"); return; }
+    const conditions=collectBirdfriendWildConditions();
+    const completedCount=birdfriendWildCompletedCount(conditions);
+    payload={category:"wild", wildName, photoName:wildName, conditions, completedCount, challengeEligible:completedCount===15};
+  } else {
+    const petData={
+      breed:document.getElementById("birdfriendPetBreed").value.trim(),
+      nickname:document.getElementById("birdfriendPetNickname").value.trim(),
+      sex:document.getElementById("birdfriendPetSex").value,
+      diet:document.getElementById("birdfriendPetDiet").value.trim(),
+      age:document.getElementById("birdfriendPetAge").value.trim(),
+      talent:document.getElementById("birdfriendPetTalent").value.trim()
+    };
+    const missing = [["品種",petData.breed],["小名",petData.nickname],["性別",petData.sex],["食性",petData.diet],["年齡",petData.age],["特殊才華",petData.talent]].find(x=>!x[1]);
+    if (missing) { setBirdfriendPhotoStatus("寵物萌照請完成 6 項資料：缺少「" + missing[0] + "」。", "error"); return; }
+    payload={category:"pet", petData, photoName:petData.nickname, conditions:{}, completedCount:0, challengeEligible:false};
+  }
+
+  btn.disabled = true; btn.textContent = editingId ? "儲存修改中…" : "照片上傳中…";
+  try {
+    const playerRef = db.collection("players").doc(playerPortalSession.id);
+    const playerSnap = await playerRef.get();
+    const pdata = playerSnap.exists ? playerSnap.data() : null;
+    if (!pdata || pdata.ownerUid !== playerPortalSession.uid || pdata.accountStatus !== "approved") throw new Error("帳號尚未核准，不能上傳或修改照片");
+
+    let ref, oldData={};
+    if (editingId) {
+      const own=await assertOwnBirdfriendRecord(editingId); ref=own.ref; oldData=own.data;
+      if (oldData.category !== birdfriendPhotoCategory) throw new Error("修改時不可變更投稿類型");
+    } else ref=db.collection("birdfriendPhotos").doc();
+
+    let photoUrl=oldData.photoUrl || "", storagePath=oldData.storagePath || "";
+    if (file) {
+      const compressed = await compressImageFile(file, 1920, 0.88);
+      const safeBase = (file.name || "photo").replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/\.[^.]+$/, "") || "photo";
+      storagePath = `birdfriendPhotos/${playerPortalSession.uid}/${Date.now()}_${safeBase}.jpg`;
+      const up = await fbStorageRef.child(storagePath).put(compressed);
+      photoUrl = await up.ref.getDownloadURL();
+      if (oldData.storagePath && oldData.storagePath !== storagePath) { try { await fbStorageRef.child(oldData.storagePath).delete(); } catch (_) {} }
+    }
+
+    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, status:"submitted", updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if (!editingId) data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    await ref.set(data,{merge:true});
+    const count=payload.category === "wild" ? payload.completedCount : 0;
+    resetBirdfriendUploadForm();
+    await loadCommunityBirdsFromFirestore();
+    await loadBirdfriendMyPhotos();
+    setBirdfriendPhotoStatus(payload.category === "wild" ? (count===15 ? "儲存完成：15/15 完整，可列入題目與總挑戰。" : `儲存完成：目前 ${count}/15，僅在圖鑑模式瀏覽。`) : "寵物萌照儲存完成，只在圖鑑模式瀏覽。", "ok");
+  } catch (err) {
+    setBirdfriendPhotoStatus("儲存失敗：" + String(err.message || err), "error");
+  } finally { btn.disabled = false; btn.textContent = birdfriendEditingRecord ? "儲存修改" : "儲存照片與資料"; }
+});
+
+renderBirdfriendWildConditionFields();
+syncBirdfriendCategoryUI();
 
 document.getElementById("playerPortalSubmit")?.addEventListener("click", async () => {
   if (!FIREBASE_ENABLED || !db || !fbAuth) { setPlayerPortalStatus("目前無法連接帳號資料庫", "error"); return; }
@@ -4798,66 +5154,21 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
   const password = document.getElementById("portalPlayerPin").value;
   const btn = document.getElementById("playerPortalSubmit");
   if (!/^[^/\\]{2,24}$/.test(id)) { setPlayerPortalStatus("帳號需為 2–24 個字，且不可包含斜線", "error"); return; }
-  btn.disabled = true;
-  btn.textContent = "處理中…";
+  btn.disabled = true; btn.textContent = "處理中…";
   try {
     const ref = db.collection("players").doc(id);
-    if (playerPortalMode === "apply") {
-      const user = await ensureAnonymousApplicant();
-      await ref.set({
-        id,
-        ownerUid:user.uid,
-        displayName:document.getElementById("portalDisplayName").value.trim() || id,
-        favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
-        bio:document.getElementById("portalBio").value.trim(),
-        accountStatus:"pending",
-        passwordSet:false,
-        score:0,
-        progress:{},
-        birdsDone:{},
-        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
-      setPlayerPortalStatus("申請已送出。管理員核准後，回到『玩家登入』按『登入／取得認證碼』。", "ok");
 
-    } else if (playerPortalMode === "setup") {
-      // V4.4：不再強制目前 Auth 必須仍是原匿名帳號。
-      // 管理員登入同一台裝置後，匿名 session 會被取代；這正是 V4.3 無法完成認證的原因。
+    if (playerPortalMode === "setup") {
       const snap = await ref.get();
       if (!snap.exists) throw new Error("找不到鳥友帳號");
       const data = snap.data();
-      if (data.accountStatus !== "approved") throw new Error("帳號尚未核准");
       const enteredCode = document.getElementById("portalSetupCode").value.trim();
       const newPassword = document.getElementById("portalNewPassword").value;
       const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
-      if (!/^\d{6}$/.test(enteredCode) || enteredCode !== String(data.setupCode || "")) throw new Error("六位認證碼不正確");
-      if (expiresAt && Date.now() > expiresAt) throw new Error("認證碼已過期，請管理員重新核准");
+      if (!/^\d{6}$/.test(enteredCode) || enteredCode !== String(data.setupCode || "")) throw new Error("六位授權碼不正確");
+      if (expiresAt && Date.now() > expiresAt) throw new Error("授權碼已過期，請重新登入取得新授權碼");
       if (newPassword.length < 6) throw new Error("密碼至少需要 6 位");
-
-      const email = await playerEmailForId(id);
-      let newUid = null;
-      let secondaryApp = null;
-      const current = fbAuth.currentUser;
-
-      // 原匿名申請者仍在時，沿用原 uid；若已被管理員登入取代，使用 secondary app 建立玩家帳號，避免登出管理員再造成權限中斷。
-      if (current && current.isAnonymous && data.ownerUid === current.uid) {
-        const credential = firebase.auth.EmailAuthProvider.credential(email, newPassword);
-        const linked = await current.linkWithCredential(credential);
-        newUid = linked.user.uid;
-      } else {
-        const appName = "player-setup-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-        secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, appName);
-        const secondaryAuth = secondaryApp.auth();
-        try {
-          const created = await secondaryAuth.createUserWithEmailAndPassword(email, newPassword);
-          newUid = created.user.uid;
-        } finally {
-          try { await secondaryAuth.signOut(); } catch (e) {}
-          try { await secondaryApp.delete(); } catch (e) {}
-        }
-      }
-
+      const newUid = await createBirdfriendAuthUser(id, newPassword);
       await ref.set({
         ownerUid:newUid,
         passwordSet:true,
@@ -4865,19 +5176,13 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
         setupCode:firebase.firestore.FieldValue.delete(),
         setupCodeExpiresAt:firebase.firestore.FieldValue.delete(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true });
+      }, {merge:true});
+      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
+      showBirdfriendWaiting(id);
+      return;
+    }
 
-      localStorage.removeItem(PLAYER_PENDING_ID_KEY);
-      // 完成後切換成攝影師登入；此帳密僅供攝影師介面使用，與「遊戲開始」分開。
-      if (!fbAuth.currentUser || fbAuth.currentUser.uid !== newUid) {
-        if (fbAuth.currentUser) await fbAuth.signOut();
-        await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        await fbAuth.signInWithEmailAndPassword(email, newPassword);
-      }
-      const fresh = await ref.get();
-      showPlayerProfile(id, fresh.exists ? fresh.data() : {...data, passwordSet:true, ownerUid:newUid}, fbAuth.currentUser);
-
-    } else if (playerPortalMode === "edit") {
+    if (playerPortalMode === "edit") {
       const user = fbAuth.currentUser;
       if (!user || !playerPortalSession || playerPortalSession.uid !== user.uid) throw new Error("登入狀態已失效");
       await ref.set({
@@ -4885,54 +5190,93 @@ document.getElementById("playerPortalSubmit")?.addEventListener("click", async (
         favoriteBird:document.getElementById("portalFavoriteBird").value.trim(),
         bio:document.getElementById("portalBio").value.trim(),
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true });
+      }, {merge:true});
       setPlayerPortalStatus("你的個人資料已儲存。", "ok");
-
-    } else {
-      // V4.4：先直接讀取申請文件。只要管理員已核准且存在 setupCode，就顯示給玩家；
-      // 不再限定目前 Firebase Auth 必須是「原匿名申請者」，因此管理員剛登入核准後也能正常取碼。
-      let snap = null;
-      try { snap = await ref.get(); } catch (e) { console.warn("登入前讀取玩家資料失敗", e); }
-      if (snap && snap.exists) {
-        const data = snap.data();
-        if (data.accountStatus === "pending") throw new Error("申請正在等待管理員審核");
-        if (data.accountStatus === "rejected") throw new Error("此申請未獲核准，請聯絡管理員");
-        if (data.accountStatus === "approved" && !data.passwordSet && data.setupCode) {
-          const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
-          if (expiresAt && Date.now() > expiresAt) throw new Error("認證碼已過期，請管理員重新核准");
-          playerPortalMode = "setup";
-          document.getElementById("portalPlayerId").disabled = true;
-          document.getElementById("portalPasswordField").style.display = "none";
-          document.getElementById("playerProfileFields").style.display = "none";
-          document.getElementById("playerCodePanel").style.display = "block";
-          document.getElementById("issuedPlayerCode").textContent = "你的認證碼：" + String(data.setupCode);
-          btn.textContent = "驗證並設定密碼";
-          setPlayerPortalStatus("管理員已核准。認證碼已顯示，請在下方輸入同一組六位數字並設定永久密碼。", "ok");
-          return;
-        }
-      }
-
-      if (password.length < 6) throw new Error("請輸入至少 6 位的玩家密碼");
-      const email = await playerEmailForId(id);
-      if (fbAuth.currentUser) await fbAuth.signOut();
-      await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      const user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
-      snap = await ref.get();
-      if (!snap.exists || snap.data().ownerUid !== user.uid || snap.data().accountStatus !== "approved") throw new Error("帳號尚未核准或資料不相符");
-      showPlayerProfile(id, snap.data(), user);
+      return;
     }
+
+    let snap = null;
+    try { snap = await ref.get(); } catch (e) { console.warn("讀取鳥友帳號失敗", e); }
+
+    // 首次：只輸入帳號即可，自動建立待審核帳號並發出 6 位授權碼。
+    if (!snap || !snap.exists) {
+      const setupCode = birdfriendNewCode();
+      await ref.set({
+        id,
+        accountType:"bird",
+        displayName:id,
+        favoriteBird:"",
+        bio:"",
+        accountStatus:"pending",
+        passwordSet:false,
+        setupCode,
+        setupCodeExpiresAt:firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
+        score:0,
+        progress:{},
+        birdsDone:{},
+        createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      localStorage.setItem(PLAYER_PENDING_ID_KEY, id);
+      playerPortalMode = "setup";
+      document.getElementById("portalPlayerId").disabled = true;
+      document.getElementById("portalPasswordField").style.display = "none";
+      document.getElementById("playerProfileFields").style.display = "none";
+      document.getElementById("playerUploadPanel").style.display = "none";
+      document.getElementById("playerCodePanel").style.display = "block";
+      document.getElementById("issuedPlayerCode").textContent = "你的授權碼：" + setupCode;
+      btn.textContent = "驗證並設定密碼";
+      setPlayerPortalStatus("首次帳號已建立。請輸入上方 6 位授權碼，再設定自己的密碼。完成後等待管理員核准。", "ok");
+      return;
+    }
+
+    const data = snap.data();
+    if (data.accountType === "game" || String(snap.id).startsWith("__game__")) throw new Error("這是遊戲帳號，請使用鳥友帳號登入");
+    if (data.accountStatus === "rejected") throw new Error("此鳥友帳號未獲核准，請聯絡管理員");
+    if (data.accountStatus === "disabled") throw new Error("此鳥友帳號目前已停用");
+
+    if (!data.passwordSet) {
+      let setupCode = String(data.setupCode || "");
+      const expiresAt = data.setupCodeExpiresAt && data.setupCodeExpiresAt.toMillis ? data.setupCodeExpiresAt.toMillis() : 0;
+      if (!/^\d{6}$/.test(setupCode) || (expiresAt && Date.now() > expiresAt)) {
+        setupCode = birdfriendNewCode();
+        await ref.set({setupCode, setupCodeExpiresAt:firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000), updatedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true});
+      }
+      playerPortalMode = "setup";
+      document.getElementById("portalPlayerId").disabled = true;
+      document.getElementById("portalPasswordField").style.display = "none";
+      document.getElementById("playerProfileFields").style.display = "none";
+      document.getElementById("playerUploadPanel").style.display = "none";
+      document.getElementById("playerCodePanel").style.display = "block";
+      document.getElementById("issuedPlayerCode").textContent = "你的授權碼：" + setupCode;
+      btn.textContent = "驗證並設定密碼";
+      setPlayerPortalStatus("請用這組 6 位授權碼完成密碼設定。設定完成後由管理員決定是否核准。", "ok");
+      return;
+    }
+
+    if (password.length < 6) throw new Error("請輸入至少 6 位密碼");
+    const email = await playerEmailForId(id);
+    if (fbAuth.currentUser) await fbAuth.signOut();
+    await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const user = (await fbAuth.signInWithEmailAndPassword(email, password)).user;
+    const fresh = await ref.get();
+    if (!fresh.exists || fresh.data().ownerUid !== user.uid) throw new Error("鳥友帳號資料不相符");
+    const freshData = fresh.data();
+    if (freshData.accountStatus === "pending") { localStorage.setItem(PLAYER_PENDING_ID_KEY, id); showBirdfriendWaiting(id); return; }
+    if (freshData.accountStatus !== "approved") throw new Error(freshData.accountStatus === "disabled" ? "此鳥友帳號目前已停用" : "帳號尚未核准");
+    localStorage.removeItem(PLAYER_PENDING_ID_KEY);
+    showPlayerProfile(id, freshData, user);
   } catch (err) {
     const code = err && err.code;
-    if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用匿名登入與電子郵件/密碼登入。", "error");
-    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("此鳥友帳號已建立。若先前已完成設定，請切回『鳥友登入』直接輸入密碼。", "error");
+    if (code === "auth/operation-not-allowed") setPlayerPortalStatus("請先在 Firebase Authentication 啟用電子郵件/密碼登入。", "error");
+    else if (code === "auth/email-already-in-use") setPlayerPortalStatus("這個鳥友帳號已經設定過密碼，請回到登入畫面使用原密碼。", "error");
     else if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found" || code === "auth/invalid-login-credentials") setPlayerPortalStatus("鳥友帳號或密碼不正確。", "error");
-    else if (code === "permission-denied" || code === "firestore/permission-denied") setPlayerPortalStatus("目前 Firestore 權限不允許讀取這個鳥友帳號。請先保持管理員登入後再取得認證碼。", "error");
     else setPlayerPortalStatus(String(err.message || err), "error");
   } finally {
     btn.disabled = false;
-    if (playerPortalMode !== "setup" && playerPortalMode !== "edit") btn.textContent = playerPortalMode === "apply" ? "送出申請" : "登入／取得認證碼";
-    else if (playerPortalMode === "setup") btn.textContent = "驗證並設定密碼";
-    else btn.textContent = "儲存我的資料";
+    if (playerPortalMode === "setup") btn.textContent = "驗證並設定密碼";
+    else if (playerPortalMode === "edit") btn.textContent = "儲存我的資料";
+    else btn.textContent = "鳥友登入";
   }
 });
 
@@ -4971,12 +5315,8 @@ async function reviewPlayerApplication(docId, status) {
       reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),
       reviewedBy:currentAdminUser.uid
     };
-    if (status === "approved") {
-      const random = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
-      update.setupCode = String(random).padStart(6, "0");
-      update.setupCodeExpiresAt = firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
-      update.passwordSet = false;
-    } else {
+    // 新流程：授權碼由鳥友首次登入時自動取得；管理員只負責核准或拒絕，不改動已設定的密碼。
+    if (status !== "approved") {
       update.setupCode = firebase.firestore.FieldValue.delete();
       update.setupCodeExpiresAt = firebase.firestore.FieldValue.delete();
     }
@@ -5063,8 +5403,9 @@ function renderPlayerList() {
     if (type === "bird") {
       if (status === "pending") {
         const approve = document.createElement("button"); approve.className = "approve-btn"; approve.textContent = "核准"; approve.onclick = () => reviewPlayerApplication(player.docId, "approved"); actions.appendChild(approve);
+        if (!player.passwordSet) { const codeBtn = document.createElement("button"); codeBtn.className = "view-player-btn"; codeBtn.textContent = "授權碼"; codeBtn.onclick = () => regenerateBirdfriendSetupCode(player); actions.appendChild(codeBtn); }
       } else if (status === "approved") {
-        const codeBtn = document.createElement("button"); codeBtn.className = "approve-btn"; codeBtn.textContent = "授權碼"; codeBtn.onclick = () => regenerateBirdfriendSetupCode(player); actions.appendChild(codeBtn);
+        if (!player.passwordSet) { const codeBtn = document.createElement("button"); codeBtn.className = "approve-btn"; codeBtn.textContent = "授權碼"; codeBtn.onclick = () => regenerateBirdfriendSetupCode(player); actions.appendChild(codeBtn); }
         const disable = document.createElement("button"); disable.className = "disable-player-btn"; disable.textContent = "停用"; disable.onclick = () => setPlayerAccountStatus(player.docId, "disabled"); actions.appendChild(disable);
       } else {
         const restore = document.createElement("button"); restore.className = "restore-player-btn"; restore.textContent = "恢復"; restore.onclick = () => setPlayerAccountStatus(player.docId, "approved"); actions.appendChild(restore);
@@ -5119,12 +5460,11 @@ async function regenerateBirdfriendSetupCode(player) {
   if (!db || !(await requireAdminSession())) return;
   if (accountTypeOf(player) !== "bird") { alert("遊戲帳號不使用鳥友授權碼。"); return; }
   const visibleId = player.id || player.docId || "";
-  if ((player.accountStatus || "pending") !== "approved") { alert("請先核准這個鳥友帳號，再產生授權碼。"); return; }
   if (player.passwordSet === true) {
     alert("此鳥友帳號已完成密碼設定，不需要一次性授權碼。若要重新設定登入密碼，應使用獨立的密碼重設流程，避免破壞現有帳號。");
     return;
   }
-  if (!confirm(`要為鳥友「${visibleId}」重新產生 6 位授權碼嗎？\n\n舊授權碼會立即失效，新授權碼有效 24 小時。`)) return;
+  if (!confirm(`要為鳥友「${visibleId}」重新產生 6 位授權碼嗎？\n\n新授權碼有效 24 小時；這不會改變管理員的核准狀態。`)) return;
   try {
     const random = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
     const code = String(random).padStart(6, "0");
@@ -5176,6 +5516,7 @@ async function initApp() {
   if (FIREBASE_ENABLED) {
     document.getElementById("listModeStamp").textContent = "同步雲端鳥類資料中...";
     await loadBirdsFromFirestore();
+    await loadCommunityBirdsFromFirestore();
     await loadGroupsFromFirestore();
     document.getElementById("listModeStamp").textContent = "遊戲解說模式:選擇一隻鳥開始";
   }
