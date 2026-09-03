@@ -5064,6 +5064,7 @@ function renderPlayerList() {
       if (status === "pending") {
         const approve = document.createElement("button"); approve.className = "approve-btn"; approve.textContent = "核准"; approve.onclick = () => reviewPlayerApplication(player.docId, "approved"); actions.appendChild(approve);
       } else if (status === "approved") {
+        const codeBtn = document.createElement("button"); codeBtn.className = "approve-btn"; codeBtn.textContent = "授權碼"; codeBtn.onclick = () => regenerateBirdfriendSetupCode(player); actions.appendChild(codeBtn);
         const disable = document.createElement("button"); disable.className = "disable-player-btn"; disable.textContent = "停用"; disable.onclick = () => setPlayerAccountStatus(player.docId, "disabled"); actions.appendChild(disable);
       } else {
         const restore = document.createElement("button"); restore.className = "restore-player-btn"; restore.textContent = "恢復"; restore.onclick = () => setPlayerAccountStatus(player.docId, "approved"); actions.appendChild(restore);
@@ -5114,6 +5115,33 @@ async function setPlayerAccountStatus(docId, status) {
     await loadPlayerList();
   } catch (err) { alert(action + "失敗：" + String(err.message || err)); }
 }
+async function regenerateBirdfriendSetupCode(player) {
+  if (!db || !(await requireAdminSession())) return;
+  if (accountTypeOf(player) !== "bird") { alert("遊戲帳號不使用鳥友授權碼。"); return; }
+  const visibleId = player.id || player.docId || "";
+  if ((player.accountStatus || "pending") !== "approved") { alert("請先核准這個鳥友帳號，再產生授權碼。"); return; }
+  if (player.passwordSet === true) {
+    alert("此鳥友帳號已完成密碼設定，不需要一次性授權碼。若要重新設定登入密碼，應使用獨立的密碼重設流程，避免破壞現有帳號。");
+    return;
+  }
+  if (!confirm(`要為鳥友「${visibleId}」重新產生 6 位授權碼嗎？\n\n舊授權碼會立即失效，新授權碼有效 24 小時。`)) return;
+  try {
+    const random = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
+    const code = String(random).padStart(6, "0");
+    await db.collection("players").doc(player.docId).set({
+      setupCode: code,
+      setupCodeExpiresAt: firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
+      setupCodeRegeneratedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      setupCodeRegeneratedBy: currentAdminUser.uid,
+      passwordSet: false
+    }, {merge:true});
+    await loadPlayerList();
+    alert(`鳥友「${visibleId}」的新授權碼：${code}\n\n有效期限：24 小時\n舊授權碼已失效。`);
+  } catch (err) {
+    alert("授權碼產生失敗：" + String(err.message || err));
+  }
+}
+
 async function deleteManagedAccount(player) {
   if (!db || !(await requireAdminSession())) return;
   const type = accountTypeOf(player);
