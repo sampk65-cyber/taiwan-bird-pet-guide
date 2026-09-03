@@ -1420,7 +1420,7 @@
   .birdfriend-condition-grid .chk-btn { min-height:42px !important; padding:5px 2px !important; font-size:11px !important; line-height:1.18 !important; border-radius:10px !important; }
   .birdfriend-custom-condition { margin-top:7px; }
 
-  /* V4.8 鳥友等級徽章與攝影署名 */
+  /* V5.0 鳥友等級徽章與攝影署名 */
   .birdfriend-member-stats {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     margin:0 0 16px; padding:14px; border:1px solid rgba(46,92,68,.16);
@@ -1513,6 +1513,24 @@
     .home-action-copy small { display:none; }
   }
 
+
+/* ===== V5.0 照片藝術特效 ===== */
+.photo-effect-panel{margin:12px 0 16px;padding:14px;border:1px solid rgba(54,92,69,.18);border-radius:18px;background:rgba(255,255,255,.72)}
+.photo-effect-title{font-weight:900;color:#315f48;margin-bottom:10px;font-size:15px}
+.photo-effect-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.photo-effect-btn{border:1.5px solid #d7d3c7;background:#fff;color:#5d5b54;border-radius:13px;padding:10px 5px;font-size:12px;font-weight:800;line-height:1.25;min-height:48px}
+.photo-effect-btn.active{border-color:#377c57;background:#377c57;color:#fff;box-shadow:0 4px 12px rgba(55,124,87,.22);transform:translateY(-1px)}
+.photo-effect-preview{display:none;margin-top:12px;border-radius:16px;overflow:hidden;background:#eee;position:relative;aspect-ratio:4/3}
+.photo-effect-preview.show{display:block}
+.photo-effect-preview img{width:100%;height:100%;object-fit:contain;display:block;background:#f5f2e9}
+.photo-effect-badge{position:absolute;left:10px;bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;font-weight:800}
+.photo-effect-note{margin-top:8px;color:#777168;font-size:12px;line-height:1.55}
+@media(max-width:520px){.photo-effect-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.photo-effect-btn{font-size:11px;padding:8px 3px;min-height:45px}}
+
+/* ===== V5.0 500種搜尋 / 真實照片替換 ===== */
+.v50-search-result{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #d8e4dc;background:#fff;border-radius:12px;padding:9px 11px;font-weight:800;color:#315f48}
+.v50-search-result button{border:0;border-radius:999px;background:#377c57;color:white;padding:7px 12px;font-weight:800}
+.v50-ai-chip{display:inline-flex;padding:4px 8px;border-radius:999px;background:#e7f1eb;color:#35664e;font-size:11px;font-weight:800}
 </style>
 </head>
 <body>
@@ -1527,7 +1545,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V4.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.0 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1633,6 +1651,9 @@
         </div>
         <input type="hidden" id="birdfriendEditingPhotoId" value="">
         <div id="birdfriendWildFields">
+          <div class="field"><label>搜尋 500 種鳥類並替換照片</label><input id="birdfriendCoreSearch" type="search" maxlength="40" placeholder="輸入關鍵字，例如：綠繡眼"></div>
+          <div id="birdfriendCoreSearchResults" style="display:grid;gap:6px;margin:-6px 0 12px;"></div>
+          <input type="hidden" id="birdfriendTargetBirdId" value="">
           <div class="field"><label>鳥名</label><input id="birdfriendWildName" type="text" maxlength="40" placeholder="例如：五色鳥"></div>
           <div id="birdfriendWildConditionFields"></div>
         </div>
@@ -1645,6 +1666,21 @@
           <div class="field"><label>特殊才華</label><textarea id="birdfriendPetTalent" maxlength="180" rows="3" placeholder="例如：會說你好、會唱歌、會自己回籠"></textarea></div>
         </div>
         <div class="field"><label>選擇照片</label><input id="birdfriendPhotoFile" type="file" accept="image/*"></div>
+        <div class="photo-effect-panel" id="birdfriendEffectPanel">
+          <div class="photo-effect-title">照片藝術特效（可選）</div>
+          <div class="photo-effect-grid" data-effect-group="birdfriend">
+            <button type="button" class="photo-effect-btn active" data-effect="original">原圖</button>
+            <button type="button" class="photo-effect-btn" data-effect="watercolor">水彩質感</button>
+            <button type="button" class="photo-effect-btn" data-effect="oil">油畫質感</button>
+            <button type="button" class="photo-effect-btn" data-effect="cinema">電影風格</button>
+            <button type="button" class="photo-effect-btn" data-effect="vintage">復古膠片</button>
+            <button type="button" class="photo-effect-btn" data-effect="bw">黑白經典</button>
+            <button type="button" class="photo-effect-btn" data-effect="fresh">日系清新</button>
+            <button type="button" class="photo-effect-btn" data-effect="dreamy">夢幻柔光</button>
+          </div>
+          <div class="photo-effect-preview" id="birdfriendEffectPreview"><img id="birdfriendEffectPreviewImg" alt="照片特效預覽"><span class="photo-effect-badge" id="birdfriendEffectPreviewLabel">原圖</span></div>
+          <div class="photo-effect-note">特效會先在手機端處理再上傳；系統同時保留原始照片。野生鳥進入挑戰時優先使用原始照片，圖鑑則顯示你選擇的特效版本。</div>
+        </div>
         <div class="field"><label>補充說明（選填）</label><textarea id="birdfriendPhotoNote" maxlength="180" rows="3" placeholder="拍攝地點、日期或想分享的故事"></textarea></div>
         <button class="save-btn" type="button" id="birdfriendPhotoUploadBtn">儲存照片與資料</button>
         <button class="hint-btn" type="button" id="birdfriendCancelEditBtn" style="display:none;width:100%;margin-top:8px;padding:11px;">取消修改</button>
@@ -1928,6 +1964,21 @@
       <input type="file" id="f_photo" accept="image/*">
     </div>
     <div class="hint" id="photoStatusHint">檢查中...</div>
+    <div class="photo-effect-panel" id="adminEffectPanel">
+      <div class="photo-effect-title">照片藝術特效（設計師／管理員）</div>
+      <div class="photo-effect-grid" data-effect-group="admin">
+        <button type="button" class="photo-effect-btn active" data-effect="original">原圖</button>
+        <button type="button" class="photo-effect-btn" data-effect="watercolor">水彩質感</button>
+        <button type="button" class="photo-effect-btn" data-effect="oil">油畫質感</button>
+        <button type="button" class="photo-effect-btn" data-effect="cinema">電影風格</button>
+        <button type="button" class="photo-effect-btn" data-effect="vintage">復古膠片</button>
+        <button type="button" class="photo-effect-btn" data-effect="bw">黑白經典</button>
+        <button type="button" class="photo-effect-btn" data-effect="fresh">日系清新</button>
+        <button type="button" class="photo-effect-btn" data-effect="dreamy">夢幻柔光</button>
+      </div>
+      <div class="photo-effect-preview" id="adminEffectPreview"><img id="adminEffectPreviewImg" alt="照片特效預覽"><span class="photo-effect-badge" id="adminEffectPreviewLabel">原圖</span></div>
+      <div class="photo-effect-note">可先預覽再儲存；原始照片會保留，挑戰辨識優先使用原圖。</div>
+    </div>
 
     <div class="field">
       <label>攝影者(可選,會跟照片一起顯示)</label>
@@ -1947,6 +1998,8 @@
     <div id="adminModifyPanel">
       <div class="section-title" style="margin-top:0;">已建檔鳥類清單 <span class="list-status-badge">已建檔・可修改</span></div>
       <div class="hint">點一下任一筆資料，就會載入該筆內容進入修改畫面；存檔後直接更新原資料。</div>
+      <div class="field" style="margin:12px 0;"><label>搜尋 500 種鳥類關鍵字</label><input type="search" id="adminBirdCatalogSearch" placeholder="輸入鳥名，例如：綠繡眼、鷺、鷹"></div>
+      <div class="hint" id="adminBirdCatalogSearchStatus" style="margin-top:-6px;"></div>
       <div id="birdListAdmin"></div>
 
       <div class="section-title">匯出資料(供接 Firestore 用)</div>
@@ -2028,7 +2081,7 @@ const CONDITIONS = [
 
 const LEVEL_REQUIRED = { 1: 3, 2: 6, 3: 10, 4: 15 };
 
-// V4.8 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
+// V5.0 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
 let communityBirds = [];
 function photographerCreditText(bird) {
   const v = bird && (bird.photographer || bird.displayName || bird.playerId);
@@ -2046,12 +2099,17 @@ function communityRecordToBird(id, data) {
   return {
     id: "birdfriend__" + id,
     sourceDocId: id,
+    uploadedAt: data.uploadedAt?.toMillis ? data.uploadedAt.toMillis() : (data.uploadedAt || data.createdAt?.toMillis?.() || 0),
     source: "birdfriend",
     ownerUid: data.ownerUid || "",
+    targetBirdId: data.targetBirdId || "",
     category: data.category || "wild",
     challengeEligible: !isPet && complete,
     name: isPet ? (pet.nickname || pet.breed || "寵物萌照") : (data.wildName || data.photoName || "未命名野生鳥"),
     photoUrl: data.photoUrl || "",
+    challengePhotoUrl: data.originalPhotoUrl || data.photoUrl || "",
+    originalPhotoUrl: data.originalPhotoUrl || data.photoUrl || "",
+    photoStyle: data.photoStyle || "original",
     photographer: data.photographer || data.displayName || data.playerId || "鳥友投稿",
     story: data.note || (isPet ? [pet.breed, pet.sex, pet.age, pet.talent].filter(Boolean).join(" · ") : ""),
     level: 1,
@@ -2063,8 +2121,14 @@ function communityRecordToBird(id, data) {
     uploadedAt: data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : null
   };
 }
-function getGalleryBirds() { return birds.concat(communityBirds); }
-function getChallengeBirds() { return birds.concat(communityBirds.filter(b => b.challengeEligible === true)); }
+function getBirdChallengePhotoUrl(bird){ return (bird && (bird.challengePhotoUrl || bird.originalPhotoUrl || bird.photoUrl)) || ""; }
+function getV50CoreBirdsWithReplacements(){
+  const mapped=new Map();
+  communityBirds.filter(b=>b.category==="wild"&&b.targetBirdId&&b.photoUrl).forEach(b=>{ const old=mapped.get(b.targetBirdId); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mapped.set(b.targetBirdId,b); });
+  return birds.map(b=>{ const r=mapped.get(b.id); if(!r) return b; return Object.assign({},b,{photoUrl:r.photoUrl,originalPhotoUrl:r.originalPhotoUrl||r.photoUrl,photographer:r.photographer||r.displayName||r.playerId||"鳥友投稿",imageType:"real_photo",photoStyle:r.photoStyle||"original",replacedByBirdfriend:true}); });
+}
+function getGalleryBirds() { const replacedIds=new Set(communityBirds.filter(b=>b.targetBirdId).map(b=>b.sourceDocId)); return getV50CoreBirdsWithReplacements().concat(communityBirds.filter(b=>!replacedIds.has(b.sourceDocId))); }
+function getChallengeBirds() { return getV50CoreBirdsWithReplacements().filter(b=>b.challengeEnabled!==false && b.imageType!=="ai_watercolor").concat(communityBirds.filter(b => b.challengeEligible === true && !b.targetBirdId)); }
 function findAnyBirdById(id) { return getGalleryBirds().find(b => b.id === id) || null; }
 async function loadCommunityBirdsFromFirestore() {
   communityBirds = [];
@@ -2295,6 +2359,32 @@ let birds = [
     story: "白腹秧雞是台灣低海拔常見卻機警的水鳥,體型圓胖側扁,方便穿梭草叢與灌木間。臉部到腹部呈現亮白色,和黑褐色背部形成強烈對比,黃色鳥喙基部帶紅。繁殖期在三月到七月,清晨與黃昏最容易聽到牠們像「補鍋」一樣清亮的叫聲,有時整夜不停。個性害羞敏感,一有動靜就迅速鑽入草叢躲藏。剛孵化的雛鳥全身烏黑,毛茸茸的模樣十分可愛,出生沒多久就會跟著親鳥學覓食。"
   }
 ];
+
+
+// ===== V5.0 臺灣鳥類 500 種核心名單 =====
+const TAIWAN_CORE_500_NAMES = ["麻雀", "五色鳥", "帝雉", "白腹秧雞", "樹鴨", "斑頭雁", "灰雁", "鴻雁", "白額雁", "小白額雁", "寒林豆雁", "凍原豆雁", "黑雁", "疣鼻天鵝", "小天鵝", "黃嘴天鵝", "瀆鳧", "花鳧", "棉鴨", "鴛鴦", "巴鴨", "白眉鴨", "琵嘴鴨", "赤膀鴨", "羅文鴨", "赤頸鴨", "葡萄胸鴨", "呂宋鴨", "花嘴鴨", "綠頭鴨", "尖尾鴨", "小水鴨", "赤嘴潛鴨", "帆背潛鴨", "紅頭潛鴨", "環頸潛鴨", "白眼潛鴨", "青頭潛鴨", "鳳頭潛鴨", "斑背潛鴨", "小斑背潛鴨", "斑臉海番鴨", "長尾鴨", "鵲鴨", "白秋沙", "川秋沙", "紅胸秋沙", "唐秋沙", "臺灣山鷓鴣", "環頸雉", "藍腹鷴", "藍孔雀", "臺灣竹雞", "小鵪鶉", "鵪鶉", "野鴿", "灰林鴿", "黑林鴿", "白喉林鴿", "金背鳩", "灰斑鳩", "紅鳩", "珠頸斑鳩", "斑尾鵑鳩", "長尾鳩", "翠翼鳩", "斑馬鳩", "橙胸綠鳩", "厚嘴綠鳩", "綠鳩", "紅頭綠鳩", "小綠鳩", "褐翅鴉鵑", "番鵑", "冠郭公", "斑翅鳳頭鵑", "噪鵑", "八聲杜鵑", "方尾烏鵑", "鷹鵑", "北方鷹鵑", "棕腹鷹鵑", "小杜鵑", "四聲杜鵑", "大杜鵑", "北方中杜鵑", "普通夜鷹", "南亞夜鷹", "白喉針尾雨燕", "灰喉針尾雨燕", "紫針尾雨燕", "短嘴金絲燕", "叉尾雨燕", "小雨燕", "西方秧雞", "東亞秧雞", "灰胸秧雞", "斑胸秧雞", "紅冠水雞", "白冠雞", "灰頭紫水雞", "白眉秧雞", "董雞", "菲律賓秧雞", "紅腳秧雞", "灰腳秧雞", "緋秧雞", "斑脇秧雞", "紅腳苦惡鳥", "小秧雞", "白鶴", "沙丘鶴", "白枕鶴", "簑羽鶴", "丹頂鶴", "灰鶴", "白頭鶴", "高蹺鴴", "黑領高蹺鴴", "反嘴鴴", "蠣鴴", "灰斑鴴", "太平洋金斑鴴", "環頸鴴", "小環頸鴴", "蒙古沙鴴", "鐵嘴沙鴴", "東方環頸鴴", "東方紅胸鴴", "青藏鴴", "劍鴴", "金眶鴴", "小辮鴴", "跳鴴", "灰頭麥雞", "鳳頭麥雞", "肉垂麥雞", "水雉", "彩鷸", "鷸鴕", "鶴鷸", "紅腳鷸", "小青足鷸", "青足鷸", "諾氏鷸", "白腰草鷸", "磯鷸", "鷹斑鷸", "美洲黃足鷸", "黃足鷸", "赤足鷸", "反嘴鷸", "翹嘴鷸", "小杓鷸", "中杓鷸", "美洲中杓鷸", "大杓鷸", "黦鷸", "小青腳鷸", "斑尾鷸", "黑尾鷸", "半蹼鷸", "短嘴半蹼鷸", "長嘴半蹼鷸", "針尾沙錐", "田鷸", "大地鷸", "中地鷸", "山鷸", "丘鷸", "澳洲鷸", "小濱鷸", "西濱鷸", "大濱鷸", "紅腹濱鷸", "流蘇鷸", "寬嘴鷸", "尖尾濱鷸", "彎嘴濱鷸", "高蹺濱鷸", "丹氏濱鷸", "長趾濱鷸", "紅胸濱鷸", "琵嘴鷸", "黃胸鷸", "三趾濱鷸", "黑腹濱鷸", "白腰濱鷸", "斑胸濱鷸", "磯濱鷸", "灰瓣蹼鷸", "紅頸瓣蹼鷸", "灰斑鷸", "翻石鷸", "燕鴴", "棕頭鷗", "紅嘴鷗", "黑頭鷗", "楔尾鷗", "小鷗", "遺鷗", "細嘴鷗", "三趾鷗", "海鷗", "黑尾鷗", "西伯利亞銀鷗", "蒙古銀鷗", "織女銀鷗", "灰背鷗", "北極賊鷗", "中賊鷗", "長尾賊鷗", "大賊鷗", "白燕鷗", "玄燕鷗", "白眉燕鷗", "小燕鷗", "鷗嘴燕鷗", "裏海燕鷗", "黑腹燕鷗", "黑浮鷗", "白翅黑燕鷗", "燕鷗", "蒼燕鷗", "紅燕鷗", "白嘴端燕鷗", "小鳳頭燕鷗", "鳳頭燕鷗", "黑嘴端鳳頭燕鷗", "小鸊鷉", "角鸊鷉", "赤頸鸊鷉", "冠鸊鷉", "黑頸鸊鷉", "白尾熱帶鳥", "紅嘴熱帶鳥", "紅尾熱帶鳥", "紅喉潛鳥", "黑喉潛鳥", "太平洋潛鳥", "白嘴潛鳥", "黑腳信天翁", "短尾信天翁", "黑背信天翁", "白額鸌", "大水薙鳥", "灰水薙鳥", "短尾水薙鳥", "長尾水薙鳥", "楔尾鸌", "克島圓尾鸌", "白頷圓尾鸌", "穴鳥", "熱帶細鸌", "黑腹軍艦鳥", "白斑軍艦鳥", "小軍艦鳥", "藍臉鰹鳥", "紅腳鰹鳥", "褐鰹鳥", "納茲卡鰹鳥", "鸕鶿", "海鸕鶿", "黑頸鸕鶿", "彩䴉", "埃及聖䴉", "黑頭白䴉", "朱鷺", "白琵鷺", "黑面琵鷺", "大麻鷺", "黃頸黑鷺", "栗小鷺", "秋小鷺", "黃小鷺", "夜鷺", "棕夜鷺", "黑冠麻鷺", "麻鷺", "岩鷺", "唐白鷺", "白鷺鷥", "中白鷺", "大白鷺", "蒼鷺", "紫鷺", "牛背鷺", "池鷺", "爪哇池鷺", "綠簑鷺", "栗頭鷺", "黑冠鷺", "鶚", "黑冠鵑隼", "鳳頭蜂鷹", "東方蜂鷹", "黑翅鳶", "禿鷲", "黑禿鷲", "白尾鷲", "蛇鵰", "大冠鷲", "熊鷹", "林鵰", "花鵰", "靴隼鵰", "白肩鵰", "金鵰", "白腹鵰", "鳳頭蒼鷹", "松雀鷹", "日本松雀鷹", "褐耳鷹", "赤腹鷹", "北雀鷹", "蒼鷹", "西方澤鵟", "東方澤鵟", "灰澤鵟", "花澤鵟", "黑鳶", "栗鳶", "白尾海鵰", "白腹海鵰", "灰面鵟鷹", "毛足鵟", "歐亞鵟", "大鵟", "東方鵟", "草鴞", "黃嘴角鴞", "領角鴞", "蘭嶼角鴞", "褐鷹鴞", "鵂鶹", "縱紋腹小鴞", "褐林鴞", "長耳鴞", "短耳鴞", "黃魚鴞", "鵰鴞", "佛法僧", "三寶鳥", "翠鳥", "赤翡翠", "黑頭翡翠", "白胸翡翠", "冠魚狗", "斑魚狗", "綠喉蜂虎", "栗喉蜂虎", "蜂虎", "戴勝", "地啄木", "小啄木", "大赤啄木", "棕腹啄木", "綠啄木", "紅隼", "紅腳隼", "灰背隼", "燕隼", "遊隼", "藍翅八色鳥", "八色鳥", "綠胸八色鳥", "灰喉山椒鳥", "長尾山椒鳥", "赤紅山椒鳥", "琉球山椒鳥", "黑翅山椒鳥", "大鵑鵙", "灰鵑鵙", "黑卷尾", "大卷尾", "小卷尾", "髮冠卷尾", "鴉嘴卷尾", "朱鸝", "黃鸝", "黑枕藍鶲", "紫綬帶", "阿穆爾綬帶", "虎紋伯勞", "紅頭伯勞", "紅背伯勞", "荒漠伯勞", "紅尾伯勞", "栗背伯勞", "棕背伯勞", "灰背伯勞", "西方灰伯勞", "楔尾伯勞", "松鴉", "灰喜鵲", "臺灣藍鵲", "樹鵲", "喜鵲", "星鴉", "東方寒鴉", "禿鼻鴉", "小嘴烏鴉", "巨嘴鴉", "玉頸鴉", "方尾鶲", "煤山雀", "黃腹山雀", "赤腹山雀", "雜色山雀", "青背山雀", "黃山雀", "大山雀", "遠東山雀", "百靈", "小雲雀", "雲雀", "短趾百靈", "蒙古百靈", "細紋葦鶯", "稻田葦鶯", "鈍翅葦鶯", "遠東葦鶯", "布氏葦鶯", "東方大葦鶯", "蒼眉蝗鶯", "庫頁島蝗鶯", "小蝗鶯", "北蝗鶯", "史氏蝗鶯", "矛斑蝗鶯", "臺灣叢樹鶯", "赤褐蝗鶯", "臺灣鷦眉", "小鷦眉", "棕沙燕", "灰沙燕", "岩燕", "洋燕", "家燕", "白腹毛腳燕", "東方毛腳燕", "東方金腰燕", "栗背短腳鵯", "棕耳鵯", "紅嘴黑鵯", "白環鸚嘴鵯", "白頭翁", "烏頭翁", "白喉紅臀鵯", "林柳鶯", "黃眉柳鶯", "淡眉柳鶯", "雲南柳鶯", "黃腰柳鶯", "巨嘴柳鶯", "棕眉柳鶯", "黃腹柳鶯", "褐色柳鶯", "棕腹柳鶯", "歐亞柳鶯", "嘰喳柳鶯", "冠羽柳鶯", "飯島柳鶯", "白眶鶲鶯", "比氏鶲鶯", "峨眉鶲鶯", "淡尾鶲鶯", "暗綠柳鶯", "雙斑綠柳鶯", "淡腳柳鶯", "庫頁島柳鶯", "日本柳鶯", "極北柳鶯", "勘察加柳鶯", "栗頭鶲鶯", "黑眉柳鶯", "克氏冠紋柳鶯", "哈氏冠紋柳鶯", "短尾鶯", "棕面鶯", "日本樹鶯", "遠東樹鶯", "小鶯", "深山鶯", "紅頭山雀", "白喉林鶯", "漠地林鶯", "褐頭花翼", "黃羽鸚嘴", "粉紅鸚嘴", "栗耳鳳眉", "冠羽畫眉", "紅脇繡眼", "斯氏繡眼", "日菲繡眼", "低地繡眼", "綠繡眼", "山紅頭", "小彎嘴", "大彎嘴"];
+const CORE500_EXISTING_NAMES = new Set(birds.map(b => b.name));
+function makeV50AiWatercolorPlaceholder(name, no) {
+  const hue=(no*37)%360;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 55% 91%)"/><stop offset="1" stop-color="hsl(${(hue+70)%360} 45% 82%)"/></linearGradient><filter id="w"><feTurbulence baseFrequency=".018" numOctaves="3" seed="${no}"/><feColorMatrix values="1 0 0 0 .75  0 1 0 0 .75  0 0 1 0 .75  0 0 0 .16 0"/></filter></defs><rect width="600" height="450" fill="url(#g)"/><rect width="600" height="450" filter="url(#w)" opacity=".45"/><g transform="translate(300 200)" fill="none" stroke="#315f48" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity=".84"><ellipse cx="0" cy="0" rx="96" ry="68"/><circle cx="72" cy="-55" r="48"/><path d="M115 -55l65 24-65 20M-82 5c-62 16-88 52-100 92M-20 61l-15 55M35 59l17 57"/><circle cx="88" cy="-66" r="5" fill="#315f48"/></g><text x="300" y="352" text-anchor="middle" font-family="sans-serif" font-size="34" font-weight="700" fill="#244b39">${name}</text><text x="300" y="391" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#5c7468">AI 水彩示意圖 · 待真實照片替換</text></svg>`;
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+function ensureV50CoreBirds() {
+  const nameMap=new Map(birds.map(b=>[b.name,b]));
+  TAIWAN_CORE_500_NAMES.forEach((name,idx)=>{
+    if(nameMap.has(name)) return;
+    const no=idx+1;
+    const id='tw500_'+String(no).padStart(3,'0');
+    birds.push({id,name,level:1,requiredCorrect:3,speed:90,season:'春',conditions:{elevation:['待確認'],family:['待確認'],habitat:['待確認'],diet:['待確認'],predator:['待確認'],population:['待確認'],disturbance:['待確認'],residency:['待確認'],activity:['待確認'],nestType:['待確認'],size:['待確認'],feature:['待確認'],eggColor:['待確認'],eggCount:['待確認'],originStatus:['原生種']},story:'V5.0 核心鳥種。AI 水彩示意圖僅供圖鑑建檔，待鳥友或管理者提供真實照片後替換。',photoUrl:makeV50AiWatercolorPlaceholder(name,no),imageType:'ai_watercolor',aiLabel:'AI水彩示意圖',challengeEnabled:false,coreCatalog:true,coreNo:no});
+  });
+  // 若舊版已有同名鳥種，仍只保留一筆；核心清單總數固定 500。
+  const wanted=new Set(TAIWAN_CORE_500_NAMES);
+  const core=[]; const extras=[]; const seen=new Set();
+  birds.forEach(b=>{ if(wanted.has(b.name)&&!seen.has(b.name)){core.push(b);seen.add(b.name)} else if(!wanted.has(b.name)) extras.push(b); });
+  TAIWAN_CORE_500_NAMES.forEach((name,idx)=>{ const b=core.find(x=>x.name===name); if(b){b.coreCatalog=true;b.coreNo=idx+1;} });
+  birds=[...TAIWAN_CORE_500_NAMES.map(n=>core.find(b=>b.name===n)).filter(Boolean),...extras];
+}
+ensureV50CoreBirds();
 
 let currentBirdId = null;
 let GAME_MODE = "explain";
@@ -3338,6 +3428,101 @@ function renderConditionFields() {
 }
 
 // ---------- 照片上傳前自動壓縮(手機螢幕看清楚就好,不用原始大小) ----------
+// ===== V5.0 照片藝術特效 =====
+const PHOTO_EFFECTS = {
+  original:{label:"原圖", filter:"none"},
+  watercolor:{label:"水彩質感", filter:"saturate(1.18) contrast(0.92) brightness(1.05) blur(0.6px)"},
+  oil:{label:"油畫質感", filter:"saturate(1.28) contrast(1.12) brightness(1.02)"},
+  cinema:{label:"電影風格", filter:"contrast(1.18) saturate(0.88) brightness(0.94) sepia(0.10)"},
+  vintage:{label:"復古膠片", filter:"sepia(0.28) contrast(1.05) saturate(0.82) brightness(1.02)"},
+  bw:{label:"黑白經典", filter:"grayscale(1) contrast(1.14)"},
+  fresh:{label:"日系清新", filter:"brightness(1.12) contrast(0.92) saturate(0.94)"},
+  dreamy:{label:"夢幻柔光", filter:"brightness(1.08) saturate(0.92) contrast(0.92) blur(0.45px)"}
+};
+let birdfriendPhotoEffect = "original";
+let adminPhotoEffect = "original";
+let birdfriendPreviewObjectUrl = "";
+let adminPreviewObjectUrl = "";
+
+function photoEffectLabel(style){ return (PHOTO_EFFECTS[style]||PHOTO_EFFECTS.original).label; }
+function loadImageFromFile(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("圖片讀取失敗"));};
+    img.src=url;
+  });
+}
+function canvasToJpegBlob(canvas, quality=.9){
+  return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("圖片處理失敗")),"image/jpeg",quality));
+}
+function posterizeCanvas(ctx,w,h,levels){
+  const image=ctx.getImageData(0,0,w,h), d=image.data, step=255/Math.max(2,levels-1);
+  for(let i=0;i<d.length;i+=4){d[i]=Math.round(d[i]/step)*step;d[i+1]=Math.round(d[i+1]/step)*step;d[i+2]=Math.round(d[i+2]/step)*step;}
+  ctx.putImageData(image,0,0);
+}
+async function createStyledPhotoBlob(file, style="original", maxWidth=1920, quality=.9){
+  if(style==="original") return compressImageFile(file,maxWidth,quality);
+  const img=await loadImageFromFile(file);
+  let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  if(w>maxWidth){h=Math.round(h*(maxWidth/w));w=maxWidth;}
+  const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext("2d",{willReadFrequently:true});
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  ctx.filter=(PHOTO_EFFECTS[style]||PHOTO_EFFECTS.original).filter;
+  ctx.drawImage(img,0,0,w,h);ctx.filter="none";
+  if(style==="oil") posterizeCanvas(ctx,w,h,18);
+  if(style==="watercolor") posterizeCanvas(ctx,w,h,28);
+  if(style==="cinema"){
+    const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.18,w/2,h/2,Math.max(w,h)*.72);
+    g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.24)");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  }
+  if(style==="dreamy"){
+    ctx.globalCompositeOperation="screen";ctx.globalAlpha=.10;ctx.fillStyle="#ffe8f1";ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+  }
+  if(style==="fresh"){
+    ctx.globalCompositeOperation="screen";ctx.globalAlpha=.06;ctx.fillStyle="#e8fff4";ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+  }
+  return canvasToJpegBlob(canvas,quality);
+}
+async function updateEffectPreview(group){
+  const isBird=group==="birdfriend";
+  const fileEl=document.getElementById(isBird?"birdfriendPhotoFile":"f_photo");
+  const preview=document.getElementById(isBird?"birdfriendEffectPreview":"adminEffectPreview");
+  const imgEl=document.getElementById(isBird?"birdfriendEffectPreviewImg":"adminEffectPreviewImg");
+  const labelEl=document.getElementById(isBird?"birdfriendEffectPreviewLabel":"adminEffectPreviewLabel");
+  if(!fileEl||!preview||!imgEl||!labelEl) return;
+  const file=fileEl.files&&fileEl.files[0];
+  if(!file){preview.classList.remove("show");imgEl.removeAttribute("src");return;}
+  const style=isBird?birdfriendPhotoEffect:adminPhotoEffect;
+  labelEl.textContent=photoEffectLabel(style);
+  try{
+    const blob=await createStyledPhotoBlob(file,style,1100,.82);
+    if(isBird && birdfriendPreviewObjectUrl) URL.revokeObjectURL(birdfriendPreviewObjectUrl);
+    if(!isBird && adminPreviewObjectUrl) URL.revokeObjectURL(adminPreviewObjectUrl);
+    const url=URL.createObjectURL(blob);
+    if(isBird) birdfriendPreviewObjectUrl=url; else adminPreviewObjectUrl=url;
+    imgEl.src=url;preview.classList.add("show");
+  }catch(e){console.warn("特效預覽失敗",e);}
+}
+function bindPhotoEffectGroup(group){
+  document.querySelectorAll('[data-effect-group="'+group+'"] .photo-effect-btn').forEach(btn=>btn.addEventListener("click",async()=>{
+    const style=btn.dataset.effect||"original";
+    if(group==="birdfriend") birdfriendPhotoEffect=style; else adminPhotoEffect=style;
+    document.querySelectorAll('[data-effect-group="'+group+'"] .photo-effect-btn').forEach(b=>b.classList.toggle("active",b===btn));
+    await updateEffectPreview(group);
+  }));
+}
+function resetPhotoEffect(group, style="original"){
+  if(group==="birdfriend") birdfriendPhotoEffect=style; else adminPhotoEffect=style;
+  document.querySelectorAll('[data-effect-group="'+group+'"] .photo-effect-btn').forEach(b=>b.classList.toggle("active",b.dataset.effect===style));
+  updateEffectPreview(group);
+}
+document.getElementById("birdfriendPhotoFile")?.addEventListener("change",()=>updateEffectPreview("birdfriend"));
+document.getElementById("f_photo")?.addEventListener("change",()=>updateEffectPreview("admin"));
+bindPhotoEffectGroup("birdfriend");
+bindPhotoEffectGroup("admin");
+
 function compressImageFile(file, maxWidth = 1280, quality = 0.8) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -3401,6 +3586,7 @@ function resetAdminForm() {
   document.getElementById("f_level").value = "1";
   document.getElementById("f_season").value = "春";
   document.getElementById("f_photo").value = "";
+  resetPhotoEffect("admin","original");
   settingsBirdLocation = null;
   syncSettingsLocationFields(null);
   document.querySelectorAll(".chk-btn.selected").forEach(el => el.classList.remove("selected"));
@@ -3440,6 +3626,7 @@ function loadBirdForEdit(birdId) {
   document.getElementById("f_photographer").value = bird.photographer || "";
   document.getElementById("f_story").value = bird.story || "";
   document.getElementById("f_photo").value = "";
+  resetPhotoEffect("admin", bird.photoStyle || "original");
 
   settingsBirdLocation = bird.location ? JSON.parse(JSON.stringify(bird.location)) : null;
   syncSettingsLocationFields(settingsBirdLocation);
@@ -3543,6 +3730,7 @@ document.getElementById("saveBirdBtn").onclick = async () => {
   const photoInput = document.getElementById("f_photo");
   const photoFile = photoInput.files[0];
   let photoUrl = null;
+  window.__v49AdminPhotoMeta = null;
 
   if (photoFile) {
     if (!FIREBASE_ENABLED) {
@@ -3553,18 +3741,25 @@ document.getElementById("saveBirdBtn").onclick = async () => {
     saveBtn.disabled = true;
     saveBtn.textContent = "壓縮圖片中...";
     try {
-      const compressedBlob = await compressImageFile(photoFile, 1920, 0.9);
+      const originalBlob = await compressImageFile(photoFile, 1920, 0.9);
+      const styledBlob = adminPhotoEffect === "original" ? originalBlob : await createStyledPhotoBlob(photoFile, adminPhotoEffect, 1920, 0.9);
       saveBtn.textContent = "照片上傳中...";
-      let uploadPath = "birds/" + Date.now() + "_" + photoFile.name.replace(/\.[^.]+$/, "") + ".jpg";
+      const stamp=Date.now();
+      const safeName=(photoFile.name||"photo").replace(/[^a-zA-Z0-9._-]+/g,"_").replace(/\.[^.]+$/,"")||"photo";
+      let uploadPath = "birds/" + stamp + "_" + safeName + (adminPhotoEffect === "original" ? "" : "_"+adminPhotoEffect) + ".jpg";
+      let originalUploadPath = "birds/" + stamp + "_" + safeName + "_original.jpg";
       if (editingBirdSource === "community" && editingCommunityDocId) {
         const communityBird = communityBirds.find(b => b.sourceDocId === editingCommunityDocId);
         const ownerUid = communityBird && communityBird.ownerUid;
         if (!ownerUid) throw new Error("找不到鳥友投稿擁有者，無法更換照片");
-        uploadPath = "birdfriendPhotos/" + ownerUid + "/" + Date.now() + "_admin.jpg";
+        uploadPath = "birdfriendPhotos/" + ownerUid + "/" + stamp + "_admin_" + adminPhotoEffect + ".jpg";
+        originalUploadPath = "birdfriendPhotos/" + ownerUid + "/" + stamp + "_admin_original.jpg";
       }
-      const fileRef = fbStorageRef.child(uploadPath);
-      const snapshot = await fileRef.put(compressedBlob);
-      photoUrl = await snapshot.ref.getDownloadURL();
+      const originalSnapshot=await fbStorageRef.child(originalUploadPath).put(originalBlob);
+      const originalUrl=await originalSnapshot.ref.getDownloadURL();
+      if(adminPhotoEffect === "original") { photoUrl=originalUrl; uploadPath=originalUploadPath; }
+      else { const snapshot = await fbStorageRef.child(uploadPath).put(styledBlob); photoUrl = await snapshot.ref.getDownloadURL(); }
+      window.__v49AdminPhotoMeta={photoStyle:adminPhotoEffect,originalPhotoUrl:originalUrl,originalStoragePath:originalUploadPath,storagePath:uploadPath};
     } catch (err) {
       alert("照片上傳失敗:" + err.message);
       saveBtn.disabled = false;
@@ -3593,7 +3788,10 @@ document.getElementById("saveBirdBtn").onclick = async () => {
         photographer: photographer || original.photographer || "鳥友投稿",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
-      if (photoUrl) updateData.photoUrl = photoUrl;
+      if (photoUrl) {
+        updateData.photoUrl = photoUrl;
+        if (window.__v49AdminPhotoMeta) Object.assign(updateData, window.__v49AdminPhotoMeta);
+      }
       await db.collection("birdfriendPhotos").doc(editingCommunityDocId).set(updateData, { merge:true });
       await loadCommunityBirdsFromFirestore();
     } else {
@@ -3606,7 +3804,12 @@ document.getElementById("saveBirdBtn").onclick = async () => {
         bird.season = season;
         bird.conditions = conditions;
         bird.story = story;
-        if (photoUrl) bird.photoUrl = photoUrl;
+        if (photoUrl) {
+          bird.photoUrl = photoUrl;
+          bird.imageType = "real_photo";
+          bird.challengeEnabled = true;
+          if (window.__v49AdminPhotoMeta) Object.assign(bird, window.__v49AdminPhotoMeta);
+        }
         if (photographer) bird.photographer = photographer; else delete bird.photographer;
         if (settingsBirdLocation) bird.location = JSON.parse(JSON.stringify(settingsBirdLocation));
         else delete bird.location;
@@ -3624,7 +3827,10 @@ document.getElementById("saveBirdBtn").onclick = async () => {
       conditions,
       story
     };
-    if (photoUrl) newBird.photoUrl = photoUrl;
+    if (photoUrl) {
+      newBird.photoUrl = photoUrl;
+      if (window.__v49AdminPhotoMeta) Object.assign(newBird, window.__v49AdminPhotoMeta);
+    }
     if (photographer) newBird.photographer = photographer;
     if (settingsBirdLocation) newBird.location = JSON.parse(JSON.stringify(settingsBirdLocation));
     newBird.uploadedAt = Date.now();
@@ -3829,10 +4035,14 @@ function updateActiveGroupDisplay() {
 function renderAdminList() {
   const list = document.getElementById("birdListAdmin");
   list.innerHTML = "";
+  const q=(document.getElementById("adminBirdCatalogSearch")?.value||"").trim().toLocaleLowerCase("zh-Hant");
+  let shown=0;
   birds.forEach((b, i) => {
+    if(q && !String(b.name||"").toLocaleLowerCase("zh-Hant").includes(q)) return;
+    shown++;
     const row = document.createElement("div");
     row.className = "list-row list-row-clickable";
-    row.innerHTML = `<span><span class="idx">No. ${String(i + 1).padStart(3, "0")}</span>${b.name}</span><span class="tag">LV.${b.level} ・ 需答對 ${b.requiredCorrect} 項</span>`;
+    row.innerHTML = `<span><span class="idx">No. ${String(b.coreNo || i + 1).padStart(3, "0")}</span>${b.name}</span><span class="tag">${b.imageType==="ai_watercolor"?"AI水彩・待真照":"真實照片"} ・ LV.${b.level}</span>`;
     row.onclick = () => {
       loadBirdForEdit(b.id);
       editingBirdSource = "official";
@@ -3846,7 +4056,9 @@ function renderAdminList() {
     list.appendChild(row);
   });
 
-  const wildCommunity = communityBirds.filter(b => b.category === "wild");
+  const stat=document.getElementById("adminBirdCatalogSearchStatus");
+  if(stat) stat.textContent=q ? `找到 ${shown} 種核心／正式鳥類` : `核心名單 500 種；可直接搜尋後更換照片`;
+  const wildCommunity = communityBirds.filter(b => b.category === "wild" && (!q || String(b.name||"").toLocaleLowerCase("zh-Hant").includes(q)));
   wildCommunity.forEach((b) => {
     const completed = CONDITIONS.filter(cond => Array.isArray((b.conditions || {})[cond.key]) && (b.conditions || {})[cond.key].length > 0).length;
     const row = document.createElement("div");
@@ -3863,6 +4075,8 @@ function renderAdminList() {
     list.appendChild(row);
   });
 }
+
+document.getElementById("adminBirdCatalogSearch")?.addEventListener("input", renderAdminList);
 
 function renderExport() {
   document.getElementById("exportBox").textContent = JSON.stringify(birds, null, 2);
@@ -5132,6 +5346,17 @@ document.getElementById("playerGrantTab")?.addEventListener("click", () => setPl
 document.getElementById("playerLoginTab")?.addEventListener("click", () => setPlayerPortalMode("login"));
 
 let birdfriendPhotoCategory = "wild";
+function renderBirdfriendCoreSearch(){
+  const input=document.getElementById("birdfriendCoreSearch"); const box=document.getElementById("birdfriendCoreSearchResults");
+  if(!input||!box) return; const q=(input.value||"").trim().toLocaleLowerCase("zh-Hant"); box.innerHTML="";
+  if(!q) return;
+  birds.filter(b=>b.coreCatalog&&String(b.name||"").toLocaleLowerCase("zh-Hant").includes(q)).slice(0,12).forEach(b=>{
+    const row=document.createElement("div"); row.className="v50-search-result"; row.innerHTML=`<span>No. ${String(b.coreNo||0).padStart(3,"0")}　${b.name} ${b.imageType==="ai_watercolor"?'<span class="v50-ai-chip">AI示意圖</span>':''}</span><button type="button">選擇替換</button>`;
+    row.querySelector("button").onclick=()=>{document.getElementById("birdfriendTargetBirdId").value=b.id;document.getElementById("birdfriendWildName").value=b.name;input.value=b.name;box.innerHTML=`<div class="hint">已選擇：No. ${String(b.coreNo||0).padStart(3,"0")} ${b.name}。這次上傳的真實照片會成為此鳥種的優先顯示照片。</div>`;};
+    box.appendChild(row);
+  });
+}
+document.getElementById("birdfriendCoreSearch")?.addEventListener("input",renderBirdfriendCoreSearch);
 let birdfriendEditingRecord = null;
 
 function renderBirdfriendWildConditionFields() {
@@ -5233,9 +5458,10 @@ function setBirdfriendPhotoStatus(message, type="info") {
 function resetBirdfriendUploadForm() {
   birdfriendEditingRecord = null;
   const editId = document.getElementById("birdfriendEditingPhotoId"); if (editId) editId.value = "";
-  ["birdfriendWildName","birdfriendPetBreed","birdfriendPetNickname","birdfriendPetDiet","birdfriendPetAge","birdfriendPetTalent","birdfriendPhotoNote"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
+  ["birdfriendWildName","birdfriendCoreSearch","birdfriendPetBreed","birdfriendPetNickname","birdfriendPetDiet","birdfriendPetAge","birdfriendPetTalent","birdfriendPhotoNote"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
   const sex=document.getElementById("birdfriendPetSex"); if(sex) sex.value="";
-  const file=document.getElementById("birdfriendPhotoFile"); if(file) file.value="";
+  const file=document.getElementById("birdfriendPhotoFile"); if(file) file.value=""; const target=document.getElementById("birdfriendTargetBirdId"); if(target) target.value=""; const sr=document.getElementById("birdfriendCoreSearchResults"); if(sr) sr.innerHTML="";
+  resetPhotoEffect("birdfriend","original");
   document.querySelectorAll(".birdfriend-condition-grid .chk-btn.selected").forEach(el => el.classList.remove("selected"));
   document.querySelectorAll(".birdfriend-custom-condition").forEach(el => el.value="");
   const btn=document.getElementById("birdfriendPhotoUploadBtn"); if(btn) btn.textContent="儲存照片與資料";
@@ -5249,6 +5475,7 @@ function fillBirdfriendEditForm(item) {
   syncBirdfriendCategoryUI();
   const idEl=document.getElementById("birdfriendEditingPhotoId"); if(idEl) idEl.value=item.id;
   document.getElementById("birdfriendPhotoNote").value = item.note || "";
+  resetPhotoEffect("birdfriend", item.photoStyle || "original");
   if (birdfriendPhotoCategory === "wild") {
     document.getElementById("birdfriendWildName").value = item.wildName || item.photoName || "";
     document.querySelectorAll(".birdfriend-condition-grid .chk-btn.selected").forEach(el => el.classList.remove("selected"));
@@ -5294,7 +5521,10 @@ async function deleteBirdfriendOwnPhoto(item) {
   try {
     const {ref,data}=await assertOwnBirdfriendRecord(item.id);
     await ref.delete();
-    if (data.storagePath && fbStorageRef) { try { await fbStorageRef.child(data.storagePath).delete(); } catch (_) {} }
+    if (fbStorageRef) {
+      const paths=[data.storagePath,data.originalStoragePath].filter(Boolean);
+      for(const path of [...new Set(paths)]) { try { await fbStorageRef.child(path).delete(); } catch (_) {} }
+    }
     resetBirdfriendUploadForm();
     await loadCommunityBirdsFromFirestore();
     await loadBirdfriendMyPhotos();
@@ -5398,7 +5628,8 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     if (!wildName) { setBirdfriendPhotoStatus("野生鳥類請先填寫鳥名。", "error"); return; }
     const conditions=collectBirdfriendWildConditions();
     const completedCount=birdfriendWildCompletedCount(conditions);
-    payload={category:"wild", wildName, photoName:wildName, conditions, completedCount, challengeEligible:completedCount===15};
+    const targetBirdId=document.getElementById("birdfriendTargetBirdId")?.value||"";
+    payload={category:"wild", wildName, photoName:wildName, conditions, completedCount, challengeEligible:completedCount===15, targetBirdId:targetBirdId||null, imageType:"real_photo"};
   } else {
     const petData={
       breed:document.getElementById("birdfriendPetBreed").value.trim(),
@@ -5427,16 +5658,29 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     } else ref=db.collection("birdfriendPhotos").doc();
 
     let photoUrl=oldData.photoUrl || "", storagePath=oldData.storagePath || "";
+    let originalPhotoUrl=oldData.originalPhotoUrl || oldData.photoUrl || "", originalStoragePath=oldData.originalStoragePath || oldData.storagePath || "";
+    let selectedPhotoStyle = birdfriendPhotoEffect || oldData.photoStyle || "original";
     if (file) {
-      const compressed = await compressImageFile(file, 1920, 0.88);
       const safeBase = (file.name || "photo").replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/\.[^.]+$/, "") || "photo";
-      storagePath = `birdfriendPhotos/${playerPortalSession.uid}/${Date.now()}_${safeBase}.jpg`;
-      const up = await fbStorageRef.child(storagePath).put(compressed);
-      photoUrl = await up.ref.getDownloadURL();
-      if (oldData.storagePath && oldData.storagePath !== storagePath) { try { await fbStorageRef.child(oldData.storagePath).delete(); } catch (_) {} }
+      const stamp=Date.now();
+      const originalBlob = await compressImageFile(file, 1920, 0.9);
+      originalStoragePath = `birdfriendPhotos/${playerPortalSession.uid}/${stamp}_${safeBase}_original.jpg`;
+      const originalUp = await fbStorageRef.child(originalStoragePath).put(originalBlob);
+      originalPhotoUrl = await originalUp.ref.getDownloadURL();
+      if (selectedPhotoStyle === "original") {
+        storagePath = originalStoragePath;
+        photoUrl = originalPhotoUrl;
+      } else {
+        const styledBlob = await createStyledPhotoBlob(file, selectedPhotoStyle, 1920, 0.9);
+        storagePath = `birdfriendPhotos/${playerPortalSession.uid}/${stamp}_${safeBase}_${selectedPhotoStyle}.jpg`;
+        const styledUp = await fbStorageRef.child(storagePath).put(styledBlob);
+        photoUrl = await styledUp.ref.getDownloadURL();
+      }
+      const oldPaths=[oldData.storagePath,oldData.originalStoragePath].filter(Boolean);
+      for(const oldPath of oldPaths){ if(oldPath!==storagePath && oldPath!==originalStoragePath){ try{await fbStorageRef.child(oldPath).delete();}catch(_){}} }
     }
 
-    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, photographer:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, status:"submitted", updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, photographer:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, originalPhotoUrl, originalStoragePath, photoStyle:selectedPhotoStyle, status:"submitted", updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if (!editingId) data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     await ref.set(data,{merge:true});
     const count=payload.category === "wild" ? payload.completedCount : 0;
