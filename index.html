@@ -1554,6 +1554,10 @@
 .v53-ai-log{margin-top:10px;max-height:150px;overflow:auto;border-radius:12px;background:rgba(255,255,255,.75);padding:8px 10px;font-size:11px;line-height:1.5;color:#4a5d52;}
 @media(max-width:640px){#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}#adminFormPanel .checkbox-grid .chk-btn{min-width:0!important;word-break:break-word!important;}.v53-ai-import-card{padding:13px}.v53-ai-import-btn{width:100%;}}
 
+
+/* V5.5: AI 接圖入口固定在修改資料最上方 */
+#v53AiImportCard{display:block!important;margin:10px 0 22px!important;border:2px solid rgba(46,112,73,.28)!important;box-shadow:0 8px 22px rgba(46,92,68,.10)}
+#v53AiZipInput{min-height:52px;background:#fff;border-radius:14px;padding:10px}
 </style>
 </head>
 <body>
@@ -1568,7 +1572,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.3 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.5 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -2019,15 +2023,7 @@
     </div>
 
     <div id="adminModifyPanel">
-      <div class="section-title" style="margin-top:0;">已建檔鳥類清單 <span class="list-status-badge">已建檔・可修改</span></div>
-      <div class="hint">點一下任一筆資料，就會載入該筆內容進入修改畫面；存檔後直接更新原資料。</div>
-      <div class="field" style="margin:12px 0;"><label>搜尋 500 種鳥類關鍵字</label><input type="search" id="adminBirdCatalogSearch" placeholder="輸入鳥名，例如：綠繡眼、鷺、鷹"></div>
-      <div class="hint" id="adminBirdCatalogSearchStatus" style="margin-top:-6px;"></div>
-      <div id="birdListAdmin"></div>
-
-      <div class="section-title">V5.3 批次建檔進度</div>
-      <div class="hint" id="v53BatchProgress">500種 × 15欄位；不確定保持空白。奇數水彩、偶數油畫。批次可續作。</div>
-
+      <div class="section-title" style="margin-top:0;">AI 圖片接收中心 <span class="list-status-badge">V5.5</span></div>
       <div class="v53-ai-import-card" id="v53AiImportCard">
         <div class="v53-ai-import-title"><span>🎨 AI 圖片批次匯入 Firebase</span><span id="v53AiImportCount">0 / 500</span></div>
         <div class="hint">選擇含 001～500 圖片的 ZIP。系統會依編號自動判定：奇數＝水彩、偶數＝油畫，壓成 512px WebP（目標 ≤90KB）後上傳 Storage，並同步 Firestore。真實照片一律不覆蓋。</div>
@@ -2041,6 +2037,16 @@
         <div class="v53-ai-status" id="v53AiImportStatus">尚未選擇 ZIP。已完成的編號會存在本機 checkpoint；重新選同一 ZIP 後可續傳。</div>
         <div class="v53-ai-log" id="v53AiImportLog" style="display:none;"></div>
       </div>
+
+      <div class="section-title" style="margin-top:0;">已建檔鳥類清單 <span class="list-status-badge">已建檔・可修改</span></div>
+      <div class="hint">點一下任一筆資料，就會載入該筆內容進入修改畫面；存檔後直接更新原資料。</div>
+      <div class="field" style="margin:12px 0;"><label>搜尋 500 種鳥類關鍵字</label><input type="search" id="adminBirdCatalogSearch" placeholder="輸入鳥名，例如：綠繡眼、鷺、鷹"></div>
+      <div class="hint" id="adminBirdCatalogSearchStatus" style="margin-top:-6px;"></div>
+      <div id="birdListAdmin"></div>
+
+      <div class="section-title">V5.5 批次建檔進度</div>
+      <div class="hint" id="v53BatchProgress">500種 × 15欄位；不確定保持空白。奇數水彩、偶數油畫。批次可續作。</div>
+
       <div class="section-title">匯出資料(供接 Firestore 用)</div>
       <div class="hint">複製此 JSON,之後可直接匯入 Firestore 對應集合</div>
       
