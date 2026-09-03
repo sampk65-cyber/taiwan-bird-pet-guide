@@ -24,6 +24,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
 <style>
   :root {
@@ -1540,7 +1541,18 @@
 .admin-compact-card.expanded .player-review-list{display:flex;}
 .admin-compact-toggle{border:1px solid rgba(48,105,75,.22);background:#fff;border-radius:999px;padding:6px 12px;font-weight:800;color:#315f48;cursor:pointer;}
 .admin-compact-card .player-review-head{cursor:pointer;}
-@media(max-width:640px){#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}#adminFormPanel .checkbox-grid .chk-btn{min-width:0!important;word-break:break-word!important;}}
+.v53-ai-import-card{margin:18px 0;padding:16px;border:1px solid rgba(49,95,72,.22);border-radius:18px;background:linear-gradient(145deg,#fbfffc,#f0f7f2);box-shadow:0 8px 24px rgba(38,72,54,.07);}
+.v53-ai-import-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;color:#315f48;margin-bottom:8px;}
+.v53-ai-import-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+.v53-ai-import-row input[type=file]{flex:1 1 230px;min-width:0;}
+.v53-ai-import-btn{border:0;border-radius:999px;padding:9px 14px;font-weight:900;cursor:pointer;background:#315f48;color:#fff;}
+.v53-ai-import-btn.secondary{background:#fff;color:#315f48;border:1px solid rgba(49,95,72,.25);}
+.v53-ai-import-btn:disabled{opacity:.45;cursor:not-allowed;}
+.v53-ai-progress{height:10px;border-radius:999px;background:#dfe9e2;overflow:hidden;margin:12px 0 7px;}
+.v53-ai-progress>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#6e9f81,#315f48);transition:width .2s ease;}
+.v53-ai-status{font-size:12px;line-height:1.55;color:#52665b;white-space:pre-line;}
+.v53-ai-log{margin-top:10px;max-height:150px;overflow:auto;border-radius:12px;background:rgba(255,255,255,.75);padding:8px 10px;font-size:11px;line-height:1.5;color:#4a5d52;}
+@media(max-width:640px){#adminFormPanel .checkbox-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;}#adminFormPanel .checkbox-grid .chk-btn{min-width:0!important;word-break:break-word!important;}.v53-ai-import-card{padding:13px}.v53-ai-import-btn{width:100%;}}
 
 </style>
 </head>
@@ -1556,7 +1568,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.0R <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · V5.3 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -2013,6 +2025,22 @@
       <div class="hint" id="adminBirdCatalogSearchStatus" style="margin-top:-6px;"></div>
       <div id="birdListAdmin"></div>
 
+      <div class="section-title">V5.3 批次建檔進度</div>
+      <div class="hint" id="v53BatchProgress">500種 × 15欄位；不確定保持空白。奇數水彩、偶數油畫。批次可續作。</div>
+
+      <div class="v53-ai-import-card" id="v53AiImportCard">
+        <div class="v53-ai-import-title"><span>🎨 AI 圖片批次匯入 Firebase</span><span id="v53AiImportCount">0 / 500</span></div>
+        <div class="hint">選擇含 001～500 圖片的 ZIP。系統會依編號自動判定：奇數＝水彩、偶數＝油畫，壓成 512px WebP（目標 ≤90KB）後上傳 Storage，並同步 Firestore。真實照片一律不覆蓋。</div>
+        <div class="v53-ai-import-row">
+          <input type="file" id="v53AiZipInput" accept=".zip,application/zip">
+          <button type="button" class="v53-ai-import-btn" id="v53AiImportBtn">開始／繼續匯入</button>
+          <button type="button" class="v53-ai-import-btn secondary" id="v53AiStopBtn" disabled>暫停</button>
+          <button type="button" class="v53-ai-import-btn secondary" id="v53AiResetCheckpointBtn">重設本機進度</button>
+        </div>
+        <div class="v53-ai-progress"><span id="v53AiProgressBar"></span></div>
+        <div class="v53-ai-status" id="v53AiImportStatus">尚未選擇 ZIP。已完成的編號會存在本機 checkpoint；重新選同一 ZIP 後可續傳。</div>
+        <div class="v53-ai-log" id="v53AiImportLog" style="display:none;"></div>
+      </div>
       <div class="section-title">匯出資料(供接 Firestore 用)</div>
       <div class="hint">複製此 JSON,之後可直接匯入 Firestore 對應集合</div>
       
@@ -2092,7 +2120,7 @@ const CONDITIONS = [
 
 const LEVEL_REQUIRED = { 1: 3, 2: 6, 3: 10, 4: 15 };
 
-// V5.0 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
+// V5.3 鳥友影像館：圖鑑可看全部投稿；只有 15 項完整野生鳥可進入題目與總挑戰。
 let communityBirds = [];
 function photographerCreditText(bird) {
   const v = bird && (bird.photographer || bird.displayName || bird.playerId);
@@ -2369,14 +2397,14 @@ let birds = [
       elevation: ["0-500", "500-1000"], family: ["秧雞科"], habitat: ["濕地", "農田", "溪流"], diet: ["小型動物", "雜食"],
       predator: ["人類"], population: ["普遍"], disturbance: ["高"], residency: ["留鳥"],
       activity: ["晨昏活動", "夜行性"], nestType: ["地面巢"], size: ["中型(15-35cm)"], feature: ["羽色鮮豔"],
-      eggColor: ["待確認"], eggCount: ["待確認"], originStatus: ["原生種"]
+      eggColor: [], eggCount: [], originStatus: ["原生種"]
     },
     story: "白腹秧雞是台灣低海拔常見卻機警的水鳥,體型圓胖側扁,方便穿梭草叢與灌木間。臉部到腹部呈現亮白色,和黑褐色背部形成強烈對比,黃色鳥喙基部帶紅。繁殖期在三月到七月,清晨與黃昏最容易聽到牠們像「補鍋」一樣清亮的叫聲,有時整夜不停。個性害羞敏感,一有動靜就迅速鑽入草叢躲藏。剛孵化的雛鳥全身烏黑,毛茸茸的模樣十分可愛,出生沒多久就會跟著親鳥學覓食。"
   }
 ];
 
 
-// ===== V5.0 臺灣鳥類 500 種核心名單 =====
+// ===== V5.3 臺灣鳥類 500 種核心名單 =====
 const TAIWAN_CORE_500_NAMES = [
   "麻雀", "五色鳥", "帝雉", "白腹秧雞", "綠繡眼", "樹鴨", "斑頭雁", "灰雁", "鴻雁", "白額雁",
   "小白額雁", "寒林豆雁", "凍原豆雁", "黑雁", "疣鼻天鵝", "小天鵝", "黃嘴天鵝", "瀆鳧", "花鳧", "棉鴨",
@@ -2441,7 +2469,7 @@ function ensureV50CoreBirds() {
     if(nameMap.has(name)) return;
     const no=idx+1;
     const id='tw500_'+String(no).padStart(3,'0');
-    birds.push({id,name,level:1,previewLevel:((no-1)%4)+1,definitionPending:true,requiredCorrect:3,speed:90,season:'春',conditions:{elevation:['待確認'],family:['待確認'],habitat:['待確認'],diet:['待確認'],predator:['待確認'],population:['待確認'],disturbance:['待確認'],residency:['待確認'],activity:['待確認'],nestType:['待確認'],size:['待確認'],feature:['待確認'],eggColor:['待確認'],eggCount:['待確認'],originStatus:['原生種']},story:'V5.0 核心鳥種骨架。資料與等級待真實定義；有真實照片後由鳥友或管理者替換。',photoUrl:'',imageType:'placeholder_line',challengeEnabled:false,coreCatalog:true,coreNo:no});
+    birds.push({id,name,level:1,previewLevel:((no-1)%4)+1,definitionPending:true,requiredCorrect:3,speed:90,season:'春',conditions:{elevation:[],family:[],habitat:[],diet:[],predator:[],population:[],disturbance:[],residency:[],activity:[],nestType:[],size:[],feature:[],eggColor:[],eggCount:[],originStatus:[]},story:'V5.3 核心鳥種骨架。不確定資料維持空白；有真實照片後由鳥友或管理者替換。',photoUrl:'',imageType:'placeholder_line',challengeEnabled:false,coreCatalog:true,coreNo:no});
   });
   // 若舊版已有同名鳥種，仍只保留一筆；核心清單總數固定 500。
   const wanted=new Set(TAIWAN_CORE_500_NAMES);
@@ -2451,6 +2479,66 @@ function ensureV50CoreBirds() {
   birds=[...TAIWAN_CORE_500_NAMES.map(n=>core.find(b=>b.name===n)).filter(Boolean),...extras];
 }
 ensureV50CoreBirds();
+
+// ===== V5.3 可續作資料層：只寫入已由網路圖鑑確認的欄位；不確定一律空白 =====
+const V53_DATASET_VERSION = "2026-09-03-batch-001";
+const V53_CONFIRMED_DATA = {
+  "002": {
+    name:"五色鳥",
+    conditions:{
+      elevation:["0-500","500-1000","1000-1500","1500-2000","2000-2500"],
+      family:["鬚鴷科"], habitat:["森林","公園綠地"], diet:["種子果實","昆蟲"],
+      population:["普遍"], residency:["留鳥"], activity:["日行性"], nestType:["樹洞"],
+      eggColor:["白色"], eggCount:["3-4顆"], originStatus:["特有種"]
+    },
+    source:"https://taieol.tw/pages/73518/articles",
+    reviewedAt:"2026-09-03"
+  },
+  "004": {
+    name:"白腹秧雞",
+    conditions:{
+      elevation:["0-500","500-1000"], family:["秧雞科"], habitat:["濕地","農田","溪流"],
+      diet:["小型動物","雜食"], population:["普遍"], residency:["留鳥"],
+      nestType:["草叢盤巢"], eggColor:["白色","帶斑點"], eggCount:["4-7顆"]
+    },
+    source:"https://kite.taieol.tw/species/Amaurornis%20phoenicurus%20chinensis",
+    reviewedAt:"2026-09-03"
+  },
+  "005": {
+    name:"綠繡眼",
+    conditions:{
+      family:["繡眼科"], habitat:["公園綠地","農田"], diet:["昆蟲","種子果實","花蜜花粉"],
+      population:["普遍"], residency:["留鳥"], activity:["日行性"], nestType:["杯狀巢"],
+      size:["小型(<15cm)"], feature:["眼圈明顯"], eggColor:["藍綠色"], eggCount:["2-3顆"],
+      originStatus:["原生種"]
+    },
+    source:"https://taieol.tw/pages/248452/articles",
+    reviewedAt:"2026-09-03"
+  }
+};
+function applyV53ConfirmedData(){
+  Object.entries(V53_CONFIRMED_DATA).forEach(([no,data])=>{
+    const b=birds.find(x=>String(x.coreNo||'').padStart(3,'0')===no || x.name===data.name);
+    if(!b) return;
+    b.conditions=b.conditions||{};
+    CONDITIONS.forEach(c=>{ if(!Array.isArray(b.conditions[c.key]) || b.conditions[c.key].includes('待確認')) b.conditions[c.key]=[]; });
+    Object.entries(data.conditions||{}).forEach(([k,v])=>{ b.conditions[k]=Array.isArray(v)?v.slice():[]; });
+    b.v53Verified=true; b.v53Source=data.source||''; b.v53ReviewedAt=data.reviewedAt||'';
+    b.v53ConfirmedFieldCount=CONDITIONS.reduce((n,c)=>n+(Array.isArray(b.conditions[c.key])&&b.conditions[c.key].length?1:0),0);
+  });
+}
+applyV53ConfirmedData();
+
+// 500種影像工作佇列：奇數=水彩、偶數=油畫。檔案與 Firebase 路徑固定，方便跨對話續作。
+const V53_IMAGE_MANIFEST = TAIWAN_CORE_500_NAMES.map((name,idx)=>{
+  const no=idx+1, id=String(no).padStart(3,'0'), style=(no%2===1?'watercolor':'oil');
+  return {no,id,name,style,status:'pending',storagePath:`coreBirdArt/v5.3/${id}_${style}.webp`,maxBytes:90000};
+});
+function getV53Progress(){
+  const reviewed=Object.keys(V53_CONFIRMED_DATA).length;
+  const confirmedFields=Object.values(V53_CONFIRMED_DATA).reduce((sum,d)=>sum+Object.keys(d.conditions||{}).length,0);
+  return {version:V53_DATASET_VERSION,totalBirds:500,totalFields:7500,reviewedBirds:reviewed,confirmedFields,imageTotal:500,imagePending:V53_IMAGE_MANIFEST.filter(x=>x.status==='pending').length,nextBirdNo:reviewed+1};
+}
 
 let currentBirdId = null;
 let GAME_MODE = "explain";
@@ -3912,6 +4000,166 @@ document.getElementById("saveBirdBtn").onclick = async () => {
   renderExport();
   renderBirdGrid();
 };
+
+
+// ===== V5.3 AI 圖片 ZIP → Firebase 批次匯入（可續傳） =====
+const V53_AI_IMPORT_CHECKPOINT_KEY = "birdGuideV53AiImportCheckpoint";
+let v53AiImportStopRequested = false;
+let v53AiImportRunning = false;
+
+function v53ReadAiCheckpoint(){
+  try { return JSON.parse(localStorage.getItem(V53_AI_IMPORT_CHECKPOINT_KEY) || "{}"); }
+  catch(e){ return {}; }
+}
+function v53WriteAiCheckpoint(cp){
+  try { localStorage.setItem(V53_AI_IMPORT_CHECKPOINT_KEY, JSON.stringify(cp || {})); } catch(e){}
+}
+function v53AiLog(msg){
+  const el=document.getElementById("v53AiImportLog"); if(!el) return;
+  el.style.display="block";
+  const t=new Date().toLocaleTimeString("zh-TW",{hour12:false});
+  el.textContent += `[${t}] ${msg}\n`;
+  el.scrollTop=el.scrollHeight;
+}
+function v53RefreshAiImportUi(extra){
+  const cp=v53ReadAiCheckpoint();
+  const done=Object.values(cp).filter(x=>x&&x.status==="done").length;
+  const skipped=Object.values(cp).filter(x=>x&&x.status==="skipped_real").length;
+  const count=document.getElementById("v53AiImportCount"); if(count) count.textContent=`${done} / 500`;
+  const bar=document.getElementById("v53AiProgressBar"); if(bar) bar.style.width=Math.min(100,(done/500)*100)+"%";
+  const st=document.getElementById("v53AiImportStatus");
+  if(st && extra) st.textContent=extra + (skipped?`\n保護真實照片：已跳過 ${skipped} 種。`:"");
+}
+function v53CoreBirdByNo(no){
+  const n=Number(no);
+  return birds.find(b=>Number(b.coreNo)===n) || birds.find(b=>b.name===TAIWAN_CORE_500_NAMES[n-1]) || null;
+}
+function v53BirdHasRealPhoto(bird){
+  if(!bird) return false;
+  if(bird.imageType==="real_photo") return true;
+  if(bird.replacedByBirdfriend) return true;
+  const derived=getV50CoreBirdsWithReplacements().find(x=>Number(x.coreNo)===Number(bird.coreNo));
+  if(derived && derived.replacedByBirdfriend) return true;
+  // 舊版核心鳥若有內嵌 JPEG/HTTP 真實照片且未標示 AI，也視為真實照片。
+  if(bird.photoUrl && !/^data:image\/svg\+xml/i.test(bird.photoUrl) && !String(bird.imageType||"").startsWith("ai_")) return true;
+  return false;
+}
+function v53FindZipEntry(zip,no){
+  const prefix=String(no).padStart(3,"0");
+  const files=Object.values(zip.files).filter(x=>!x.dir && /\.(webp|png|jpe?g)$/i.test(x.name));
+  return files.find(x=>new RegExp(`(^|/)${prefix}(?:[_\\- .]|$)`,"i").test(x.name)) ||
+         files.find(x=>new RegExp(`(^|/)${prefix}[^/]*\\.(webp|png|jpe?g)$`,"i").test(x.name)) || null;
+}
+async function v53BlobToBitmap(blob){
+  if(window.createImageBitmap) return await createImageBitmap(blob);
+  return await new Promise((resolve,reject)=>{
+    const img=new Image(), url=URL.createObjectURL(blob);
+    img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};
+    img.onerror=e=>{URL.revokeObjectURL(url);reject(new Error("圖片解碼失敗"))};
+    img.src=url;
+  });
+}
+async function v53CompressToWebp(blob,maxDim=512,targetBytes=90000){
+  const img=await v53BlobToBitmap(blob);
+  const iw=img.width||img.naturalWidth, ih=img.height||img.naturalHeight;
+  let scale=Math.min(1,maxDim/Math.max(iw,ih));
+  let w=Math.max(1,Math.round(iw*scale)), h=Math.max(1,Math.round(ih*scale));
+  let quality=.86, out=null;
+  for(let pass=0; pass<8; pass++){
+    const canvas=document.createElement("canvas"); canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+    out=await new Promise(res=>canvas.toBlob(res,"image/webp",quality));
+    if(!out) throw new Error("瀏覽器無法產生 WebP");
+    if(out.size<=targetBytes) break;
+    if(quality>.48) quality-=.09; else { w=Math.max(240,Math.round(w*.88)); h=Math.max(180,Math.round(h*.88)); }
+  }
+  try{ if(img.close) img.close(); }catch(e){}
+  return out;
+}
+async function v53UploadOneAiArt(no,zip){
+  const bird=v53CoreBirdByNo(no);
+  if(!bird) throw new Error(`No.${String(no).padStart(3,"0")} 找不到核心鳥種`);
+  if(v53BirdHasRealPhoto(bird)) return {status:"skipped_real",bird};
+  const entry=v53FindZipEntry(zip,no);
+  if(!entry) return {status:"missing",bird};
+  const raw=await entry.async("blob");
+  const webp=await v53CompressToWebp(raw,512,90000);
+  const id=String(no).padStart(3,"0");
+  const style=(no%2===1?"watercolor":"oil");
+  const storagePath=`coreBirdArt/v5.3/${id}_${style}.webp`;
+  const meta={contentType:"image/webp",customMetadata:{birdNo:id,birdName:bird.name,style,version:"5.3"}};
+  const snap=await fbStorageRef.child(storagePath).put(webp,meta);
+  const url=await snap.ref.getDownloadURL();
+  const imageType=style==="watercolor"?"ai_watercolor":"ai_oil";
+  const credit=style==="watercolor"?"AI 水彩示意圖":"AI 油畫示意圖";
+  const patch={photoUrl:url,imageType,aiStyle:style,aiGenerated:true,aiStoragePath:storagePath,photographer:credit,challengeEnabled:false,coreCatalog:true,coreNo:Number(no),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  await db.collection("birds").doc(bird.id).set(patch,{merge:true});
+  bird.photoUrl=url; bird.imageType=imageType; bird.aiStyle=style; bird.aiGenerated=true; bird.aiStoragePath=storagePath; bird.photographer=credit; bird.challengeEnabled=false;
+  return {status:"done",bird,bytes:webp.size,storagePath};
+}
+
+async function v53StartAiZipImport(){
+  if(v53AiImportRunning) return;
+  if(!(await requireAdminSession())) return;
+  if(!FIREBASE_ENABLED || !fbStorageRef || !db){ alert("Firebase 尚未連線，無法批次匯入。"); return; }
+  if(typeof JSZip==="undefined"){ alert("ZIP 元件尚未載入，請確認網路後重新整理。"); return; }
+  const input=document.getElementById("v53AiZipInput");
+  const file=input&&input.files&&input.files[0];
+  if(!file){ alert("請先選擇包含 001～500 圖片的 ZIP。"); return; }
+  v53AiImportRunning=true; v53AiImportStopRequested=false;
+  const startBtn=document.getElementById("v53AiImportBtn"), stopBtn=document.getElementById("v53AiStopBtn");
+  if(startBtn) startBtn.disabled=true; if(stopBtn) stopBtn.disabled=false;
+  try{
+    v53RefreshAiImportUi("正在讀取 ZIP…");
+    const zip=await JSZip.loadAsync(file);
+    const cp=v53ReadAiCheckpoint();
+    let doneNow=0, missing=0, protectedReal=0, errors=0;
+    for(let no=1;no<=500;no++){
+      if(v53AiImportStopRequested){ v53AiLog("已暫停；重新選同一 ZIP 後可從 checkpoint 繼續。"); break; }
+      const id=String(no).padStart(3,"0");
+      if(cp[id] && (cp[id].status==="done" || cp[id].status==="skipped_real")) continue;
+      const bird=v53CoreBirdByNo(no);
+      v53RefreshAiImportUi(`處理 ${id} ${bird?bird.name:""}…`);
+      try{
+        const r=await v53UploadOneAiArt(no,zip);
+        if(r.status==="done"){
+          cp[id]={status:"done",name:r.bird.name,style:(no%2===1?"watercolor":"oil"),storagePath:r.storagePath,bytes:r.bytes,at:Date.now()}; doneNow++;
+          v53AiLog(`✓ ${id} ${r.bird.name} → ${(r.bytes/1024).toFixed(1)}KB`);
+        } else if(r.status==="skipped_real"){
+          cp[id]={status:"skipped_real",name:r.bird.name,at:Date.now()}; protectedReal++;
+          v53AiLog(`↷ ${id} ${r.bird.name} 已有真實照片，保護跳過`);
+        } else {
+          cp[id]={status:"missing",name:r.bird.name,at:Date.now()}; missing++;
+        }
+        v53WriteAiCheckpoint(cp); v53RefreshAiImportUi(`已完成本輪 ${doneNow} 張；缺圖 ${missing}；真實照片保護 ${protectedReal}；錯誤 ${errors}`);
+      }catch(err){
+        cp[id]={status:"error",message:String(err&&err.message||err),at:Date.now()}; v53WriteAiCheckpoint(cp); errors++;
+        v53AiLog(`✕ ${id} ${bird?bird.name:""}：${err.message||err}`);
+      }
+    }
+    renderAdminList(); renderBirdGrid(); renderExport();
+    const doneTotal=Object.values(v53ReadAiCheckpoint()).filter(x=>x&&x.status==="done").length;
+    v53RefreshAiImportUi(v53AiImportStopRequested?`已暫停。Firebase 已完成 ${doneTotal} / 500；重新選同一 ZIP 即可續傳。`:`本輪完成。Firebase AI 圖片 checkpoint：${doneTotal} / 500。缺圖與失敗項目可補進 ZIP 後再次執行。`);
+  }catch(err){
+    alert("ZIP 讀取或批次匯入失敗："+(err.message||err));
+    v53AiLog("批次中止："+(err.message||err));
+  }finally{
+    v53AiImportRunning=false;
+    if(startBtn) startBtn.disabled=false; if(stopBtn) stopBtn.disabled=true;
+  }
+}
+
+document.getElementById("v53AiImportBtn")?.addEventListener("click",v53StartAiZipImport);
+document.getElementById("v53AiStopBtn")?.addEventListener("click",()=>{v53AiImportStopRequested=true;const el=document.getElementById("v53AiImportStatus");if(el)el.textContent="正在完成目前這一張，之後暫停…";});
+document.getElementById("v53AiResetCheckpointBtn")?.addEventListener("click",()=>{
+  if(v53AiImportRunning){alert("請先暫停批次匯入。");return;}
+  if(!confirm("只重設這台裝置的 V5.3 AI 圖片 checkpoint？Firebase 已上傳的檔案不會刪除。")) return;
+  localStorage.removeItem(V53_AI_IMPORT_CHECKPOINT_KEY);
+  const log=document.getElementById("v53AiImportLog");if(log){log.textContent="";log.style.display="none";}
+  v53RefreshAiImportUi("本機 checkpoint 已重設。再次匯入時仍會保護真實照片，但 AI 圖片可能重新覆寫同一路徑。");
+});
+v53RefreshAiImportUi("尚未選擇 ZIP。已完成的編號會存在本機 checkpoint；重新選同一 ZIP 後可續傳。");
 
 async function saveBirdToFirestore(bird) {
   if (!FIREBASE_ENABLED || !db) return;
@@ -6196,6 +6444,12 @@ async function initApp() {
   }
 }
 initApp();
+
+// V5.3 進度提示（不干擾既有功能）
+setTimeout(()=>{
+  const el=document.getElementById('v53BatchProgress');
+  if(el){const p=getV53Progress(); el.textContent=`資料：${p.reviewedBirds}/500 種已人工核對批次；${p.confirmedFields}/7500 欄已確認。圖片佇列：${p.imageTotal-p.imagePending}/${p.imageTotal}。下次可依 checkpoint 繼續。`;}
+},0);
 </script>
 
 <!-- 穩定內嵌音樂：不依賴 Tone.Transport、不依賴外部音檔 -->
