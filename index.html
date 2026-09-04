@@ -4371,11 +4371,15 @@ function v53RefreshAiImportUi(extra){
   const cp=v53ReadAiCheckpoint();
   const packageIds=v53AiActivePackageNos.map(no=>String(no).padStart(3,"0"));
   const total=packageIds.length || 500;
-  const done=packageIds.length ? packageIds.filter(id=>cp[id]&&cp[id].status==="done").length : Object.values(cp).filter(x=>x&&x.status==="done").length;
-  const skipped=packageIds.length ? packageIds.filter(id=>cp[id]&&cp[id].status==="skipped_real").length : Object.values(cp).filter(x=>x&&x.status==="skipped_real").length;
-  const finished=done+skipped;
-  const count=document.getElementById("v53AiImportCount"); if(count) count.textContent=`${finished} / ${total}`;
-  const bar=document.getElementById("v53AiProgressBar"); if(bar) bar.style.width=Math.min(100,(finished/total)*100)+"%";
+  const records=packageIds.length ? packageIds.map(id=>cp[id]).filter(Boolean) : Object.values(cp).filter(Boolean);
+  const done=records.filter(x=>x.status==="done").length;
+  const skipped=records.filter(x=>x.status==="skipped_real").length;
+  const errors=records.filter(x=>x.status==="error").length;
+  const missing=records.filter(x=>x.status==="missing").length;
+  const processed=done+skipped+errors+missing;
+  const count=document.getElementById("v53AiImportCount");
+  if(count) count.textContent=`已處理 ${processed} / ${total}｜成功 ${done}｜失敗 ${errors}`;
+  const bar=document.getElementById("v53AiProgressBar"); if(bar) bar.style.width=Math.min(100,(processed/total)*100)+"%";
   const st=document.getElementById("v53AiImportStatus");
   if(st && extra) st.textContent=extra + (skipped?`\n保護真實照片：已跳過 ${skipped} 種。`:"");
 }
@@ -4500,13 +4504,15 @@ async function v53StartAiZipImport(){
       }catch(err){
         cp[id]={status:"error",message:String(err&&err.message||err),at:Date.now()}; v53WriteAiCheckpoint(cp); errors++;
         v53AiLog(`✕ ${id} ${bird?bird.name:""}：${err.message||err}`);
+        v53RefreshAiImportUi(`已處理本輪 ${doneNow+protectedReal+missing+errors} 張；成功 ${doneNow}；失敗 ${errors}`);
       }
     }
     renderAdminList(); renderBirdGrid(); renderExport();
     const finalCp=v53ReadAiCheckpoint();
     const completedTotal=v53AiActivePackageNos.filter(no=>{const x=finalCp[String(no).padStart(3,"0")];return x&&(x.status==="done"||x.status==="skipped_real");}).length;
     const packageTotal=v53AiActivePackageNos.length;
-    v53RefreshAiImportUi(v53AiImportStopRequested?`已暫停。這個圖片包已完成 ${completedTotal} / ${packageTotal}；重新選同一 ZIP 即可續傳。`:`本輪完成。這個圖片包已完成 ${completedTotal} / ${packageTotal}。失敗項目可重新執行。`);
+    const finalErrors=v53AiActivePackageNos.filter(no=>{const x=finalCp[String(no).padStart(3,"0")];return x&&x.status==="error";}).length;
+    v53RefreshAiImportUi(v53AiImportStopRequested?`已暫停。成功 ${completedTotal} / ${packageTotal}，失敗 ${finalErrors}；重新選同一 ZIP 即可續傳。`:`本輪已處理 ${packageTotal} / ${packageTotal}；成功 ${completedTotal}，失敗 ${finalErrors}。失敗項目可重新執行。`);
   }catch(err){
     alert("ZIP 讀取或批次匯入失敗："+(err.message||err));
     v53AiLog("批次中止："+(err.message||err));
