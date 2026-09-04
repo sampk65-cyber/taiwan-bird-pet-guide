@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V6.2</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V6.5</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -370,7 +370,9 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    background: #f3f0e8;
     z-index: 2;
     display: none;
   }
@@ -838,6 +840,38 @@
     transition: border-color 0.15s, background 0.15s;
   }
   .chk-btn.selected { background: var(--green); color: #fff; border-color: var(--green); }
+  /* V6.4：修改模式清楚區分原有、這次新增與這次取消。 */
+  #adminFormPanel.editing-existing .chk-btn { position:relative; padding-bottom:20px; }
+  #adminFormPanel.editing-existing .chk-btn::after {
+    position:absolute; left:4px; right:4px; bottom:4px;
+    font-size:8px; line-height:1; font-weight:900; letter-spacing:.3px;
+  }
+  #adminFormPanel.editing-existing .chk-btn.original-selected.selected {
+    background:#176342; color:#fff; border-color:#0d4e32;
+    box-shadow:0 0 0 3px rgba(23,99,66,.18), inset 0 0 0 1px rgba(255,255,255,.2);
+  }
+  #adminFormPanel.editing-existing .chk-btn.original-selected.selected::after { content:"✓ 原有"; color:#dff7e8; }
+  #adminFormPanel.editing-existing .chk-btn.added.selected {
+    background:#1769aa; color:#fff; border-color:#0d568f;
+    box-shadow:0 0 0 3px rgba(23,105,170,.18);
+  }
+  #adminFormPanel.editing-existing .chk-btn.added.selected::after { content:"＋ 新增"; color:#e3f3ff; }
+  #adminFormPanel.editing-existing .chk-btn.removed {
+    background:#fff1f1; color:#a82f35; border:2px dashed #cf555b;
+    box-shadow:0 0 0 2px rgba(207,85,91,.10);
+  }
+  #adminFormPanel.editing-existing .chk-btn.removed::after { content:"－ 取消"; color:#b52f37; }
+  #adminFormPanel.editing-existing .custom-input.custom-changed {
+    border-color:#1769aa; background:#eef7ff; box-shadow:0 0 0 3px rgba(23,105,170,.12);
+  }
+  #adminFormPanel.editing-existing .custom-input[data-original-value]:not([data-original-value=""]):not(.custom-changed) {
+    border-color:#176342; background:#eef8f1; box-shadow:inset 4px 0 0 #176342;
+  }
+  .v64-edit-legend { display:none; margin:0 0 14px; padding:10px 12px; border-radius:12px; background:#f4f8f5; border:1px solid #c8dacf; font-size:11px; line-height:1.7; color:#40564a; }
+  #adminFormPanel.editing-existing .v64-edit-legend { display:block; }
+  .v64-edit-legend strong { display:block; color:#244d37; font-size:13px; }
+  .v64-legend-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin:0 3px 0 8px; vertical-align:middle; }
+  .v64-legend-dot:first-of-type { margin-left:0; }
   .custom-input {
     width: 100%;
     margin-top: 8px;
@@ -1524,6 +1558,21 @@
 .photo-effect-preview{display:none;margin-top:12px;border-radius:16px;overflow:hidden;background:#eee;position:relative;aspect-ratio:4/3}
 .photo-effect-preview.show{display:block}
 .photo-effect-preview img{width:100%;height:100%;object-fit:contain;display:block;background:#f5f2e9}
+.v64-photo-adjust-entry{margin-top:12px;display:grid;gap:7px}
+.v64-photo-adjust-btn{width:100%;border:0;border-radius:13px;padding:12px;background:#2f7652;color:#fff;font:inherit;font-weight:900;cursor:pointer;box-shadow:0 5px 14px rgba(47,118,82,.18)}
+.v64-photo-adjust-btn:disabled{background:#bdc8c1;color:#f6f7f6;box-shadow:none;cursor:not-allowed}
+.v64-photo-adjust-hint{font-size:10px;color:#77746c;line-height:1.55}
+.v64-photo-adjust-panel{display:none;margin-top:12px;padding:12px;border:2px solid rgba(47,118,82,.28);border-radius:16px;background:#f7fbf8}
+.v64-photo-adjust-panel.show{display:block}
+.v64-photo-adjust-frame{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:13px;background:#e9e6dd;touch-action:none;cursor:grab;box-shadow:inset 0 0 0 1px rgba(50,65,55,.12)}
+.v64-photo-adjust-frame.dragging{cursor:grabbing}
+.v64-photo-adjust-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;transform-origin:center;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.v64-photo-adjust-guide{position:absolute;inset:0;pointer-events:none;border:1px dashed rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(30,45,35,.12)}
+.v64-photo-adjust-control{display:grid;grid-template-columns:62px 1fr 42px;align-items:center;gap:8px;margin-top:10px;font-size:11px;font-weight:800;color:#496050}
+.v64-photo-adjust-control input{width:100%;accent-color:#2f7652}
+.v64-photo-adjust-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:11px}
+.v64-photo-adjust-actions button{border:1px solid #bfd1c5;border-radius:11px;padding:9px 7px;background:#fff;color:#315c42;font:inherit;font-size:11px;font-weight:900}
+.v64-photo-adjust-actions .primary{background:#2f7652;color:#fff;border-color:#2f7652}
 .photo-effect-badge{position:absolute;left:10px;bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;font-weight:800}
 .photo-effect-note{margin-top:8px;color:#777168;font-size:12px;line-height:1.55}
 @media(max-width:520px){.photo-effect-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.photo-effect-btn{font-size:11px;padding:8px 3px;min-height:45px}}
@@ -1625,7 +1674,7 @@
 .v59-pk-card:active{transform:scale(.985)}
 .v59-pk-card.selected{border-color:#e54b79;box-shadow:0 0 0 3px rgba(229,75,121,.13),0 6px 16px rgba(92,43,59,.13)}
 .v59-pk-card.empty{cursor:default;background:linear-gradient(145deg,#f1efeb,#e6e2dc);border:1.5px dashed #bcb4ad}
-.v59-pk-card img{width:100%;height:100%;object-fit:cover;display:block}
+.v59-pk-card img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;background:#f3f0e8}
 .v59-pk-kind{position:absolute;left:7px;top:7px;max-width:calc(100% - 14px);padding:4px 7px;border-radius:999px;background:rgba(20,24,22,.66);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v59-pk-card.ai .v59-pk-kind{background:rgba(40,105,83,.82)}
 .v59-pk-heart{position:absolute;right:6px;bottom:6px;padding:3px 6px;border-radius:999px;background:rgba(20,20,20,.68);color:#fff;font-size:10px;font-weight:900;line-height:1.25}
@@ -1668,6 +1717,45 @@
 .own-photo-status{display:inline-flex;margin-left:6px;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:900;vertical-align:middle}
 .own-photo-status.pending{background:#fff0c8;color:#795b1d}.own-photo-status.approved{background:#e4f5e9;color:#286040}.own-photo-status.rejected{background:#fde8e4;color:#8a4139}
 @media(max-width:520px){.submission-review-row{grid-template-columns:48px minmax(0,1fr) auto}.submission-review-thumb{width:48px;height:48px}.submission-review-actions button{width:34px;height:34px;font-size:18px}}
+
+/* ===== indexV6.5：圖鑑快速選單與管理員緊湊列 ===== */
+.v65-gallery-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
+.v65-gallery-mode-btn{min-height:39px;border:1px solid #d9d5c8;border-radius:999px;background:#fff;color:#656158;font:800 12px var(--font-sans);cursor:pointer}
+.v65-gallery-mode-btn.active{border-color:#377c57;background:#377c57;color:#fff;box-shadow:0 4px 11px rgba(55,124,87,.18)}
+.v65-gallery-search{display:none;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:10px}
+.v65-gallery-search.show{display:grid}
+.v65-gallery-search input{min-width:0;min-height:40px;border:1px solid #ddd8ca;border-radius:12px;background:#fff;padding:8px 11px;font:700 12px var(--font-sans);color:#383832}
+.v65-gallery-search button{border:1px solid #d9d5c8;border-radius:12px;background:#fff;padding:7px 11px;color:#315f48;font:800 11px var(--font-sans)}
+.v65-gallery-quick-grid{display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.v65-gallery-quick-grid.show{display:grid}
+.v65-gallery-quick-btn{min-width:0;min-height:59px;border:1px solid #ddd8ca;border-radius:13px;background:rgba(255,255,255,.9);padding:6px 3px;color:#33342f;font:800 12px/1.25 var(--font-sans);cursor:pointer;box-shadow:0 2px 6px rgba(75,68,51,.04)}
+.v65-gallery-quick-btn small{display:block;margin-bottom:4px;color:#9a978c;font-size:8px;font-weight:800;letter-spacing:.04em}
+.v65-gallery-quick-empty{grid-column:1/-1;padding:18px;text-align:center;color:#8a877e;font-size:12px}
+
+#view-admin .admin-compact-card{margin:0 0 7px!important;padding:0!important;border-radius:12px!important;overflow:hidden;box-shadow:none!important}
+#view-admin .admin-compact-card .player-review-head{min-height:44px;box-sizing:border-box;margin:0!important;padding:5px 7px 5px 11px;cursor:pointer}
+#view-admin .admin-compact-card .player-review-head strong{font-size:14px;line-height:1.2}
+#view-admin .admin-compact-card .admin-compact-toggle{padding:5px 10px;font-size:10px;line-height:1.2}
+#view-admin .admin-compact-card:not(.expanded) .submission-summary,
+#view-admin .admin-compact-card:not(.expanded) .player-summary,
+#view-admin .admin-compact-card:not(.expanded) .player-list-toolbar{display:none!important}
+#view-admin .admin-compact-card.expanded{padding-bottom:6px!important}
+#view-admin .admin-compact-card.expanded .submission-summary,
+#view-admin .admin-compact-card.expanded .player-summary{margin:0 7px 6px}
+#view-admin .admin-compact-card.expanded .player-list-toolbar{margin:0 7px 6px}
+#view-admin .admin-compact-card.expanded .player-review-list{margin:0 6px;gap:4px}
+#view-admin .admin-compact-card .player-summary span,
+#view-admin .admin-compact-card .submission-summary span{padding:3px 6px;font-size:8px}
+#view-admin .admin-compact-card .player-list-search{min-height:34px;padding:6px 9px;font-size:10px}
+#view-admin .admin-compact-card .player-list-toolbar .hint-btn{min-height:34px;padding:5px 9px;font-size:10px}
+#view-admin .submission-review-row{grid-template-columns:40px minmax(0,1fr) auto;gap:6px;min-height:46px;padding:3px 5px;border-radius:9px}
+#view-admin .submission-review-thumb{width:40px;height:40px;border-radius:7px}
+#view-admin .submission-review-title{font-size:10px}
+#view-admin .submission-review-meta{margin-top:1px;font-size:8px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-admin .submission-review-status{margin-top:2px;padding:2px 5px;font-size:8px}
+#view-admin .submission-review-actions{gap:3px}
+#view-admin .submission-review-actions button{width:31px;height:31px;border-radius:7px;font-size:16px}
+@media(max-width:370px){.v65-gallery-quick-grid{gap:5px}.v65-gallery-quick-btn{font-size:11px;padding:5px 2px}}
 </style>
 </head>
 <body>
@@ -1682,7 +1770,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.2 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.5 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1979,7 +2067,16 @@
   <div class="view" id="view-gallery">
     <div id="galleryListPanel">
       <div class="stamp">圖鑑模式:點選任一鳥類查看完整資料</div>
+      <div class="v65-gallery-toolbar" role="group" aria-label="圖鑑排列方式">
+        <button class="v65-gallery-mode-btn active" id="galleryCardModeBtn" type="button">照片排列</button>
+        <button class="v65-gallery-mode-btn" id="galleryQuickModeBtn" type="button">快速選單</button>
+      </div>
+      <div class="v65-gallery-search" id="galleryQuickSearchWrap">
+        <input id="galleryQuickSearch" type="search" inputmode="search" placeholder="搜尋鳥名或編號" aria-label="搜尋鳥名或編號">
+        <button id="galleryQuickClear" type="button">清除</button>
+      </div>
       <div class="bird-select-grid" id="galleryGrid"></div>
+      <div class="v65-gallery-quick-grid" id="galleryQuickGrid"></div>
       <button class="back-link" id="galleryBackBtn" style="margin-top:16px;">← 返回選單</button>
     </div>
     <div id="galleryDetailPanel" style="display:none;">
@@ -2146,6 +2243,26 @@
       </div>
       <div class="photo-effect-preview" id="adminEffectPreview"><img id="adminEffectPreviewImg" alt="照片特效預覽"><span class="photo-effect-badge" id="adminEffectPreviewLabel">原圖</span></div>
       <div class="photo-effect-note">可先預覽再儲存；原始照片會保留，挑戰辨識優先使用原圖。</div>
+      <div class="v64-photo-adjust-entry">
+        <button type="button" class="v64-photo-adjust-btn" id="adminPhotoAdjustBtn" disabled>↔ 圖片調整</button>
+        <div class="v64-photo-adjust-hint" id="adminPhotoAdjustHint">進入修改資料或選擇新照片後，即可調整位置與縮放。</div>
+      </div>
+      <div class="v64-photo-adjust-panel" id="adminPhotoAdjustPanel">
+        <div class="v64-photo-adjust-frame" id="adminPhotoAdjustFrame">
+          <img id="adminPhotoAdjustImg" alt="圖片位置與縮放預覽" draggable="false">
+          <span class="v64-photo-adjust-guide"></span>
+        </div>
+        <div class="v64-photo-adjust-control"><label for="adminPhotoScale">縮放</label><input type="range" id="adminPhotoScale" min="1" max="3" step="0.01" value="1"><output id="adminPhotoScaleValue">100%</output></div>
+        <div class="v64-photo-adjust-control"><label for="adminPhotoX">左右</label><input type="range" id="adminPhotoX" min="-50" max="50" step="1" value="0"><output id="adminPhotoXValue">0</output></div>
+        <div class="v64-photo-adjust-control"><label for="adminPhotoY">上下</label><input type="range" id="adminPhotoY" min="-50" max="50" step="1" value="0"><output id="adminPhotoYValue">0</output></div>
+        <div class="v64-photo-adjust-actions">
+          <button type="button" id="adminPhotoFitBtn">完整置中</button>
+          <button type="button" id="adminPhotoResetBtn">重設原值</button>
+          <button type="button" id="adminPhotoAdjustCancelBtn">取消</button>
+          <button type="button" class="primary" id="adminPhotoAdjustDoneBtn">完成調整</button>
+        </div>
+        <div class="v64-photo-adjust-hint" style="margin-top:8px;">可直接拖曳照片或使用滑桿；按「完成調整」後，再按下方更新資料才會存入 Firebase。</div>
+      </div>
     </div>
 
     <div class="field">
@@ -2153,6 +2270,12 @@
       <input type="text" id="f_photographer" placeholder="例如:小明、爸爸拍的">
     </div>
 
+    <div class="v64-edit-legend" id="v64EditLegend">
+      <strong id="v64EditChangeSummary">目前沒有異動</strong>
+      <span class="v64-legend-dot" style="background:#176342"></span>綠色＝原有
+      <span class="v64-legend-dot" style="background:#1769aa"></span>藍色＝本次新增
+      <span class="v64-legend-dot" style="background:#cf555b"></span>紅色＝本次取消
+    </div>
     <div id="conditionFields"></div>
 
     <div class="field">
@@ -2292,6 +2415,53 @@ function photographerCreditText(bird) {
   const v = bird && (bird.photographer || bird.displayName || bird.playerId);
   return String(v || "攝影者未署名").trim() || "攝影者未署名";
 }
+// V6.3：Firebase 同一路徑被覆寫時下載網址不一定改變，加入圖片版本避免瀏覽器繼續顯示舊圖。
+function v63ImageRevisionValue(bird, preferAi) {
+  if (!bird) return "";
+  const raw = preferAi
+    ? (bird.aiImageRevision || bird.imageRevision || bird.updatedAt)
+    : (bird.imageRevision || bird.aiImageRevision || bird.updatedAt);
+  if (!raw) return "";
+  if (typeof raw.toMillis === "function") return raw.toMillis();
+  if (typeof raw.seconds === "number") return raw.seconds * 1000 + Math.floor(Number(raw.nanoseconds || 0) / 1000000);
+  return raw;
+}
+function v63VersionedImageUrl(url, revision) {
+  const src = String(url || "");
+  if (!src || /^(data:|blob:)/i.test(src) || !revision) return src;
+  const hashAt = src.indexOf("#");
+  const hash = hashAt >= 0 ? src.slice(hashAt) : "";
+  const base = hashAt >= 0 ? src.slice(0, hashAt) : src;
+  return base + (base.includes("?") ? "&" : "?") + "imgv=" + encodeURIComponent(String(revision)) + hash;
+}
+function v63DisplayPhotoUrl(bird, url, preferAi) {
+  return v63VersionedImageUrl(url, v63ImageRevisionValue(bird, !!preferAi));
+}
+function v64NormalizePhotoTransform(value) {
+  const raw = value && typeof value === "object" ? value : {};
+  return {
+    x: Math.max(-50, Math.min(50, Number(raw.x) || 0)),
+    y: Math.max(-50, Math.min(50, Number(raw.y) || 0)),
+    scale: Math.max(1, Math.min(3, Number(raw.scale) || 1))
+  };
+}
+function v64PhotoTransformFor(bird, preferAi) {
+  if (!bird) return v64NormalizePhotoTransform(null);
+  return v64NormalizePhotoTransform(preferAi ? (bird.aiPhotoTransform || bird.photoTransform) : bird.photoTransform);
+}
+function v64PhotoTransformCss(bird, preferAi) {
+  const t = v64PhotoTransformFor(bird, !!preferAi);
+  return `object-fit:contain;object-position:center;background:#f3f0e8;transform:translate3d(${t.x}%,${t.y}%,0) scale(${t.scale});transform-origin:center;`;
+}
+function v64ApplyPhotoTransform(img, bird, preferAi) {
+  if (!img) return;
+  const t = v64PhotoTransformFor(bird, !!preferAi);
+  img.style.objectFit = "contain";
+  img.style.objectPosition = "center";
+  img.style.background = "#f3f0e8";
+  img.style.transformOrigin = "center";
+  img.style.transform = `translate3d(${t.x}%,${t.y}%,0) scale(${t.scale})`;
+}
 function isCommunityWildComplete(data) {
   if (!data || data.category !== "wild") return false;
   const c = data.conditions || {};
@@ -2322,6 +2492,7 @@ function communityRecordToBird(id, data) {
     photoUrl: data.photoUrl || "",
     challengePhotoUrl: data.originalPhotoUrl || data.photoUrl || "",
     originalPhotoUrl: data.originalPhotoUrl || data.photoUrl || "",
+    photoTransform: v64NormalizePhotoTransform(data.photoTransform),
     photoStyle: data.photoStyle || "original",
     photographer: data.photographer || data.displayName || data.playerId || "鳥友投稿",
     story: data.note || (isPet ? [pet.breed, pet.sex, pet.age, pet.talent].filter(Boolean).join(" · ") : ""),
@@ -2342,7 +2513,7 @@ function getV50CoreBirdsWithReplacements(){
     if(b.targetBirdId){ const old=mappedById.get(b.targetBirdId); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mappedById.set(b.targetBirdId,b); }
     const nk=normalizeCoreBirdName(b.name); if(nk){ const old=mappedByName.get(nk); if(!old || Number(b.uploadedAt||0)>=Number(old.uploadedAt||0)) mappedByName.set(nk,b); }
   });
-  return birds.map(b=>{ const r=mappedById.get(b.id)||mappedByName.get(normalizeCoreBirdName(b.name)); if(!r) return b; return Object.assign({},b,{photoUrl:r.photoUrl,originalPhotoUrl:r.originalPhotoUrl||r.photoUrl,photographer:r.photographer||r.displayName||r.playerId||"鳥友投稿",imageType:"real_photo",photoStyle:r.photoStyle||"original",replacedByBirdfriend:true,replacementSourceDocId:r.sourceDocId,definitionPending:b.definitionPending===true}); });
+  return birds.map(b=>{ const r=mappedById.get(b.id)||mappedByName.get(normalizeCoreBirdName(b.name)); if(!r) return b; return Object.assign({},b,{photoUrl:r.photoUrl,originalPhotoUrl:r.originalPhotoUrl||r.photoUrl,photoTransform:v64NormalizePhotoTransform(r.photoTransform),photographer:r.photographer||r.displayName||r.playerId||"鳥友投稿",imageType:"real_photo",photoStyle:r.photoStyle||"original",replacedByBirdfriend:true,replacementSourceDocId:r.sourceDocId,definitionPending:b.definitionPending===true}); });
 }
 function getGalleryBirds() { const published=communityBirds.filter(isPublishedSubmission); const coreNames=new Set(birds.map(b=>normalizeCoreBirdName(b.name))); const replacedIds=new Set(published.filter(b=>b.targetBirdId||coreNames.has(normalizeCoreBirdName(b.name))).map(b=>b.sourceDocId)); return getV50CoreBirdsWithReplacements().concat(published.filter(b=>!replacedIds.has(b.sourceDocId))); }
 function getChallengeBirds() { return getV50CoreBirdsWithReplacements().filter(b=>b.challengeEnabled!==false && b.imageType!=="ai_watercolor" && b.imageType!=="placeholder_line" && b.definitionPending!==true).concat(communityBirds.filter(b => isPublishedSubmission(b) && b.challengeEligible === true && !b.targetBirdId)); }
@@ -2656,7 +2827,7 @@ function ensureV50CoreBirds() {
 ensureV50CoreBirds();
 
 // ===== V5.3 可續作資料層：只寫入已由網路圖鑑確認的欄位；不確定一律空白 =====
-const V53_DATASET_VERSION = "2026-09-04-indexV6.2-photo-moderation-daily-quota";
+const V53_DATASET_VERSION = "2026-09-04-indexV6.5-gallery-quick-admin-compact";
 
 // ===== V5.5 7500格正式資料骨架（500種 × 15欄）=====
 // 規則：確定才填；不確定維持 []。這個物件永遠保留完整 7,500 個欄位。
@@ -2826,6 +2997,7 @@ function applyV58EmbeddedArt006020(){
     const b=birds.find(x=>x.name===art.name && String(x.coreNo||'').padStart(3,'0')===no);
     if(!b) return;
     b.photoUrl=art.src;
+    b.aiPhotoUrl=art.src;
     b.originalPhotoUrl=art.src;
     b.challengePhotoUrl=art.src;
     b.imageType='ai_generated_art';
@@ -3023,7 +3195,7 @@ function renderBirdGrid() {
     tile.className = "bird-tile" + (done ? " done" : "");
     const photoCredit = `<div class="photo-credit">${photographerCreditText(b)}</div>`;
     const thumbInner = (done && b.photoUrl)
-      ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${photoCredit}</div>`
+      ? `<div class="thumb-photo-wrap"><img src="${v63DisplayPhotoUrl(b,b.photoUrl)}" alt="${b.name}" style="width:100%;height:100%;${v64PhotoTransformCss(b,false)}">${photoCredit}</div>`
       : `<div class="mystery-placeholder">
           ${buildMysteryBirdImg(mysteryImgForLevel(b.definitionPending ? (b.previewLevel || 1) : b.level))}
           <div class="mystery-qmark">?</div>
@@ -3711,7 +3883,8 @@ function renderQuiz() {
     caption.classList.add("show");
     const revealCredit = document.getElementById("revealPhotoCredit");
     if (bird.photoUrl) {
-      photoEl.src = bird.photoUrl;
+      photoEl.src = v63DisplayPhotoUrl(bird,bird.photoUrl);
+      v64ApplyPhotoTransform(photoEl,bird,false);
       photoEl.classList.add("show");
       if (revealCredit) {
         revealCredit.textContent = photographerCreditText(bird);
@@ -3895,6 +4068,52 @@ function renderQuiz() {
 }
 
 // ---------- 後台:建檔表單 ----------
+function v64UpdateEditChangeSummary() {
+  const panel=document.getElementById("adminFormPanel"), el=document.getElementById("v64EditChangeSummary");
+  if(!panel||!el||!panel.classList.contains("editing-existing")) return;
+  const added=panel.querySelectorAll(".chk-btn.added.selected").length;
+  const removed=panel.querySelectorAll(".chk-btn.removed").length;
+  const custom=panel.querySelectorAll(".custom-input.custom-changed").length;
+  el.textContent=(added||removed||custom)
+    ? `本次異動：新增 ${added} 項・取消 ${removed} 項・自訂文字 ${custom} 欄`
+    : "目前沒有異動；深綠色為原本已填好的選項";
+}
+function v64HandleConditionButtonChange(btn) {
+  const wasOriginal=btn.dataset.originalSelected==="true";
+  btn.classList.toggle("selected");
+  const isSelected=btn.classList.contains("selected");
+  btn.classList.toggle("original-selected",wasOriginal);
+  btn.classList.toggle("added",!wasOriginal&&isSelected);
+  btn.classList.toggle("removed",wasOriginal&&!isSelected);
+  v64UpdateEditChangeSummary();
+}
+function v64ClearConditionEditState() {
+  const panel=document.getElementById("adminFormPanel");
+  panel?.classList.remove("editing-existing");
+  document.querySelectorAll("#conditionFields .chk-btn").forEach(btn=>{
+    btn.classList.remove("selected","original-selected","added","removed");
+    delete btn.dataset.originalSelected;
+  });
+  document.querySelectorAll("#conditionFields .custom-input").forEach(el=>{
+    el.value=""; el.dataset.originalValue=""; el.classList.remove("custom-changed");
+  });
+}
+function v64BeginConditionEditState(conditions) {
+  v64ClearConditionEditState();
+  document.getElementById("adminFormPanel")?.classList.add("editing-existing");
+  CONDITIONS.forEach(cond=>{
+    const accepted=Array.isArray(conditions&&conditions[cond.key])?conditions[cond.key]:[];
+    const extras=[];
+    accepted.forEach(val=>{
+      const btn=document.querySelector('.checkbox-grid[data-key="'+cond.key+'"] .chk-btn[data-value="'+CSS.escape(val)+'"]');
+      if(btn){btn.classList.add("selected","original-selected");btn.dataset.originalSelected="true";}
+      else extras.push(val);
+    });
+    const input=document.getElementById("custom_"+cond.key);
+    if(input){input.value=extras.join(", ");input.dataset.originalValue=input.value;input.classList.remove("custom-changed");}
+  });
+  v64UpdateEditChangeSummary();
+}
 function renderConditionFields() {
   const container = document.getElementById("conditionFields");
   container.innerHTML = "";
@@ -3910,7 +4129,7 @@ function renderConditionFields() {
       btn.className = "chk-btn";
       btn.dataset.value = opt;
       btn.textContent = opt;
-      btn.onclick = () => btn.classList.toggle("selected");
+      btn.onclick = () => v64HandleConditionButtonChange(btn);
       grid.appendChild(btn);
     });
     field.innerHTML = `<label>${cond.label}(可複選)</label>`;
@@ -3920,6 +4139,12 @@ function renderConditionFields() {
     customInput.className = "custom-input";
     customInput.id = "custom_" + cond.key;
     customInput.placeholder = "其他(自行輸入,清單沒有的答案填這裡)";
+    customInput.addEventListener("input",()=>{
+      const panel=document.getElementById("adminFormPanel");
+      if(!panel?.classList.contains("editing-existing")) return;
+      customInput.classList.toggle("custom-changed",customInput.value.trim()!==String(customInput.dataset.originalValue||"").trim());
+      v64UpdateEditChangeSummary();
+    });
     field.appendChild(customInput);
     container.appendChild(field);
   });
@@ -3941,6 +4166,82 @@ let birdfriendPhotoEffect = "original";
 let adminPhotoEffect = "original";
 let birdfriendPreviewObjectUrl = "";
 let adminPreviewObjectUrl = "";
+let v64AdminPhotoTransform = v64NormalizePhotoTransform(null);
+let v64AdminPhotoTransformOriginal = v64NormalizePhotoTransform(null);
+let v64AdminPhotoTransformBeforeOpen = v64NormalizePhotoTransform(null);
+let v64AdminPhotoSource = "";
+let v64AdminPhotoDrag = null;
+
+function v64ClonePhotoTransform(value){ return {...v64NormalizePhotoTransform(value)}; }
+function v64RenderAdminPhotoAdjust() {
+  const img=document.getElementById("adminPhotoAdjustImg");
+  const scale=document.getElementById("adminPhotoScale"), x=document.getElementById("adminPhotoX"), y=document.getElementById("adminPhotoY");
+  const sv=document.getElementById("adminPhotoScaleValue"), xv=document.getElementById("adminPhotoXValue"), yv=document.getElementById("adminPhotoYValue");
+  const t=v64NormalizePhotoTransform(v64AdminPhotoTransform); v64AdminPhotoTransform=t;
+  if(img){img.src=v64AdminPhotoSource||"";img.style.transform=`translate3d(${t.x}%,${t.y}%,0) scale(${t.scale})`;}
+  if(scale) scale.value=String(t.scale); if(x) x.value=String(t.x); if(y) y.value=String(t.y);
+  if(sv) sv.textContent=Math.round(t.scale*100)+"%"; if(xv) xv.textContent=(t.x>0?"+":"")+Math.round(t.x); if(yv) yv.textContent=(t.y>0?"+":"")+Math.round(t.y);
+}
+function v64SetAdminPhotoAdjustSource(src, preserveTransform=true) {
+  v64AdminPhotoSource=String(src||"");
+  if(!preserveTransform){
+    v64AdminPhotoTransform=v64NormalizePhotoTransform(null);
+    v64AdminPhotoTransformOriginal=v64NormalizePhotoTransform(null);
+  }
+  const btn=document.getElementById("adminPhotoAdjustBtn"), hint=document.getElementById("adminPhotoAdjustHint");
+  if(btn) btn.disabled=!v64AdminPhotoSource;
+  if(hint) hint.textContent=v64AdminPhotoSource?"按下「圖片調整」後，可拖曳鳥的位置並縮放。":"進入修改資料或選擇新照片後，即可調整位置與縮放。";
+  v64RenderAdminPhotoAdjust();
+}
+function v64LoadAdminPhotoAdjust(bird,src) {
+  v64AdminPhotoTransform=v64ClonePhotoTransform(bird&&bird.photoTransform);
+  v64AdminPhotoTransformOriginal=v64ClonePhotoTransform(v64AdminPhotoTransform);
+  v64SetAdminPhotoAdjustSource(src,true);
+}
+function v64ResetAdminPhotoAdjust() {
+  v64AdminPhotoTransform=v64NormalizePhotoTransform(null);
+  v64AdminPhotoTransformOriginal=v64NormalizePhotoTransform(null);
+  v64AdminPhotoTransformBeforeOpen=v64NormalizePhotoTransform(null);
+  v64AdminPhotoSource="";
+  document.getElementById("adminPhotoAdjustPanel")?.classList.remove("show");
+  const btn=document.getElementById("adminPhotoAdjustBtn"); if(btn) btn.disabled=true;
+  const hint=document.getElementById("adminPhotoAdjustHint"); if(hint) hint.textContent="進入修改資料或選擇新照片後，即可調整位置與縮放。";
+  v64RenderAdminPhotoAdjust();
+}
+function v64PrepareNewAdminPhoto(){
+  v64AdminPhotoTransform=v64NormalizePhotoTransform(null);
+  v64AdminPhotoTransformOriginal=v64NormalizePhotoTransform(null);
+}
+function v64BindAdminPhotoAdjust() {
+  const panel=document.getElementById("adminPhotoAdjustPanel"), frame=document.getElementById("adminPhotoAdjustFrame");
+  document.getElementById("adminPhotoAdjustBtn")?.addEventListener("click",()=>{
+    if(!v64AdminPhotoSource)return;
+    v64AdminPhotoTransformBeforeOpen=v64ClonePhotoTransform(v64AdminPhotoTransform);
+    panel?.classList.add("show"); v64RenderAdminPhotoAdjust();
+    setTimeout(()=>panel?.scrollIntoView({behavior:"smooth",block:"center"}),30);
+  });
+  document.getElementById("adminPhotoScale")?.addEventListener("input",e=>{v64AdminPhotoTransform.scale=Number(e.target.value);v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoX")?.addEventListener("input",e=>{v64AdminPhotoTransform.x=Number(e.target.value);v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoY")?.addEventListener("input",e=>{v64AdminPhotoTransform.y=Number(e.target.value);v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoFitBtn")?.addEventListener("click",()=>{v64AdminPhotoTransform=v64NormalizePhotoTransform(null);v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoResetBtn")?.addEventListener("click",()=>{v64AdminPhotoTransform=v64ClonePhotoTransform(v64AdminPhotoTransformOriginal);v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoAdjustCancelBtn")?.addEventListener("click",()=>{v64AdminPhotoTransform=v64ClonePhotoTransform(v64AdminPhotoTransformBeforeOpen);panel?.classList.remove("show");v64RenderAdminPhotoAdjust();});
+  document.getElementById("adminPhotoAdjustDoneBtn")?.addEventListener("click",()=>{panel?.classList.remove("show");document.getElementById("adminPhotoAdjustHint").textContent="圖片位置已套用；請按下方更新資料以存入 Firebase。";});
+  frame?.addEventListener("pointerdown",e=>{
+    if(!v64AdminPhotoSource)return;
+    frame.setPointerCapture(e.pointerId);frame.classList.add("dragging");
+    v64AdminPhotoDrag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:v64AdminPhotoTransform.x,y:v64AdminPhotoTransform.y};
+  });
+  frame?.addEventListener("pointermove",e=>{
+    if(!v64AdminPhotoDrag||v64AdminPhotoDrag.id!==e.pointerId)return;
+    const rect=frame.getBoundingClientRect();
+    v64AdminPhotoTransform.x=v64AdminPhotoDrag.x+(e.clientX-v64AdminPhotoDrag.startX)/Math.max(1,rect.width)*100;
+    v64AdminPhotoTransform.y=v64AdminPhotoDrag.y+(e.clientY-v64AdminPhotoDrag.startY)/Math.max(1,rect.height)*100;
+    v64RenderAdminPhotoAdjust();
+  });
+  const end=e=>{if(v64AdminPhotoDrag&&v64AdminPhotoDrag.id===e.pointerId)v64AdminPhotoDrag=null;frame?.classList.remove("dragging");};
+  frame?.addEventListener("pointerup",end); frame?.addEventListener("pointercancel",end);
+}
 
 function photoEffectLabel(style){ return (PHOTO_EFFECTS[style]||PHOTO_EFFECTS.original).label; }
 function loadImageFromFile(file){
@@ -4001,6 +4302,7 @@ async function updateEffectPreview(group){
     const url=URL.createObjectURL(blob);
     if(isBird) birdfriendPreviewObjectUrl=url; else adminPreviewObjectUrl=url;
     imgEl.src=url;preview.classList.add("show");
+    if(!isBird) v64SetAdminPhotoAdjustSource(url,true);
   }catch(e){console.warn("特效預覽失敗",e);}
 }
 function bindPhotoEffectGroup(group){
@@ -4017,9 +4319,19 @@ function resetPhotoEffect(group, style="original"){
   updateEffectPreview(group);
 }
 document.getElementById("birdfriendPhotoFile")?.addEventListener("change",()=>updateEffectPreview("birdfriend"));
-document.getElementById("f_photo")?.addEventListener("change",()=>updateEffectPreview("admin"));
+document.getElementById("f_photo")?.addEventListener("change",e=>{
+  const hasFile=!!(e.target.files&&e.target.files[0]);
+  if(hasFile){v64PrepareNewAdminPhoto();updateEffectPreview("admin");return;}
+  updateEffectPreview("admin");
+  const current=editingBirdSource==="community"
+    ? communityBirds.find(b=>b.sourceDocId===editingCommunityDocId)
+    : birds.find(b=>b.id===editingBirdId);
+  if(current&&current.photoUrl) v64LoadAdminPhotoAdjust(current,v63DisplayPhotoUrl(current,current.photoUrl));
+  else v64ResetAdminPhotoAdjust();
+});
 bindPhotoEffectGroup("birdfriend");
 bindPhotoEffectGroup("admin");
+v64BindAdminPhotoAdjust();
 
 function compressImageFile(file, maxWidth = 1280, quality = 0.8) {
   return new Promise((resolve, reject) => {
@@ -4088,8 +4400,8 @@ function resetAdminForm() {
   resetPhotoEffect("admin","original");
   settingsBirdLocation = null;
   syncSettingsLocationFields(null);
-  document.querySelectorAll(".chk-btn.selected").forEach(el => el.classList.remove("selected"));
-  document.querySelectorAll(".custom-input").forEach(el => el.value = "");
+  v64ClearConditionEditState();
+  v64ResetAdminPhotoAdjust();
 }
 
 document.getElementById("adminAddModeBtn").onclick = () => {
@@ -4129,24 +4441,8 @@ function loadBirdForEdit(birdId) {
   settingsBirdLocation = bird.location ? JSON.parse(JSON.stringify(bird.location)) : null;
   syncSettingsLocationFields(settingsBirdLocation);
 
-  document.querySelectorAll(".chk-btn.selected").forEach(el => el.classList.remove("selected"));
-  document.querySelectorAll(".custom-input").forEach(el => el.value = "");
-
-  CONDITIONS.forEach(cond => {
-    const acceptedValues = bird.conditions[cond.key] || [];
-    const customExtras = [];
-    acceptedValues.forEach(val => {
-      const btn = document.querySelector('.checkbox-grid[data-key="' + cond.key + '"] .chk-btn[data-value="' + CSS.escape(val) + '"]');
-      if (btn) {
-        btn.classList.add("selected");
-      } else {
-        customExtras.push(val);
-      }
-    });
-    if (customExtras.length > 0) {
-      document.getElementById("custom_" + cond.key).value = customExtras.join(", ");
-    }
-  });
+  v64BeginConditionEditState(bird.conditions || {});
+  v64LoadAdminPhotoAdjust(bird,v63DisplayPhotoUrl(bird,bird.photoUrl));
 
 }
 
@@ -4172,17 +4468,8 @@ function loadCommunityBirdForEdit(sourceDocId) {
   settingsBirdLocation = null;
   syncSettingsLocationFields(null);
 
-  document.querySelectorAll(".chk-btn.selected").forEach(el => el.classList.remove("selected"));
-  document.querySelectorAll(".custom-input").forEach(el => el.value = "");
-  CONDITIONS.forEach(cond => {
-    const acceptedValues = (bird.conditions && bird.conditions[cond.key]) || [];
-    const customExtras = [];
-    acceptedValues.forEach(val => {
-      const btn = document.querySelector('.checkbox-grid[data-key="' + cond.key + '"] .chk-btn[data-value="' + CSS.escape(val) + '"]');
-      if (btn) btn.classList.add("selected"); else customExtras.push(val);
-    });
-    if (customExtras.length > 0) document.getElementById("custom_" + cond.key).value = customExtras.join(", ");
-  });
+  v64BeginConditionEditState(bird.conditions || {});
+  v64LoadAdminPhotoAdjust(bird,v63DisplayPhotoUrl(bird,bird.photoUrl));
 }
 
 document.getElementById("cancelEditBtn").onclick = () => {
@@ -4224,6 +4511,7 @@ document.getElementById("saveBirdBtn").onclick = async () => {
   const speedInput = parseInt(document.getElementById("f_speed").value, 10);
   const defaultSpeedByLevel = { 1: 80, 2: 140, 3: 200, 4: 280 };
   const speed = (!isNaN(speedInput) && speedInput > 0) ? speedInput : defaultSpeedByLevel[level];
+  const photoTransform = v64ClonePhotoTransform(v64AdminPhotoTransform);
 
   const saveBtn = document.getElementById("saveBirdBtn");
   const photoInput = document.getElementById("f_photo");
@@ -4285,6 +4573,7 @@ document.getElementById("saveBirdBtn").onclick = async () => {
         challengeEligible: completedCount === 15,
         note: story,
         photographer: photographer || original.photographer || "鳥友投稿",
+        photoTransform,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (photoUrl) {
@@ -4303,6 +4592,8 @@ document.getElementById("saveBirdBtn").onclick = async () => {
         bird.season = season;
         bird.conditions = conditions;
         bird.story = story;
+        bird.photoTransform = photoTransform;
+        if (!photoFile && String(bird.imageType || "").startsWith("ai_")) bird.aiPhotoTransform = v64ClonePhotoTransform(photoTransform);
         bird.definitionPending = false;
         delete bird.previewLevel;
         if (photoUrl) {
@@ -4328,6 +4619,7 @@ document.getElementById("saveBirdBtn").onclick = async () => {
       conditions,
       story
     };
+    newBird.photoTransform = photoTransform;
     if (photoUrl) {
       newBird.photoUrl = photoUrl;
       if (window.__v49AdminPhotoMeta) Object.assign(newBird, window.__v49AdminPhotoMeta);
@@ -4453,14 +4745,18 @@ async function v53UploadOneAiArt(no,zip){
   const id=String(no).padStart(3,"0");
   const style=(no%2===1?"watercolor":"oil");
   const storagePath=`coreBirdArt/v5.3/${id}_${style}.webp`;
-  const meta={contentType:"image/webp",customMetadata:{birdNo:id,birdName:bird.name,style,version:"5.3"}};
+  const meta={contentType:"image/webp",cacheControl:"no-cache, max-age=0",customMetadata:{birdNo:id,birdName:bird.name,style,version:"6.3"}};
   const snap=await fbStorageRef.child(storagePath).put(webp,meta);
   const url=await snap.ref.getDownloadURL();
+  const imageRevision=Date.now();
   const imageType=style==="watercolor"?"ai_watercolor":"ai_oil";
   const credit=style==="watercolor"?"AI 水彩示意圖":"AI 油畫示意圖";
-  const patch={photoUrl:url,imageType,aiStyle:style,aiGenerated:true,aiStoragePath:storagePath,photographer:credit,challengeEnabled:false,coreCatalog:true,coreNo:Number(no),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  const defaultTransform=v64NormalizePhotoTransform(null);
+  const patch={photoUrl:url,aiPhotoUrl:url,imageType,aiStyle:style,aiGenerated:true,aiStoragePath:storagePath,imageRevision,aiImageRevision:imageRevision,photoTransform:defaultTransform,aiPhotoTransform:defaultTransform,photographer:credit,challengeEnabled:false,coreCatalog:true,coreNo:Number(no),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   await db.collection("birds").doc(bird.id).set(patch,{merge:true});
-  bird.photoUrl=url; bird.imageType=imageType; bird.aiStyle=style; bird.aiGenerated=true; bird.aiStoragePath=storagePath; bird.photographer=credit; bird.challengeEnabled=false;
+  bird.photoUrl=url; bird.aiPhotoUrl=url; bird.imageType=imageType; bird.aiStyle=style; bird.aiGenerated=true; bird.aiStoragePath=storagePath; bird.imageRevision=imageRevision; bird.aiImageRevision=imageRevision; bird.photoTransform=v64ClonePhotoTransform(defaultTransform); bird.aiPhotoTransform=v64ClonePhotoTransform(defaultTransform); bird.photographer=credit; bird.challengeEnabled=false;
+  if (typeof v59PkCache !== "undefined") v59PkCache.delete(v59PkBirdKey(bird));
+  if (typeof v59RefreshVisiblePk === "function") v59RefreshVisiblePk(bird,true);
   return {status:"done",bird,bytes:webp.size,storagePath};
 }
 
@@ -4548,15 +4844,38 @@ async function loadBirdsFromFirestore() {
   if (!FIREBASE_ENABLED || !db) return;
   try {
     const snapshot = await db.collection("birds").get();
+    const aiUrlRepairs = [];
     snapshot.forEach(doc => {
       const data = doc.data();
       const idx = birds.findIndex(b => b.id === doc.id);
       if (idx >= 0) {
         birds[idx] = { ...birds[idx], ...data, id: doc.id };
+        const bird = birds[idx];
+        if (data.aiPhotoUrl) bird.aiPhotoUrl = data.aiPhotoUrl;
+        else if (data.photoUrl && String(data.imageType || "").startsWith("ai_")) bird.aiPhotoUrl = data.photoUrl;
+        else if (data.aiStoragePath && /^data:/i.test(String(bird.aiPhotoUrl || ""))) bird.aiPhotoUrl = "";
+        // 相容舊資料：過去已記錄 AI Storage 路徑，但尚未另存 aiPhotoUrl。
+        if (!bird.aiPhotoUrl && bird.aiStoragePath && fbStorageRef) {
+          aiUrlRepairs.push(
+            fbStorageRef.child(bird.aiStoragePath).getDownloadURL()
+              .then(url => { bird.aiPhotoUrl = url; })
+              .catch(() => {})
+          );
+        }
       } else {
-        birds.push(data);
+        const bird = { ...data, id: doc.id };
+        if (!bird.aiPhotoUrl && bird.photoUrl && String(bird.imageType || "").startsWith("ai_")) bird.aiPhotoUrl = bird.photoUrl;
+        birds.push(bird);
+        if (!bird.aiPhotoUrl && bird.aiStoragePath && fbStorageRef) {
+          aiUrlRepairs.push(
+            fbStorageRef.child(bird.aiStoragePath).getDownloadURL()
+              .then(url => { bird.aiPhotoUrl = url; })
+              .catch(() => {})
+          );
+        }
       }
     });
+    if (aiUrlRepairs.length) await Promise.allSettled(aiUrlRepairs);
     // V6.0：舊雲端資料即使曾被寫成 15 題，也一律依目前 L1–L4 校正。
     syncAllBirdLevelRequirements();
   } catch (err) {
@@ -5348,12 +5667,63 @@ document.getElementById("rqBackToMenuBtn").onclick = () => showChallengeMenu();
 document.getElementById("randomQuizBackBtn").onclick = () => showChallengeMenu();
 
 // ---------- 圖鑑模式 ----------
+let v65GalleryMode = "cards";
+
+function setV65GalleryMode(mode) {
+  v65GalleryMode = mode === "quick" ? "quick" : "cards";
+  const quick = v65GalleryMode === "quick";
+  document.getElementById("galleryCardModeBtn")?.classList.toggle("active", !quick);
+  document.getElementById("galleryQuickModeBtn")?.classList.toggle("active", quick);
+  const cards = document.getElementById("galleryGrid");
+  const quickGrid = document.getElementById("galleryQuickGrid");
+  const search = document.getElementById("galleryQuickSearchWrap");
+  if (cards) cards.style.display = quick ? "none" : "grid";
+  quickGrid?.classList.toggle("show", quick);
+  search?.classList.toggle("show", quick);
+  if (quick) renderGalleryQuickGrid();
+}
+
+function renderGalleryQuickGrid() {
+  const grid = document.getElementById("galleryQuickGrid");
+  if (!grid) return;
+  const keyword = String(document.getElementById("galleryQuickSearch")?.value || "").trim().toLowerCase();
+  const galleryBirds = getGalleryBirds();
+  const matches = galleryBirds.filter((bird, index) => {
+    const no = String(bird.coreNo || index + 1).padStart(3, "0");
+    return !keyword || String(bird.name || "").toLowerCase().includes(keyword) || no.includes(keyword);
+  });
+  grid.innerHTML = "";
+  if (!matches.length) {
+    const empty = document.createElement("div");
+    empty.className = "v65-gallery-quick-empty";
+    empty.textContent = "找不到符合的鳥類";
+    grid.appendChild(empty);
+    return;
+  }
+  matches.forEach((bird) => {
+    const originalIndex = galleryBirds.indexOf(bird);
+    const no = String(bird.coreNo || originalIndex + 1).padStart(3, "0");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "v65-gallery-quick-btn";
+    const number = document.createElement("small");
+    number.textContent = "No. " + no;
+    const name = document.createElement("span");
+    name.textContent = bird.name;
+    button.append(number, name);
+    button.onclick = () => showGalleryDetail(bird.id);
+    grid.appendChild(button);
+  });
+}
+
 function showGallery() {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-gallery").classList.add("active");
   document.getElementById("galleryListPanel").style.display = "block";
   document.getElementById("galleryDetailPanel").style.display = "none";
   renderGalleryGrid();
+  renderGalleryQuickGrid();
+  setV65GalleryMode(v65GalleryMode);
 }
 
 function renderGalleryGrid() {
@@ -5364,7 +5734,7 @@ function renderGalleryGrid() {
     tile.className = "bird-tile";
     const galleryCredit = `<div class="photo-credit">${photographerCreditText(b)}</div>`;
     const thumbInner = b.photoUrl
-      ? `<div class="thumb-photo-wrap"><img src="${b.photoUrl}" alt="${b.name}" style="width:100%;height:100%;object-fit:cover;">${galleryCredit}</div>`
+      ? `<div class="thumb-photo-wrap"><img src="${v63DisplayPhotoUrl(b,b.photoUrl)}" alt="${b.name}" style="width:100%;height:100%;${v64PhotoTransformCss(b,false)}">${galleryCredit}</div>`
       : `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(b.definitionPending ? (b.previewLevel || 1) : b.level))}</div>`;
     tile.innerHTML = `
       <div class="index">No. ${String(i + 1).padStart(3, "0")}</div>
@@ -5391,7 +5761,7 @@ function showGalleryDetail(birdId) {
   photoBox.innerHTML = "";
   if (bird.photoUrl) {
     const credit = `<div class="photo-credit">${photographerCreditText(bird)}</div>`;
-    photoBox.innerHTML = `<div class="thumb-photo-wrap"><img src="${bird.photoUrl}" style="width:100%;height:100%;object-fit:cover;">${credit}</div>`;
+    photoBox.innerHTML = `<div class="thumb-photo-wrap"><img src="${v63DisplayPhotoUrl(bird,bird.photoUrl)}" alt="${bird.name}" style="width:100%;height:100%;${v64PhotoTransformCss(bird,false)}">${credit}</div>`;
   } else {
     photoBox.innerHTML = `<div class="mystery-placeholder">${buildMysteryBirdImg(mysteryImgForLevel(bird.level))}</div>`;
   }
@@ -5445,9 +5815,19 @@ function showGalleryDetail(birdId) {
 }
 
 document.getElementById("galleryBackBtn").onclick = () => showChallengeMenu();
+document.getElementById("galleryCardModeBtn").onclick = () => setV65GalleryMode("cards");
+document.getElementById("galleryQuickModeBtn").onclick = () => setV65GalleryMode("quick");
+document.getElementById("galleryQuickSearch").addEventListener("input", renderGalleryQuickGrid);
+document.getElementById("galleryQuickClear").onclick = () => {
+  const input = document.getElementById("galleryQuickSearch");
+  input.value = "";
+  renderGalleryQuickGrid();
+  input.focus();
+};
 document.getElementById("galleryDetailBackBtn").onclick = () => {
   document.getElementById("galleryListPanel").style.display = "block";
   document.getElementById("galleryDetailPanel").style.display = "none";
+  setV65GalleryMode(v65GalleryMode);
 };
 
 document.getElementById("leaderboardBtn").onclick = async () => {
@@ -6899,7 +7279,7 @@ function renderPlayerList() {
   });
 }
 
-function toggleAdminCompactCard(cardId,btnId){const c=document.getElementById(cardId),b=document.getElementById(btnId);if(!c||!b)return;c.classList.toggle("expanded");b.textContent=c.classList.contains("expanded")?"收起":"展開";}
+function toggleAdminCompactCard(cardId,btnId){const c=document.getElementById(cardId),b=document.getElementById(btnId);if(!c||!b)return;c.classList.toggle("expanded");const open=c.classList.contains("expanded");b.textContent=open?"收起":"展開";b.setAttribute("aria-expanded",String(open));}
 document.getElementById("togglePlayerApplicationsBtn")?.addEventListener("click",e=>{e.stopPropagation();toggleAdminCompactCard("playerApplicationCard","togglePlayerApplicationsBtn");});
 document.getElementById("togglePlayerListBtn")?.addEventListener("click",e=>{e.stopPropagation();toggleAdminCompactCard("playerListCard","togglePlayerListBtn");});
 document.getElementById("playerApplicationHead")?.addEventListener("click",()=>toggleAdminCompactCard("playerApplicationCard","togglePlayerApplicationsBtn"));
@@ -7043,18 +7423,21 @@ function v59PkTotalsDocId(birdKey) {
 function v59PkCandidates(bird) {
   const base = v59PkBaseBird(bird);
   const birdKey = v59PkBirdKey(base);
-  const aiSrc = base && (
+  const rawAiSrc = base && (
+    base.aiPhotoUrl ||
     (base.imageType && String(base.imageType).indexOf("ai_") === 0 && base.photoUrl) ||
     (typeof V58_EMBEDDED_ART_006_020 !== "undefined" && V58_EMBEDDED_ART_006_020[String(base.coreNo || "").padStart(3,"0")] &&
       V58_EMBEDDED_ART_006_020[String(base.coreNo || "").padStart(3,"0")].src) ||
     ""
   );
+  const aiSrc = v63DisplayPhotoUrl(base,rawAiSrc,true);
   const items = [{
     id:"ai_" + birdKey,
     type:"ai",
     src:aiSrc || "",
     label:"AI 創作",
-    photographer:"AI 生成鳥圖"
+    photographer:"AI 生成鳥圖",
+    transformBird:base
   }];
   const posts = communityBirds.filter(function(x){
     if (!x || x.category !== "wild" || !x.photoUrl || !isPublishedSubmission(x) || x.pkPublished === false) return false;
@@ -7067,7 +7450,8 @@ function v59PkCandidates(bird) {
       type:"photo",
       src:x.originalPhotoUrl || x.photoUrl,
       label:"投稿 " + (index + 1),
-      photographer:photographerCreditText(x)
+      photographer:photographerCreditText(x),
+      transformBird:x
     });
   });
   while (items.length < 4) {
@@ -7135,6 +7519,7 @@ async function renderV59BirdPk(bird, gridId, statusId, force) {
       img.src = item.src;
       img.alt = bird.name + "・" + item.label;
       img.loading = "lazy";
+      v64ApplyPhotoTransform(img,item.transformBird,item.type === "ai");
       const kind = document.createElement("span");
       kind.className = "v59-pk-kind";
       kind.textContent = item.type === "ai" ? "AI 創作" : (item.label + "・" + item.photographer);
