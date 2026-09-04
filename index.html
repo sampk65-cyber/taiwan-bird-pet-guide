@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V6.7</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V6.8</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -1783,7 +1783,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.7 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -1882,7 +1882,7 @@
       </div>
       <div id="playerUploadPanel" style="display:none;margin-top:22px;padding-top:20px;border-top:1px solid rgba(46,92,68,.18);">
         <h3 style="margin:0 0 8px;font-size:22px;color:#2d5f49;">分享鳥兒照片</h3>
-        <div class="hint" style="margin-bottom:8px;">野生鳥類依 1–15 項圖鑑條件建檔；15 項完整才會列入題目與總挑戰。所有新投稿先送管理員確認，通過後才會公開。</div>
+        <div class="hint" style="margin-bottom:8px;">野生鳥類依 1–15 項圖鑑條件建檔；已有 1 項以上有效資料即可進入總挑戰，完整度提高時題數與滿分會同步增加。所有新投稿先送管理員確認，通過後才會公開。</div>
         <div class="birdfriend-quota" id="birdfriendDailyQuota" aria-live="polite">今日投稿 0 / 10</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
           <button type="button" class="birdfriend-category-btn active" data-category="wild" style="min-height:84px;border:2px solid #3d825c;border-radius:18px;padding:11px 10px;background:#e8f5ec;color:#23613f;font-size:20px;font-weight:900;box-shadow:0 5px 14px rgba(45,95,73,.08);">野生鳥類<small style="display:block;font-size:12px;font-weight:700;margin-top:4px;opacity:.78;">1–15 項圖鑑資料</small><small class="birdfriend-category-count">現有種類：<span id="birdfriendWildTypeCount">0</span> 種</small></button>
@@ -2427,7 +2427,7 @@ function syncAllBirdLevelRequirements() {
   birds.forEach(syncBirdLevelRequirement);
 }
 
-// V6.2 照片投稿：只有管理員確認通過的投稿可公開；完整野生鳥才可進入題目與總挑戰。
+// V6.8 照片投稿：只有管理員確認通過的投稿可公開；野生鳥有 1 題以上有效資料即可進入總挑戰。
 let communityBirds = [];
 function photographerCreditText(bird) {
   const v = bird && (bird.photographer || bird.displayName || bird.playerId);
@@ -2505,7 +2505,7 @@ function communityRecordToBird(id, data) {
     pkPublished: data.pkPublished !== false,
     targetBirdId: data.targetBirdId || "",
     category: data.category || "wild",
-    challengeEligible: !isPet && complete,
+    challengeEligible: !isPet && Object.values(data.conditions || {}).some(value => Array.isArray(value) ? value.length > 0 : String(value || "").trim() !== ""),
     name: isPet ? (pet.nickname || pet.breed || "寵物萌照") : (data.wildName || data.photoName || "未命名野生鳥"),
     photoUrl: data.photoUrl || "",
     challengePhotoUrl: data.originalPhotoUrl || data.photoUrl || "",
@@ -2546,7 +2546,36 @@ function v66UpdateTypeCounts() {
     const el = document.getElementById(id); if (el) el.textContent = String(value);
   });
 }
-function getChallengeBirds() { return getV50CoreBirdsWithReplacements().filter(b=>b.challengeEnabled!==false && b.imageType!=="ai_watercolor" && b.imageType!=="placeholder_line" && b.definitionPending!==true).concat(communityBirds.filter(b => isPublishedSubmission(b) && b.challengeEligible === true && !b.targetBirdId)); }
+function availableConditionsForBird(bird) {
+  const conditions = bird && bird.conditions && typeof bird.conditions === "object" ? bird.conditions : {};
+  return CONDITIONS.filter(cond => {
+    const value = conditions[cond.key];
+    if (Array.isArray(value)) return value.some(item => String(item || "").trim());
+    return value != null && String(value).trim() !== "";
+  });
+}
+function availableQuestionCountForBird(bird) {
+  return availableConditionsForBird(bird).length;
+}
+function playableRequiredCorrectForBird(bird) {
+  const available = availableQuestionCountForBird(bird);
+  if (available <= 0) return 0;
+  const levelTarget = LEVEL_REQUIRED[Math.max(1, Math.min(4, Number(bird && bird.level) || 1))] || 3;
+  const configured = Number(bird && bird.requiredCorrect) > 0 ? Number(bird.requiredCorrect) : levelTarget;
+  return Math.max(1, Math.min(available, configured));
+}
+function getChallengeBirds() {
+  const official = getV50CoreBirdsWithReplacements().filter(bird => availableQuestionCountForBird(bird) > 0);
+  const officialNames = new Set(official.map(bird => normalizeCoreBirdName(bird.name)));
+  const extrasByName = new Map();
+  communityBirds.filter(bird => bird && bird.category === "wild" && isPublishedSubmission(bird) && !bird.targetBirdId && availableQuestionCountForBird(bird) > 0).forEach(bird => {
+    const key = normalizeCoreBirdName(bird.name);
+    if (!key || officialNames.has(key)) return;
+    const previous = extrasByName.get(key);
+    if (!previous || Number(bird.uploadedAt || 0) >= Number(previous.uploadedAt || 0)) extrasByName.set(key, bird);
+  });
+  return official.concat(Array.from(extrasByName.values()));
+}
 function findAnyBirdById(id) { return getGalleryBirds().find(b => b.id === id) || null; }
 async function loadCommunityBirdsFromFirestore() {
   communityBirds = [];
@@ -2572,18 +2601,23 @@ function scoreForCorrectAnswers(correctCount) {
 let totalScore = 0;
 
 function getMaxScore() {
-  return getChallengeBirds().length * 7;
+  return getChallengeBirds().reduce((sum, bird) => sum + scoreForCorrectAnswers(availableQuestionCountForBird(bird)), 0);
 }
 
-function correctAnswerCountForBird(birdId) {
-  const answers = currentAnswered && currentAnswered[birdId];
+function getTotalAvailableQuestionCount() {
+  return getChallengeBirds().reduce((sum, bird) => sum + availableQuestionCountForBird(bird), 0);
+}
+
+function correctAnswerCountForBird(bird) {
+  if (!bird) return 0;
+  const answers = currentAnswered && currentAnswered[bird.id];
   if (!answers || typeof answers !== "object" || Array.isArray(answers)) return 0;
-  return Object.values(answers).filter(value => value === true).length;
+  return availableConditionsForBird(bird).filter(cond => answers[cond.key] === true).length;
 }
 
 function earnedScoreForBird(bird) {
   if (!bird || currentAnswered[bird.id + "_captured"] !== true) return 0;
-  const correctCount = correctAnswerCountForBird(bird.id);
+  const correctCount = correctAnswerCountForBird(bird);
   if (correctCount > 0) return scoreForCorrectAnswers(correctCount);
   return Math.max(0, Math.min(7, Number(currentAnswered[bird.id + "_earnedScore"]) || 0));
 }
@@ -2599,7 +2633,8 @@ function updateScoreBar() {
   if (GAME_MODE === "challenge") {
     bar.style.display = "block";
     const challengeCount = getChallengeBirds().length;
-    bar.textContent = "分數 " + totalScore + " / 滿分 " + getMaxScore() + "（" + challengeCount + " 種 × 7）";
+    const totalQuestions = getTotalAvailableQuestionCount();
+    bar.textContent = "分數 " + totalScore + " / 滿分 " + getMaxScore() + "（" + challengeCount + " 種・共 " + totalQuestions + " 題）";
   } else {
     bar.style.display = "none";
   }
@@ -2879,7 +2914,7 @@ function ensureV50CoreBirds() {
 ensureV50CoreBirds();
 
 // ===== V5.3 可續作資料層：只寫入已由網路圖鑑確認的欄位；不確定一律空白 =====
-const V53_DATASET_VERSION = "2026-09-04-indexV6.7-capture-image-one-total-score-fix";
+const V53_DATASET_VERSION = "2026-09-04-indexV6.8-dynamic-completeness-score";
 
 // ===== V5.5 7500格正式資料骨架（500種 × 15欄）=====
 // 規則：確定才填；不確定維持 []。這個物件永遠保留完整 7,500 個欄位。
@@ -3256,7 +3291,7 @@ function renderBirdGrid() {
       <div class="index">No. ${String(originalIndex + 1).padStart(3, "0")}</div>
       <div class="thumb">${thumbInner}</div>
       <div class="name">${b.name}</div>
-      <div class="level">${done ? "已解鎖" : (b.source === "birdfriend" ? "鳥友投稿 · 15項完整" : (b.definitionPending ? "等真實定義" : "LV." + b.level + " " + LEVEL_LABEL[b.level]))}</div>
+      <div class="level">${done ? "已解鎖" : (GAME_MODE === "challenge" ? (availableQuestionCountForBird(b) + " 題可挑戰") : (b.source === "birdfriend" ? ("鳥友投稿 · " + availableQuestionCountForBird(b) + "/15 題") : (b.definitionPending ? "等真實定義" : "LV." + b.level + " " + LEVEL_LABEL[b.level])))}</div>
     `;
     tile.onclick = () => openQuiz(b.id);
     grid.appendChild(tile);
@@ -3841,7 +3876,7 @@ function attemptCapture() {
       currentAnswered[bird.id + "_eggBadge"] = pickWingedEggVariant();
     }
     if (GAME_MODE === "challenge" && !alreadyCaptured) {
-      currentAnswered[bird.id + "_earnedScore"] = scoreForCorrectAnswers(correctAnswerCountForBird(bird.id));
+      currentAnswered[bird.id + "_earnedScore"] = scoreForCorrectAnswers(correctAnswerCountForBird(bird));
       recalculateTotalScore();
       updateScoreBar();
     }
@@ -3885,8 +3920,11 @@ viewfinderEl.addEventListener("pointercancel", () => { dragging = false; });
 
 function renderQuiz() {
   const bird = findAnyBirdById(currentBirdId);
-  document.getElementById("quizLevelTag").textContent = bird.source === "birdfriend" ? "鳥友投稿 · 15項完整" : ((GAME_MODE === "explain" ? "遊戲解說 · " : "正式挑戰 · ") + "LV." + bird.level + " " + LEVEL_LABEL[bird.level]);
-  document.getElementById("requiredCount").textContent = bird.requiredCorrect;
+  const availableConditions = availableConditionsForBird(bird);
+  const availableQuestionCount = availableConditions.length;
+  const requiredCorrect = playableRequiredCorrectForBird(bird);
+  document.getElementById("quizLevelTag").textContent = bird.source === "birdfriend" ? ("鳥友投稿 · " + availableQuestionCount + "/15 題") : ((GAME_MODE === "explain" ? "遊戲解說 · " : "正式挑戰 · ") + "LV." + bird.level + " " + LEVEL_LABEL[bird.level] + " · 現有 " + availableQuestionCount + " 題");
+  document.getElementById("requiredCount").textContent = requiredCorrect;
 
   const elevationValue = Array.isArray(bird.conditions.elevation) ? bird.conditions.elevation[0] : bird.conditions.elevation;
   const seasonValue = bird.season || "夏";
@@ -3896,16 +3934,16 @@ function renderQuiz() {
   document.getElementById("revealMysteryPlaceholder").innerHTML =
     buildMysteryBirdImg(mysteryImgForLevel(bird.level)) +
     '<div class="mystery-qmark">?</div>' +
-    '<div class="mystery-reqtext"><span class="req-small">需答對</span><span class="req-big">' + bird.requiredCorrect + '題</span></div>';
+    '<div class="mystery-reqtext"><span class="req-small">需答對</span><span class="req-big">' + requiredCorrect + '題</span></div>';
 
   if (!currentAnswered[bird.id]) currentAnswered[bird.id] = {};
   const answered = currentAnswered[bird.id];
-  const correctSoFar = Object.values(answered).filter(v => v === true).length;
+  const correctSoFar = correctAnswerCountForBird(bird);
   document.getElementById("correctCount").textContent = correctSoFar;
 
   const whoAmI = document.getElementById("whoAmIMeme");
   if (whoAmI) {
-    const memeProgress = Math.min(correctSoFar / Math.max(bird.requiredCorrect, 1), 1);
+    const memeProgress = Math.min(correctSoFar / Math.max(requiredCorrect, 1), 1);
     const showMeme = (GAME_MODE === "challenge" || GAME_MODE === "explain") && currentAnswered[bird.id + "_captured"] !== true;
     const nameEl = whoAmI.querySelector(".challenge-bird-name");
     if (nameEl) nameEl.textContent = bird.name;
@@ -3915,7 +3953,7 @@ function renderQuiz() {
   }
 
   const captured = currentAnswered[bird.id + "_captured"] === true;
-  const unlocked = correctSoFar >= bird.requiredCorrect;
+  const unlocked = correctSoFar >= requiredCorrect;
 
   if (captured) {
     if (!currentAnswered[bird.id + "_eggBadge"]) {
@@ -3948,7 +3986,7 @@ function renderQuiz() {
       if (revealCredit) revealCredit.style.display = "none";
     }
   } else {
-    const progress = Math.min(correctSoFar / bird.requiredCorrect, 1) * 0.85;
+    const progress = Math.min(correctSoFar / Math.max(requiredCorrect, 1), 1) * 0.85;
     veil.style.opacity = (1 - progress).toString();
     veil.style.backdropFilter = "blur(" + (14 * (1 - progress)) + "px)";
     caption.classList.remove("show");
@@ -3973,8 +4011,8 @@ function renderQuiz() {
 
   document.getElementById("storyBox").style.display = "none";
 
-  const unansweredConds = CONDITIONS.filter(c => answered[c.key] === undefined);
-  const reachedThreshold = correctSoFar >= bird.requiredCorrect;
+  const unansweredConds = availableConditions.filter(c => answered[c.key] === undefined);
+  const reachedThreshold = correctSoFar >= requiredCorrect;
   const wantsCapture = currentAnswered[bird.id + "_wantCapture"] === true;
 
   if (unansweredConds.length === 0 && !reachedThreshold && !wantsCapture) {
@@ -3984,7 +4022,7 @@ function renderQuiz() {
     encourageBox.className = "threshold-choice";
     encourageBox.innerHTML =
       '<div class="q-label">只差一點點,可以多瀏覽圖鑑模式累積知識,再回來挑戰一次!</div>' +
-      '<div class="hint" style="margin-top:8px;">這隻鳥答對 ' + correctSoFar + ' / ' + bird.requiredCorrect + ' 題,還沒達到解鎖門檻</div>';
+      '<div class="hint" style="margin-top:8px;">這隻鳥答對 ' + correctSoFar + ' / ' + requiredCorrect + ' 題,還沒達到解鎖門檻</div>';
     const retryBtn = document.createElement("button");
     retryBtn.className = "save-btn";
     retryBtn.style.marginTop = "14px";
@@ -5125,7 +5163,7 @@ function renderAdminList() {
     const completed = CONDITIONS.filter(cond => Array.isArray((b.conditions || {})[cond.key]) && (b.conditions || {})[cond.key].length > 0).length;
     const row = document.createElement("div");
     row.className = "list-row list-row-clickable";
-    row.innerHTML = `<span><span class="idx">鳥友投稿</span>${b.name}</span><span class="tag">${completed}/15${completed === 15 ? " ・ 可列入挑戰" : " ・ 僅圖鑑"}</span>`;
+    row.innerHTML = `<span><span class="idx">鳥友投稿</span>${b.name}</span><span class="tag">${completed}/15${completed > 0 ? " ・ 可列入挑戰" : " ・ 尚無題目"}</span>`;
     row.onclick = () => {
       loadCommunityBirdForEdit(b.sourceDocId);
       setAdminDataMode("add");
@@ -6907,7 +6945,7 @@ async function loadBirdfriendMyPhotos() {
       const cat = item.category === "pet" ? "寵物萌照" : "野生鳥類";
       const title = item.category === "pet" ? (item.petData?.nickname || item.petData?.breed || "未命名") : (item.wildName || item.photoName || "未命名");
       const count = item.category === "wild" ? birdfriendWildCompletedCount(item.conditions || {}) : 0;
-      const eligibility = item.category === "wild" ? (count === 15 ? "15/15 完整 · 可列入挑戰" : `${count}/15 · 僅圖鑑`) : "僅圖鑑";
+      const eligibility = item.category === "wild" ? (`${count}/15` + (count > 0 ? " · 可列入挑戰" : " · 尚無題目")) : "僅圖鑑";
       const titleEl=document.createElement("strong"); titleEl.textContent=cat + " · " + title;
       const reviewStatus=normalizedSubmissionStatus(item.status);
       const reviewBadge=document.createElement("span"); reviewBadge.className="own-photo-status " + reviewStatus; reviewBadge.textContent=reviewStatus === "approved" ? "已公布" : (reviewStatus === "rejected" ? "未通過" : "待審核");
@@ -6938,7 +6976,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     const conditions=collectBirdfriendWildConditions();
     const completedCount=birdfriendWildCompletedCount(conditions);
     const targetBirdId=document.getElementById("birdfriendTargetBirdId")?.value||"";
-    payload={category:"wild", wildName, photoName:wildName, conditions, completedCount, challengeEligible:completedCount===15, targetBirdId:targetBirdId||null, imageType:"real_photo"};
+    payload={category:"wild", wildName, photoName:wildName, conditions, completedCount, challengeEligible:completedCount>0, targetBirdId:targetBirdId||null, imageType:"real_photo"};
   } else {
     const petData={
       breed:document.getElementById("birdfriendPetBreed").value.trim(),
@@ -7005,7 +7043,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     resetBirdfriendUploadForm();
     await loadCommunityBirdsFromFirestore();
     await loadBirdfriendMyPhotos();
-    setBirdfriendPhotoStatus(payload.category === "wild" ? (count===15 ? "投稿完成：15/15 完整，待管理員確認後公布並可列入挑戰。" : `投稿完成：目前 ${count}/15，待管理員確認後公布。`) : "寵鳥萌照投稿完成，待管理員確認後公布。", "ok");
+    setBirdfriendPhotoStatus(payload.category === "wild" ? (`投稿完成：目前 ${count}/15` + (count > 0 ? "，管理員確認公布後即可列入挑戰。" : "，尚無可出題資料。")) : "寵鳥萌照投稿完成，待管理員確認後公布。", "ok");
   } catch (err) {
     if (quotaToken && !photoRecordSaved) await releaseDailyPhotoUpload(quotaToken);
     setBirdfriendPhotoStatus("儲存失敗：" + String(err.message || err), "error");
