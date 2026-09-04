@@ -2176,7 +2176,7 @@
       <div class="section-title" style="margin-top:0;">AI 圖片接收中心 <span class="list-status-badge">V5.5</span></div>
       <div class="v53-ai-import-card" id="v53AiImportCard">
         <div class="v53-ai-import-title"><span>🎨 AI 圖片批次匯入 Firebase</span><span id="v53AiImportCount">0 / 500</span></div>
-        <div class="hint">選擇含 001～500 圖片的 ZIP。系統會依編號自動判定：奇數＝水彩、偶數＝油畫，壓成 512px WebP（目標 ≤90KB）後上傳 Storage，並同步 Firestore。真實照片一律不覆蓋。</div>
+        <div class="hint">可選擇完整 001～500 ZIP，也可只放部分編號（例如 021～050）。系統只處理 ZIP 內實際存在的圖片，壓成 512px WebP（目標 ≤90KB）後上傳 Storage，並同步 Firestore。真實照片一律不覆蓋。</div>
         <div class="v53-ai-import-row">
           <input type="file" id="v53AiZipInput" accept=".zip,application/zip">
           <button type="button" class="v53-ai-import-btn" id="v53AiImportBtn">開始／繼續匯入</button>
@@ -4351,6 +4351,7 @@ document.getElementById("saveBirdBtn").onclick = async () => {
 const V53_AI_IMPORT_CHECKPOINT_KEY = "birdGuideV53AiImportCheckpoint";
 let v53AiImportStopRequested = false;
 let v53AiImportRunning = false;
+let v53AiActivePackageNos = [];
 
 function v53ReadAiCheckpoint(){
   try { return JSON.parse(localStorage.getItem(V53_AI_IMPORT_CHECKPOINT_KEY) || "{}"); }
@@ -4368,10 +4369,13 @@ function v53AiLog(msg){
 }
 function v53RefreshAiImportUi(extra){
   const cp=v53ReadAiCheckpoint();
-  const done=Object.values(cp).filter(x=>x&&x.status==="done").length;
-  const skipped=Object.values(cp).filter(x=>x&&x.status==="skipped_real").length;
-  const count=document.getElementById("v53AiImportCount"); if(count) count.textContent=`${done} / 500`;
-  const bar=document.getElementById("v53AiProgressBar"); if(bar) bar.style.width=Math.min(100,(done/500)*100)+"%";
+  const packageIds=v53AiActivePackageNos.map(no=>String(no).padStart(3,"0"));
+  const total=packageIds.length || 500;
+  const done=packageIds.length ? packageIds.filter(id=>cp[id]&&cp[id].status==="done").length : Object.values(cp).filter(x=>x&&x.status==="done").length;
+  const skipped=packageIds.length ? packageIds.filter(id=>cp[id]&&cp[id].status==="skipped_real").length : Object.values(cp).filter(x=>x&&x.status==="skipped_real").length;
+  const finished=done+skipped;
+  const count=document.getElementById("v53AiImportCount"); if(count) count.textContent=`${finished} / ${total}`;
+  const bar=document.getElementById("v53AiProgressBar"); if(bar) bar.style.width=Math.min(100,(finished/total)*100)+"%";
   const st=document.getElementById("v53AiImportStatus");
   if(st && extra) st.textContent=extra + (skipped?`\n保護真實照片：已跳過 ${skipped} 種。`:"");
 }
@@ -4394,6 +4398,18 @@ function v53FindZipEntry(zip,no){
   const files=Object.values(zip.files).filter(x=>!x.dir && /\.(webp|png|jpe?g)$/i.test(x.name));
   return files.find(x=>new RegExp(`(^|/)${prefix}(?:[_\\- .]|$)`,"i").test(x.name)) ||
          files.find(x=>new RegExp(`(^|/)${prefix}[^/]*\\.(webp|png|jpe?g)$`,"i").test(x.name)) || null;
+}
+function v53ZipBirdNumbers(zip){
+  const values=Object.values(zip.files).filter(x=>!x.dir && /\.(webp|png|jpe?g)$/i.test(x.name));
+  const numbers=[];
+  values.forEach(entry=>{
+    const base=String(entry.name||"").split("/").pop()||"";
+    const match=base.match(/^(\d{3})(?:[_\- .]|$)/);
+    if(!match) return;
+    const no=Number(match[1]);
+    if(no>=1&&no<=500&&!numbers.includes(no)) numbers.push(no);
+  });
+  return numbers.sort((a,b)=>a-b);
 }
 async function v53BlobToBitmap(blob){
   if(window.createImageBitmap) return await createImageBitmap(blob);
@@ -4458,9 +4474,12 @@ async function v53StartAiZipImport(){
   try{
     v53RefreshAiImportUi("正在讀取 ZIP…");
     const zip=await JSZip.loadAsync(file);
+    v53AiActivePackageNos=v53ZipBirdNumbers(zip);
+    if(!v53AiActivePackageNos.length) throw new Error("ZIP 內找不到以三位數編號開頭的圖片，例如 021.webp");
     const cp=v53ReadAiCheckpoint();
     let doneNow=0, missing=0, protectedReal=0, errors=0;
-    for(let no=1;no<=500;no++){
+    v53RefreshAiImportUi(`已找到 ${v53AiActivePackageNos.length} 張編號圖片，準備匯入…`);
+    for(const no of v53AiActivePackageNos){
       if(v53AiImportStopRequested){ v53AiLog("已暫停；重新選同一 ZIP 後可從 checkpoint 繼續。"); break; }
       const id=String(no).padStart(3,"0");
       if(cp[id] && (cp[id].status==="done" || cp[id].status==="skipped_real")) continue;
@@ -4484,8 +4503,10 @@ async function v53StartAiZipImport(){
       }
     }
     renderAdminList(); renderBirdGrid(); renderExport();
-    const doneTotal=Object.values(v53ReadAiCheckpoint()).filter(x=>x&&x.status==="done").length;
-    v53RefreshAiImportUi(v53AiImportStopRequested?`已暫停。Firebase 已完成 ${doneTotal} / 500；重新選同一 ZIP 即可續傳。`:`本輪完成。Firebase AI 圖片 checkpoint：${doneTotal} / 500。缺圖與失敗項目可補進 ZIP 後再次執行。`);
+    const finalCp=v53ReadAiCheckpoint();
+    const completedTotal=v53AiActivePackageNos.filter(no=>{const x=finalCp[String(no).padStart(3,"0")];return x&&(x.status==="done"||x.status==="skipped_real");}).length;
+    const packageTotal=v53AiActivePackageNos.length;
+    v53RefreshAiImportUi(v53AiImportStopRequested?`已暫停。這個圖片包已完成 ${completedTotal} / ${packageTotal}；重新選同一 ZIP 即可續傳。`:`本輪完成。這個圖片包已完成 ${completedTotal} / ${packageTotal}。失敗項目可重新執行。`);
   }catch(err){
     alert("ZIP 讀取或批次匯入失敗："+(err.message||err));
     v53AiLog("批次中止："+(err.message||err));
