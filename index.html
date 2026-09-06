@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V7.1</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.2</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -5872,7 +5872,11 @@ function renderGalleryGrid() {
       <div class="name">${b.name}</div>
       <div class="level">${b.source === "birdfriend" ? (b.category === "pet" ? "寵物萌照 · 僅圖鑑" : (b.challengeEligible ? "鳥友野生鳥 · 可挑戰" : "鳥友野生鳥 · 僅圖鑑")) : ((b.definitionPending ? "等真實定義" : "LV." + b.level + " " + LEVEL_LABEL[b.level]))}</div>
     `;
-    tile.onclick = () => showGalleryDetail(b.id);
+    tile.onclick = () => {
+      // V7.2：記住瀏覽圖鑑進入鳥種前的頁面位置。
+      window.__galleryReturnScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      showGalleryDetail(b.id);
+    };
     grid.appendChild(tile);
   });
 }
@@ -5957,9 +5961,14 @@ document.getElementById("galleryQuickClear").onclick = () => {
   input.focus();
 };
 document.getElementById("galleryDetailBackBtn").onclick = () => {
+  const returnY = Number(window.__galleryReturnScrollY || 0);
   document.getElementById("galleryListPanel").style.display = "block";
   document.getElementById("galleryDetailPanel").style.display = "none";
   setV65GalleryMode(v65GalleryMode);
+  // 等清單重新排版完成後回到原本瀏覽位置，避免跳回頁首。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.scrollTo({top:returnY, left:0, behavior:"auto"}));
+  });
 };
 
 document.getElementById("leaderboardBtn").onclick = async () => {
