@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V7.2</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.3</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -1674,6 +1674,8 @@
 .v59-pk-card:active{transform:scale(.985)}
 .v59-pk-card.selected{border-color:#e54b79;box-shadow:0 0 0 3px rgba(229,75,121,.13),0 6px 16px rgba(92,43,59,.13)}
 .v59-pk-card.empty{cursor:default;background:linear-gradient(145deg,#f1efeb,#e6e2dc);border:1.5px dashed #bcb4ad}
+.v59-pk-card.empty:not(:disabled){cursor:pointer;border-color:#b77a8d;background:linear-gradient(145deg,#fff8fb,#f7eef2)}
+.v59-pk-card.empty:not(:disabled):active{transform:scale(.98);box-shadow:0 0 0 3px rgba(183,122,141,.12)}
 .v59-pk-card img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;background:#f3f0e8}
 .v59-pk-kind{position:absolute;left:7px;top:7px;max-width:calc(100% - 14px);padding:4px 7px;border-radius:999px;background:rgba(20,24,22,.66);color:#fff;font-size:10px;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v59-pk-card.ai .v59-pk-kind{background:rgba(40,105,83,.82)}
@@ -6609,7 +6611,11 @@ function showPlayerProfile(id, data, user) {
   document.getElementById("playerLoginTab")?.classList.add("active");
   setPlayerPortalStatus("已登入。請選擇『野生鳥類』或『寵鳥萌照』開始上傳。", "ok");
   loadBirdfriendMyPhotos();
-  setTimeout(() => document.getElementById("playerUploadPanel")?.scrollIntoView({behavior:"smooth", block:"start"}), 50);
+  if (gallerySubmissionTarget) {
+    applyGallerySubmissionTarget();
+  } else {
+    setTimeout(() => document.getElementById("playerUploadPanel")?.scrollIntoView({behavior:"smooth", block:"start"}), 50);
+  }
 }
 
 function openPlayerPortal() {
@@ -7727,6 +7733,70 @@ function v59SetPkStatus(statusId, text, type) {
   el.textContent = text || "";
 }
 
+// V7.3：從瀏覽圖鑑的「開放投稿」直接導向該鳥種投稿。
+let gallerySubmissionTarget = null;
+
+function applyGallerySubmissionTarget() {
+  if (!gallerySubmissionTarget) return;
+  const target = gallerySubmissionTarget;
+  birdfriendPhotoCategory = "wild";
+  syncBirdfriendCategoryUI();
+
+  const targetId = document.getElementById("birdfriendTargetBirdId");
+  const wildName = document.getElementById("birdfriendWildName");
+  const coreSearch = document.getElementById("birdfriendCoreSearch");
+  const searchResults = document.getElementById("birdfriendCoreSearchResults");
+
+  if (targetId) targetId.value = target.id || "";
+  if (wildName) wildName.value = target.name || "";
+  if (coreSearch) coreSearch.value = target.name || "";
+  if (searchResults) searchResults.innerHTML = `<div class="hint">已指定投稿鳥種：${target.name || "目前鳥種"}</div>`;
+
+  setBirdfriendPhotoStatus(`已指定「${target.name || "目前鳥種"}」，請選擇照片並送出投稿，送出後等待管理員審查。`, "ok");
+  setTimeout(() => document.getElementById("playerUploadPanel")?.scrollIntoView({behavior:"smooth", block:"start"}), 80);
+}
+
+async function openGalleryBirdSubmission(bird) {
+  if (!bird) return;
+  const base = v59PkBaseBird(bird) || bird;
+  gallerySubmissionTarget = {
+    id: base.id || bird.id || "",
+    name: base.name || bird.name || ""
+  };
+
+  const voter = v59PkVoter();
+
+  // 只有遊戲規則代號：不能直接投稿，導向鳥友帳號申請。
+  if (voter && voter.type === "game") {
+    alert("照片投稿需要鳥友帳號。你目前只有遊戲帳號／遊戲代號，請先申請鳥友帳號。");
+    openPlayerPortal();
+    setPlayerPortalMode("grant");
+    setPlayerPortalStatus(`請先申請鳥友帳號；核准登入後即可投稿「${gallerySubmissionTarget.name}」。`, "info");
+    return;
+  }
+
+  // 已登入鳥友帳號：直接進入該鳥種投稿表單。
+  if (playerPortalSession && fbAuth && fbAuth.currentUser && fbAuth.currentUser.uid === playerPortalSession.uid) {
+    try {
+      const snap = await db.collection("players").doc(playerPortalSession.id).get();
+      const data = snap.exists ? (snap.data() || {}) : {};
+      if (data.accountStatus === "approved" && data.accountType !== "game") {
+        hideHomeWelcome(); stopCaptureGame();
+        document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+        document.getElementById("view-player-portal").classList.add("active");
+        showPlayerProfile(playerPortalSession.id, data, fbAuth.currentUser);
+        applyGallerySubmissionTarget();
+        return;
+      }
+    } catch (_) {}
+  }
+
+  // 尚未登入鳥友帳號：先進登入；登入成功後自動帶入這隻鳥。
+  openPlayerPortal();
+  setPlayerPortalMode("login");
+  setPlayerPortalStatus(`已有鳥友帳號請先登入；登入後會直接進入「${gallerySubmissionTarget.name}」投稿。若尚未申請，請按「取得授權」。`, "info");
+}
+
 async function renderV59BirdPk(bird, gridId, statusId, force) {
   const grid = document.getElementById(gridId);
   if (!grid || !bird) return;
@@ -7763,7 +7833,13 @@ async function renderV59BirdPk(bird, gridId, statusId, force) {
       empty.className = "v59-pk-empty-copy";
       empty.innerHTML = "<span>＋</span>" + (item.slot === 1 ? "圖一準備中" : "開放投稿");
       card.appendChild(empty);
-      card.disabled = true;
+      if (item.slot === 1) {
+        card.disabled = true;
+      } else {
+        card.disabled = false;
+        card.setAttribute("aria-label", `針對${bird.name}開放投稿`);
+        card.onclick = function(){ openGalleryBirdSubmission(bird); };
+      }
     }
     grid.appendChild(card);
   });
