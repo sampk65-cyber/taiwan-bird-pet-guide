@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V7.4</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.5</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -851,6 +851,18 @@
     box-shadow:0 0 0 3px rgba(23,99,66,.18), inset 0 0 0 1px rgba(255,255,255,.2);
   }
   #adminFormPanel.editing-existing .chk-btn.original-selected.selected::after { content:"✓ 原有"; color:#dff7e8; }
+  /* V7.5：非預設清單內的既有答案，也必須完整有色彩識別。 */
+  #adminFormPanel.editing-existing .chk-btn.existing-extra.original-selected.selected {
+    background:#176342 !important;
+    color:#fff !important;
+    border-color:#0d4e32 !important;
+    box-shadow:0 0 0 3px rgba(23,99,66,.18), inset 0 0 0 1px rgba(255,255,255,.2) !important;
+  }
+  #adminFormPanel.editing-existing .chk-btn.existing-extra.removed {
+    background:#fff1f1 !important;
+    color:#a82f35 !important;
+    border:2px dashed #cf555b !important;
+  }
   #adminFormPanel.editing-existing .chk-btn.added.selected {
     background:#1769aa; color:#fff; border-color:#0d568f;
     box-shadow:0 0 0 3px rgba(23,105,170,.18);
@@ -1785,7 +1797,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV7.4 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV7.5 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -4183,28 +4195,78 @@ function v64HandleConditionButtonChange(btn) {
 function v64ClearConditionEditState() {
   const panel=document.getElementById("adminFormPanel");
   panel?.classList.remove("editing-existing");
+
+  // V7.5：移除修改既有資料時動態補上的「原有自訂答案」按鈕，
+  // 避免切換鳥種後殘留上一隻鳥的答案。
+  document.querySelectorAll("#conditionFields .chk-btn.existing-extra").forEach(btn=>btn.remove());
+
   document.querySelectorAll("#conditionFields .chk-btn").forEach(btn=>{
     btn.classList.remove("selected","original-selected","added","removed");
     delete btn.dataset.originalSelected;
   });
   document.querySelectorAll("#conditionFields .custom-input").forEach(el=>{
-    el.value=""; el.dataset.originalValue=""; el.classList.remove("custom-changed");
+    el.value="";
+    el.dataset.originalValue="";
+    el.classList.remove("custom-changed");
   });
 }
+function v64NormalizeExistingConditionValues(raw) {
+  if (Array.isArray(raw)) {
+    return raw.map(v=>String(v ?? "").trim()).filter(Boolean);
+  }
+  if (raw == null) return [];
+  if (typeof raw === "string") {
+    return raw.split(/[,，、;；|]/).map(v=>v.trim()).filter(Boolean);
+  }
+  return [String(raw).trim()].filter(Boolean);
+}
+
 function v64BeginConditionEditState(conditions) {
   v64ClearConditionEditState();
   document.getElementById("adminFormPanel")?.classList.add("editing-existing");
+
   CONDITIONS.forEach(cond=>{
-    const accepted=Array.isArray(conditions&&conditions[cond.key])?conditions[cond.key]:[];
-    const extras=[];
+    const accepted=v64NormalizeExistingConditionValues(conditions && conditions[cond.key]);
+    const grid=document.querySelector('.checkbox-grid[data-key="'+cond.key+'"]');
+
     accepted.forEach(val=>{
-      const btn=document.querySelector('.checkbox-grid[data-key="'+cond.key+'"] .chk-btn[data-value="'+CSS.escape(val)+'"]');
-      if(btn){btn.classList.add("selected","original-selected");btn.dataset.originalSelected="true";}
-      else extras.push(val);
+      let btn=null;
+
+      // 不只比 data-value，也比畫面文字；可相容舊資料空白/格式差異。
+      if (grid) {
+        btn=Array.from(grid.querySelectorAll(".chk-btn")).find(b =>
+          String(b.dataset.value || b.textContent || "").trim() === val
+        ) || null;
+      }
+
+      // 舊資料或自訂答案若不在目前預設選項中，
+      // 直接補成一顆「深綠色原有答案」按鈕，讓每一個既有答案都有顏色識別。
+      if(!btn && grid){
+        btn=document.createElement("button");
+        btn.type="button";
+        btn.className="chk-btn existing-extra";
+        btn.dataset.value=val;
+        btn.textContent=val;
+        btn.onclick=()=>v64HandleConditionButtonChange(btn);
+        grid.appendChild(btn);
+      }
+
+      if(btn){
+        btn.classList.add("selected","original-selected");
+        btn.dataset.originalSelected="true";
+      }
     });
+
+    // 修改模式下，自訂文字欄只留給「本次新增加但清單沒有的答案」。
+    // 舊答案全部已轉成上方有顏色、可取消/恢復的按鈕。
     const input=document.getElementById("custom_"+cond.key);
-    if(input){input.value=extras.join(", ");input.dataset.originalValue=input.value;input.classList.remove("custom-changed");}
+    if(input){
+      input.value="";
+      input.dataset.originalValue="";
+      input.classList.remove("custom-changed");
+    }
   });
+
   v64UpdateEditChangeSummary();
 }
 function renderConditionFields() {
@@ -4573,6 +4635,13 @@ document.getElementById("cancelEditBtn").onclick = () => {
 
 document.getElementById("saveBirdBtn").onclick = async () => {
   if (!(await requireAdminSession())) return;
+
+  // V7.5：記住儲存前的修改目標。
+  // 儲存成功後若原本是在修改資料，就留在同一筆修改畫面。
+  const v75WasEditing = !!editingBirdId;
+  const v75EditingSource = editingBirdSource;
+  const v75EditingBirdId = editingBirdId;
+  const v75EditingCommunityDocId = editingCommunityDocId;
   const name = document.getElementById("f_name").value.trim();
   if (!name) {
     alert("請先填寫鳥名");
@@ -4724,11 +4793,32 @@ document.getElementById("saveBirdBtn").onclick = async () => {
     await saveBirdToFirestore(newBird);
   }
 
-  resetAdminForm();
-
   renderAdminList();
   renderExport();
   renderBirdGrid();
+
+  if (v75WasEditing) {
+    // 修改資料儲存後，仍留在「修改模式」與同一筆資料。
+    if (v75EditingSource === "community" && v75EditingCommunityDocId) {
+      loadCommunityBirdForEdit(v75EditingCommunityDocId);
+    } else if (v75EditingBirdId) {
+      loadBirdForEdit(v75EditingBirdId);
+      editingBirdSource = "official";
+      editingCommunityDocId = null;
+    }
+
+    // 保持上方「修改資料」頁籤為選取狀態，
+    // 但表單本身繼續顯示，不跳回鳥類清單。
+    setAdminDataMode("add");
+    document.getElementById("adminAddModeBtn")?.classList.remove("active");
+    document.getElementById("adminEditModeBtn")?.classList.add("active");
+
+    const titleEl=document.getElementById("formSectionTitle");
+    if(titleEl) titleEl.scrollIntoView({behavior:"auto",block:"start"});
+  } else {
+    // 只有「新增資料」成功後才維持原本清空表單的行為。
+    resetAdminForm();
+  }
 };
 
 
