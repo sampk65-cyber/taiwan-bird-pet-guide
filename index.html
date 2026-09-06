@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V7.0</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.1</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -5673,7 +5673,18 @@ document.getElementById("startRandomQuizBtn").onclick = () => {
   document.getElementById("quizPlayPanel").style.display = "block";
   rqEndReason = "running";
   setChallengeInteractionLock(true);
-  startRqTimer(n <= 50 ? 60 : 120);
+  // V7.1 題數挑戰時間分級：
+  // 20題=1分鐘、40題=2分鐘、50題=3分鐘、
+  // 60題=4分鐘、80題=5分鐘、100題=6分鐘。
+  // 非指定題數採下一個級距，確保玩家有足夠作答時間。
+  const challengeTimeSeconds =
+    n <= 20 ? 60 :
+    n <= 40 ? 120 :
+    n <= 50 ? 180 :
+    n <= 60 ? 240 :
+    n <= 80 ? 300 :
+    360;
+  startRqTimer(challengeTimeSeconds);
   renderRqQuestion();
 };
 
