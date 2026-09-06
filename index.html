@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V6.8</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.0</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -6864,16 +6864,31 @@ function taipeiDateKey(value) {
   const pick = type => (parts.find(p => p.type === type) || {}).value || "";
   return pick("year") + "-" + pick("month") + "-" + pick("day");
 }
+function normalizeQuotaSpeciesPart(value) {
+  return String(value || "").trim().toLocaleLowerCase("zh-Hant").replace(/\s+/g," ").slice(0,80);
+}
+function birdfriendSpeciesQuotaKey(payload) {
+  if (!payload) return "";
+  if (payload.category === "wild") {
+    const id = normalizeQuotaSpeciesPart(payload.targetBirdId);
+    const name = normalizeQuotaSpeciesPart(payload.wildName || payload.photoName);
+    return "wild:" + (id || name);
+  }
+  const breed = normalizeQuotaSpeciesPart(payload.petData && payload.petData.breed);
+  return "pet:" + breed;
+}
 function dailyQuotaCount(data) {
   const quota = data && data.dailyPhotoUploadQuota;
   if (!quota || quota.dateKey !== taipeiDateKey()) return 0;
-  return Object.keys(quota.reservations || {}).length;
+  const speciesCount = Object.keys(quota.species || {}).length;
+  const legacyCount = Object.keys(quota.reservations || {}).length;
+  return speciesCount + legacyCount;
 }
 function updateDailyQuotaDisplay(count) {
   const el = document.getElementById("birdfriendDailyQuota");
   if (!el) return;
   const used = Math.max(0, Math.min(BIRDFRIEND_DAILY_UPLOAD_LIMIT, Number(count) || 0));
-  el.textContent = `今日投稿 ${used} / ${BIRDFRIEND_DAILY_UPLOAD_LIMIT}` + (used >= BIRDFRIEND_DAILY_UPLOAD_LIMIT ? " · 今日額度已滿" : "");
+  el.textContent = `今日投稿種類 ${used} / ${BIRDFRIEND_DAILY_UPLOAD_LIMIT}` + (used >= BIRDFRIEND_DAILY_UPLOAD_LIMIT ? " · 今日種類額度已滿" : "");
   el.classList.toggle("full", used >= BIRDFRIEND_DAILY_UPLOAD_LIMIT);
 }
 async function refreshDailyQuotaDisplay() {
@@ -6883,25 +6898,44 @@ async function refreshDailyQuotaDisplay() {
     updateDailyQuotaDisplay(snap.exists ? dailyQuotaCount(snap.data() || {}) : 0);
   } catch (_) { updateDailyQuotaDisplay(0); }
 }
-async function reserveDailyPhotoUpload() {
-  const token = "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+async function reserveDailySpeciesUpload(payload) {
+  const speciesKey = birdfriendSpeciesQuotaKey(payload);
+  if (!speciesKey || speciesKey.endsWith(":")) throw new Error("無法辨識投稿種類，請確認鳥名或品種。");
   const playerRef = db.collection("players").doc(playerPortalSession.id);
+  let newlyReserved = false;
   await db.runTransaction(async tx => {
     const snap = await tx.get(playerRef);
     const pdata = snap.exists ? (snap.data() || {}) : null;
     if (!pdata || pdata.ownerUid !== playerPortalSession.uid || pdata.accountStatus !== "approved") throw new Error("帳號尚未核准，不能投稿照片");
+
     const dateKey = taipeiDateKey();
     const old = pdata.dailyPhotoUploadQuota || {};
-    const reservations = old.dateKey === dateKey ? {...(old.reservations || {})} : {};
-    if (Object.keys(reservations).length >= BIRDFRIEND_DAILY_UPLOAD_LIMIT) throw new Error("今日已投稿 10 張，請明天再投稿。此限制用來避免大量上傳破壞服務。");
-    reservations[token] = true;
-    tx.set(playerRef, {dailyPhotoUploadQuota:{dateKey,reservations},updatedAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true});
+    const species = old.dateKey === dateKey ? {...(old.species || {})} : {};
+    const legacyReservations = old.dateKey === dateKey ? {...(old.reservations || {})} : {};
+
+    if (!species[speciesKey]) {
+      const used = Object.keys(species).length + Object.keys(legacyReservations).length;
+      if (used >= BIRDFRIEND_DAILY_UPLOAD_LIMIT) {
+        throw new Error("今日已投稿 10 種鳥類，請明天再投稿新的種類。相同種類不重複計次。");
+      }
+      species[speciesKey] = true;
+      newlyReserved = true;
+    }
+
+    tx.set(playerRef, {
+      dailyPhotoUploadQuota:{
+        dateKey,
+        species,
+        reservations: legacyReservations
+      },
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
   });
   await refreshDailyQuotaDisplay();
-  return token;
+  return newlyReserved ? speciesKey : "";
 }
-async function releaseDailyPhotoUpload(token) {
-  if (!token || !db || !playerPortalSession) return;
+async function releaseDailySpeciesUpload(speciesKey) {
+  if (!speciesKey || !db || !playerPortalSession) return;
   const playerRef = db.collection("players").doc(playerPortalSession.id);
   try {
     await db.runTransaction(async tx => {
@@ -6909,9 +6943,15 @@ async function releaseDailyPhotoUpload(token) {
       if (!snap.exists) return;
       const pdata = snap.data() || {}, old = pdata.dailyPhotoUploadQuota || {};
       if (old.dateKey !== taipeiDateKey()) return;
-      const reservations = {...(old.reservations || {})};
-      delete reservations[token];
-      tx.set(playerRef, {dailyPhotoUploadQuota:{dateKey:old.dateKey,reservations}}, {merge:true});
+      const species = {...(old.species || {})};
+      delete species[speciesKey];
+      tx.set(playerRef, {
+        dailyPhotoUploadQuota:{
+          dateKey:old.dateKey,
+          species,
+          reservations:{...(old.reservations || {})}
+        }
+      }, {merge:true});
     });
   } catch (_) {}
   await refreshDailyQuotaDisplay();
@@ -6992,14 +7032,14 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
   }
 
   btn.disabled = true; btn.textContent = editingId ? "儲存修改中…" : "照片上傳中…";
-  let quotaToken = "";
+  let quotaSpeciesKey = "";
   let photoRecordSaved = false;
   try {
     const playerRef = db.collection("players").doc(playerPortalSession.id);
     const playerSnap = await playerRef.get();
     const pdata = playerSnap.exists ? playerSnap.data() : null;
     if (!pdata || pdata.ownerUid !== playerPortalSession.uid || pdata.accountStatus !== "approved") throw new Error("帳號尚未核准，不能上傳或修改照片");
-    if (file) quotaToken = await reserveDailyPhotoUpload();
+    if (!editingId) quotaSpeciesKey = await reserveDailySpeciesUpload(payload);
 
     let ref, oldData={};
     if (editingId) {
@@ -7030,7 +7070,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
       for(const oldPath of oldPaths){ if(oldPath!==storagePath && oldPath!==originalStoragePath){ try{await fbStorageRef.child(oldPath).delete();}catch(_){}} }
     }
 
-    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, photographer:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, originalPhotoUrl, originalStoragePath, photoStyle:selectedPhotoStyle, status:"pending", pkPublished:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const data={...payload, ownerUid:playerPortalSession.uid, playerId:playerPortalSession.id, displayName:pdata.displayName || pdata.id || playerPortalSession.id, photographer:pdata.displayName || pdata.id || playerPortalSession.id, note, photoUrl, storagePath, originalPhotoUrl, originalStoragePath, photoStyle:selectedPhotoStyle, speciesQuotaKey:birdfriendSpeciesQuotaKey(payload), submissionDateKey:taipeiDateKey(), status:"pending", pkPublished:false, updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if (editingId) {
       data.reviewedAt=firebase.firestore.FieldValue.delete();
       data.reviewedBy=firebase.firestore.FieldValue.delete();
@@ -7045,7 +7085,7 @@ document.getElementById("birdfriendPhotoUploadBtn")?.addEventListener("click", a
     await loadBirdfriendMyPhotos();
     setBirdfriendPhotoStatus(payload.category === "wild" ? (`投稿完成：目前 ${count}/15` + (count > 0 ? "，管理員確認公布後即可列入挑戰。" : "，尚無可出題資料。")) : "寵鳥萌照投稿完成，待管理員確認後公布。", "ok");
   } catch (err) {
-    if (quotaToken && !photoRecordSaved) await releaseDailyPhotoUpload(quotaToken);
+    if (quotaSpeciesKey && !photoRecordSaved) await releaseDailySpeciesUpload(quotaSpeciesKey);
     setBirdfriendPhotoStatus("儲存失敗：" + String(err.message || err), "error");
   } finally { btn.disabled = false; btn.textContent = birdfriendEditingRecord ? "儲存修改" : "送出照片投稿"; }
 });
@@ -7242,7 +7282,19 @@ function renderSubmissionReviewList() {
     const img = document.createElement("img"); img.className = "submission-review-thumb"; img.src = item.photoUrl || item.originalPhotoUrl || ""; img.alt = submissionDisplayName(item);
     const copy = document.createElement("div"); copy.className = "submission-review-copy";
     const title = document.createElement("div"); title.className = "submission-review-title"; title.textContent = (item.category === "pet" ? "寵鳥 · " : "野鳥 · ") + submissionDisplayName(item);
-    const meta = document.createElement("div"); meta.className = "submission-review-meta"; meta.textContent = "投稿者：" + (item.displayName || item.playerId || "未署名") + " · " + playerTimeText(item.createdAt || item.updatedAt);
+    const meta = document.createElement("div"); meta.className = "submission-review-meta";
+    let compareText = "";
+    if (item.category === "wild") {
+      const coreById = item.targetBirdId ? birds.find(b => b && b.id === item.targetBirdId) : null;
+      const coreByName = !coreById ? birds.find(b => normalizeCoreBirdName(b && b.name) === normalizeCoreBirdName(item.wildName || item.photoName)) : null;
+      const core = coreById || coreByName;
+      compareText = core
+        ? ` · 原始資料對比：${core.id || "—"} ${core.name || ""} · 投稿題數 ${Number(item.completedCount || 0)}/15`
+        : ` · 原始資料對比：未找到同名正式鳥種（視為新種類） · 投稿題數 ${Number(item.completedCount || 0)}/15`;
+    } else {
+      compareText = ` · 投稿品種：${(item.petData && item.petData.breed) || "未填"}`;
+    }
+    meta.textContent = "投稿者：" + (item.displayName || item.playerId || "未署名") + " · " + playerTimeText(item.createdAt || item.updatedAt) + compareText;
     const badge = document.createElement("span"); badge.className = "submission-review-status " + status; badge.textContent = status === "approved" ? "已公布" : (status === "rejected" ? "未通過" : "待審核");
     copy.append(title, meta, badge);
     const actions = document.createElement("div"); actions.className = "submission-review-actions";
@@ -7261,7 +7313,13 @@ async function loadSubmissionModeration() {
     const snap = await db.collection("birdfriendPhotos").get();
     const rows = []; snap.forEach(doc => rows.push({id:doc.id,...(doc.data() || {})}));
     const order = {pending:0,approved:1,rejected:2};
-    rows.sort((a,b) => (order[normalizedSubmissionStatus(a.status)] - order[normalizedSubmissionStatus(b.status)]) || (submissionCreatedMs(b) - submissionCreatedMs(a)));
+    rows.sort((a,b) => {
+      const sa = (a.category === "pet" ? ((a.petData && a.petData.breed) || a.photoName || "") : (a.wildName || a.photoName || ""));
+      const sb = (b.category === "pet" ? ((b.petData && b.petData.breed) || b.photoName || "") : (b.wildName || b.photoName || ""));
+      return (order[normalizedSubmissionStatus(a.status)] - order[normalizedSubmissionStatus(b.status)])
+        || String(sa).localeCompare(String(sb), "zh-Hant")
+        || (submissionCreatedMs(b) - submissionCreatedMs(a));
+    });
     cachedAdminSubmissions = rows; renderSubmissionReviewList();
   } catch (err) { list.innerHTML = '<div class="hint">讀取失敗：' + String(err.message || err) + '</div>'; }
 }
