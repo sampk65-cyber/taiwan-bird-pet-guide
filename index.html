@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>台灣野鳥寵鳥互動式圖鑑 · V7.3</title>
+<title>台灣野鳥寵鳥互動式圖鑑 · V7.4</title>
 <meta name="description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
 <meta property="og:title" content="台灣野鳥寵鳥互動式圖鑑">
 <meta property="og:description" content="探索台灣野鳥與寵鳥萌照，挑戰鳥類知識、分享鳥友影像，一起豐富互動式鳥類圖鑑。">
@@ -1785,7 +1785,7 @@
     <div class="home-hero-content">
       <header class="app-header">
         <h1 id="heroTitle">台灣野鳥寵鳥互動式圖鑑</h1>
-        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV6.8 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
+        <p id="heroSubtitle">TAIWAN BIRD FIELD GUIDE · indexV7.4 <button type="button" class="hero-admin-gear" id="settingsBtn" aria-label="管理者設定（連點五下）" title="連續點 5 下進入管理者設定">⚙</button></p>
         <p class="copyright-line">Copyright © 2026 Sam pksun. All rights reserved.</p>
       </header>
 
@@ -5889,6 +5889,18 @@ function showGalleryDetail(birdId) {
   v59GalleryBirdId = birdId;
   document.getElementById("galleryListPanel").style.display = "none";
   document.getElementById("galleryDetailPanel").style.display = "block";
+
+  // V7.4：進入鳥種詳細頁時，從照片頁首開始顯示，
+  // 不沿用清單原本的捲動位置，也不落在詳細頁中段。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const detailPanel = document.getElementById("galleryDetailPanel");
+      const photoBox = document.getElementById("galleryPhotoBox");
+      const target = photoBox || detailPanel;
+      if (target) target.scrollIntoView({behavior:"auto", block:"start"});
+    });
+  });
+
   document.getElementById("galleryBirdName").textContent = bird.name;
   document.getElementById("galleryBirdStory").textContent = bird.story || "(尚未填寫解說文字)";
   renderV59BirdPk(bird, "galleryBirdPkGrid", "galleryBirdPkStatus");
