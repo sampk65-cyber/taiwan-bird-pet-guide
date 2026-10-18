@@ -3443,11 +3443,14 @@ function primeEmbeddedMusic() {
           audio.currentTime = 0;
           audio.muted = false;
           audio.volume = oldVolume;
+          afterEmbeddedMusicUnlocked();
         }).catch(() => {
           audio.muted = false;
           audio.volume = oldVolume;
           embeddedMusicUnlocked = false;
         });
+      } else {
+        afterEmbeddedMusicUnlocked();
       }
     } catch (e) {
       audio.muted = false;
@@ -3457,6 +3460,15 @@ function primeEmbeddedMusic() {
   });
 }
 
+// 解鎖完成後，若目前正停在首頁歡迎畫面，立刻把歡迎音樂接上，
+// 不用等玩家先離開首頁再回來才會聽到音樂。
+function afterEmbeddedMusicUnlocked() {
+  const stage = document.getElementById("homeWelcomeStage");
+  if (stage && stage.classList.contains("show")) {
+    playHomeWelcomeMusic();
+  }
+}
+
 // 第一次真實觸控就解鎖兩個內嵌播放器；之後不需登出或重整。
 document.addEventListener("pointerdown", primeEmbeddedMusic, { capture: true, once: true });
 document.addEventListener("touchstart", primeEmbeddedMusic, { capture: true, once: true, passive: true });
@@ -3464,12 +3476,11 @@ document.addEventListener("touchstart", primeEmbeddedMusic, { capture: true, onc
 
 
 let masterSoundEnabled = localStorage.getItem("birdGuideMasterSoundEnabled");
-if (masterSoundEnabled === null) {
-  masterSoundEnabled = localStorage.getItem("birdGuideBackgroundMusicEnabled") !== "0";
-} else {
-  masterSoundEnabled = masterSoundEnabled !== "0";
-}
-// 相容舊程式裡既有的背景音樂判斷
+// 修正：不再沿用舊版「birdGuideBackgroundMusicEnabled」殘留設定。
+// 舊版測試時若曾關掉背景音樂，這把 key 會一直留在手機上，
+// 導致新版（改用內嵌音檔）開機音樂被誤判為「關閉」而永遠放不出來。
+// 新版一律以自己的 key 為準，沒設定過就預設開啟。
+masterSoundEnabled = masterSoundEnabled === null ? true : masterSoundEnabled !== "0";
 let backgroundMusicEnabled = masterSoundEnabled;
 
 function syncMainSoundToggle() {
@@ -7566,6 +7577,16 @@ function renderPlayerList() {
     const visibleId = type === "game" && String(rawId).startsWith("__game__") ? decodeURIComponent(String(rawId).slice(8)) : rawId;
     const meta = document.createElement("div"); meta.className = "player-review-meta";
     meta.textContent = (type === "game" ? "遊戲帳號：" : "鳥友帳號：") + visibleId + " · 分數：" + score;
+    // 管理員測試用：尚未設定密碼的鳥友帳號，直接顯示目前有效的 6 位授權碼與剩餘時間
+    if (type === "bird" && player.passwordSet !== true && player.setupCode) {
+      const expMs = player.setupCodeExpiresAt && player.setupCodeExpiresAt.toMillis ? player.setupCodeExpiresAt.toMillis() : 0;
+      const leftMin = Math.floor((expMs - Date.now()) / 60000);
+      const codeLine = document.createElement("div");
+      codeLine.className = "player-review-meta";
+      codeLine.style.cssText = "font-weight:700;color:#b25b00;";
+      codeLine.textContent = "授權碼：" + player.setupCode + (leftMin > 0 ? "（約剩 " + Math.floor(leftMin / 60) + " 小時 " + (leftMin % 60) + " 分）" : "（已過期，請按重新產生）");
+      meta.appendChild(codeLine);
+    }
     info.append(name, meta);
     const actions = document.createElement("div"); actions.className = "player-review-actions";
     const view = document.createElement("button"); view.className = "view-player-btn"; view.textContent = "查看";
