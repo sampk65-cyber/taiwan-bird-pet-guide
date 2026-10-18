@@ -5451,6 +5451,19 @@ async function playerEmailForId(id) {
   return "p-" + hex + "@players.lanyhbirds.invalid";
 }
 
+// 遊戲帳號專用：加上 "game:" 前綴，避免與鳥友帳號的信箱重複。
+async function gameEmailForId(id) {
+  const normalized = id.normalize("NFKC").trim().toLocaleLowerCase("zh-Hant");
+  const bytes = new TextEncoder().encode("game:" + normalized);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return "g-" + hex + "@players.lanyhbirds.invalid";
+}
+// Firebase 密碼至少 6 碼，4 位通行碼前面加固定字首。
+function gamePasswordForPin(pin) {
+  return "LanYH-game-" + pin;
+}
+
 function updateChallengeAccountBar() {
   const bar = document.getElementById("challengeAccountBar");
   const text = document.getElementById("challengeAccountText");
@@ -5467,6 +5480,7 @@ function updateChallengeAccountBar() {
 
 document.getElementById("switchChallengeAccountBtn")?.addEventListener("click", () => {
   clearChallengeSession();
+  try { if (fbAuth && fbAuth.currentUser && !settingsUnlocked && !playerPortalSession) fbAuth.signOut(); } catch (_) {}
   currentPlayerId = "";
   const idInput = document.getElementById("playerIdInput");
   const pinInput = document.getElementById("playerPinInput");
@@ -5557,78 +5571,105 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
 
     // V4.5：遊戲開始與攝影師帳號完全分流。
     // 遊戲使用 players 集合內獨立的 __game__ 文件，不需申請、不需審核、不需六位認證碼，也不使用 Firebase Authentication。
+    // V7.6：遊戲帳號改用 Firebase 登入（ID 產生登入信箱、通行碼產生密碼）。
+    // 好處：進度與排行榜才能寫進雲端，且通行碼不再以明碼存在資料庫。
     const gameRef = db.collection("players").doc(gamePlayerDocId(id));
-    let gameSnap = await gameRef.get();
+    const gameEmail = await gameEmailForId(id);
+    const gamePassword = gamePasswordForPin(pin);
+    let gameUser = null;
+    let progressSource = null;   // 還原進度用的資料
+    let migrated = false;        // 是否由舊版（明碼通行碼）帳號搬移而來
+    let wrongPin = false;
 
-    // 相容舊版「正式開始」：若獨立遊戲文件尚未建立，嘗試搬移舊 players 內的純遊戲帳號。
-    if (!gameSnap.exists) {
-      try {
-        const legacySnap = await db.collection("players").doc(id).get();
-        if (legacySnap.exists) {
-          const legacy = legacySnap.data() || {};
-          const isLegacyGameAccount =
-            !!legacy.pin &&
-            legacy.passwordSet !== true &&
-            !legacy.ownerUid &&
-            !legacy.setupCode;
-          if (isLegacyGameAccount && String(legacy.pin) === pin) {
-            await gameRef.set({
-              id: id,
-              accountType: "game",
-              pin: String(legacy.pin),
-              score: legacy.score || 0,
-              progress: (legacy.progress && typeof legacy.progress === "object") ? legacy.progress : {},
-              birdsDone: legacy.birdsDone || {},
-              createdAt: legacy.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
-              migratedFromLegacyPlayers: true,
-              migratedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            gameSnap = await gameRef.get();
+    await fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    try {
+      gameUser = (await fbAuth.signInWithEmailAndPassword(gameEmail, gamePassword)).user;
+    } catch (signErr) {
+      const code = signErr && signErr.code;
+      const authMiss = ["auth/user-not-found", "auth/invalid-credential", "auth/invalid-login-credentials", "auth/wrong-password"].includes(code);
+      if (!authMiss) throw signErr;
+
+      // 登入失敗：判斷是新帳號、舊版帳號，還是通行碼打錯
+      const snap = await gameRef.get();
+      const data = snap.exists ? (snap.data() || {}) : null;
+      if (data && data.ownerUid) {
+        wrongPin = true;                         // 已綁定 Firebase 帳號，通行碼不對
+      } else if (data && data.pin) {
+        if (String(data.pin) === pin) { progressSource = data; migrated = true; }
+        else wrongPin = true;                    // 舊版明碼通行碼
+      } else if (data) {
+        progressSource = data;                   // 只有投票等資料、沒有通行碼：視為新帳號並保留資料
+      } else {
+        // 相容更舊版：搬移舊 players 內的純遊戲帳號
+        try {
+          const legacySnap = await db.collection("players").doc(id).get();
+          if (legacySnap.exists) {
+            const legacy = legacySnap.data() || {};
+            const isLegacyGameAccount = !!legacy.pin && legacy.passwordSet !== true && !legacy.ownerUid && !legacy.setupCode;
+            if (isLegacyGameAccount) {
+              if (String(legacy.pin) === pin) { progressSource = legacy; migrated = true; }
+              else wrongPin = true;
+            }
           }
+        } catch (legacyErr) {
+          console.warn("舊遊戲帳號搬移略過", legacyErr);
         }
-      } catch (legacyErr) {
-        console.warn("舊遊戲帳號搬移略過", legacyErr);
+      }
+
+      if (!wrongPin) {
+        try {
+          gameUser = (await fbAuth.createUserWithEmailAndPassword(gameEmail, gamePassword)).user;
+        } catch (createErr) {
+          if (createErr && createErr.code === "auth/email-already-in-use") wrongPin = true;
+          else throw createErr;
+        }
       }
     }
 
-    if (gameSnap.exists) {
-      const data = gameSnap.data() || {};
-      if (data.pin && String(data.pin) !== pin) {
-        loginOk = false;
-        document.getElementById("loginPinError").textContent = "通行碼錯誤，如果這不是你的 ID，請換一個名字";
-        document.getElementById("loginPinError").style.display = "block";
-      } else {
-        currentPlayerId = id;
-        currentAnswered = {};
-        totalScore = 0;
-        if (data.progress && typeof data.progress === "object") {
-          currentAnswered = data.progress;
-        } else if (data.birdsDone) {
-          Object.keys(data.birdsDone).forEach(birdId => {
-            if (data.birdsDone[birdId]) {
-              currentAnswered[birdId + "_done"] = true;
-              currentAnswered[birdId + "_captured"] = true;
-            }
-          });
-        }
-        // 舊版曾依解鎖門檻錯算分數；登入時一律由每鳥實際答對題數重建。
-        recalculateTotalScore();
-        if (!data.pin) await gameRef.set({ pin: pin }, { merge: true });
-      }
+    if (wrongPin || !gameUser) {
+      loginOk = false;
+      document.getElementById("loginPinError").textContent = "通行碼錯誤，如果這不是你的 ID，請換一個名字";
+      document.getElementById("loginPinError").style.display = "block";
     } else {
-      // 一般使用者第一次直接建立遊戲 ID，立即進入，不經攝影師申請流程。
+      if (!progressSource) {
+        const snap2 = await gameRef.get();
+        progressSource = snap2.exists ? (snap2.data() || {}) : {};
+      }
+      const data = progressSource;
       currentPlayerId = id;
       currentAnswered = {};
       totalScore = 0;
-      await gameRef.set({
+      if (data.progress && typeof data.progress === "object") {
+        currentAnswered = data.progress;
+      } else if (data.birdsDone) {
+        Object.keys(data.birdsDone).forEach(birdId => {
+          if (data.birdsDone[birdId]) {
+            currentAnswered[birdId + "_done"] = true;
+            currentAnswered[birdId + "_captured"] = true;
+          }
+        });
+      }
+      // 舊版曾依解鎖門檻錯算分數；登入時一律由每鳥實際答對題數重建。
+      recalculateTotalScore();
+
+      // 綁定帳號並移除明碼通行碼
+      const update = {
         id: id,
         accountType: "game",
-        pin: pin,
-        score: 0,
-        progress: {},
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        ownerUid: gameUser.uid,
+        pin: firebase.firestore.FieldValue.delete(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      };
+      if (!data.createdAt) update.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      if (migrated) {
+        update.progress = currentAnswered;
+        update.score = totalScore;
+        update.migratedFromLegacyPlayers = true;
+      } else if (data.score === undefined) {
+        update.score = 0;
+        update.progress = {};
+      }
+      await gameRef.set(update, { merge: true });
     }
   } catch (err) {
     console.error("遊戲登入失敗", err);
