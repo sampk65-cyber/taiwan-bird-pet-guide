@@ -5556,7 +5556,11 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
     return;
   }
   if (!/^\d{4}$/.test(pin)) {
-    document.getElementById("loginPinError").textContent = "請設定/輸入 4 位數通行碼";
+    let pinMsg;
+    if (!pin) pinMsg = "尚未輸入通行碼，請輸入 4 位數字";
+    else if (!/^\d+$/.test(pin)) pinMsg = "通行碼只能是數字（0–9），請輸入 4 位數字";
+    else pinMsg = "通行碼須為 4 位數字，目前輸入了 " + pin.length + " 位";
+    document.getElementById("loginPinError").textContent = pinMsg;
     document.getElementById("loginPinError").style.display = "block";
     return;
   }
@@ -5628,7 +5632,7 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
 
     if (wrongPin || !gameUser) {
       loginOk = false;
-      document.getElementById("loginPinError").textContent = "通行碼錯誤，如果這不是你的 ID，請換一個名字";
+      document.getElementById("loginPinError").textContent = "ID「" + id + "」已有人使用，但通行碼不符。若這不是你的 ID，請換一個名字；若是你的 ID 卻忘了通行碼，請洽管理員";
       document.getElementById("loginPinError").style.display = "block";
     } else {
       if (!progressSource) {
@@ -5674,7 +5678,16 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
   } catch (err) {
     console.error("遊戲登入失敗", err);
     loginOk = false;
-    document.getElementById("loginPinError").textContent = "連線失敗，請再試一次：" + (err.message || err);
+    const ec = (err && err.code) || "";
+    let errMsg;
+    if (ec === "auth/network-request-failed" || ec === "unavailable") errMsg = "網路連線失敗，請檢查網路後再試一次";
+    else if (ec === "auth/too-many-requests") errMsg = "嘗試次數過多，系統暫時鎖定，請等幾分鐘後再試";
+    else if (ec === "auth/operation-not-allowed") errMsg = "系統尚未啟用帳號密碼登入，請通知管理員（代碼：" + ec + "）";
+    else if (ec === "auth/weak-password") errMsg = "通行碼被系統判定太簡單，請改用其他 4 位數字（代碼：" + ec + "）";
+    else if (ec === "permission-denied") errMsg = "資料庫權限不足，無法儲存登入資料，請通知管理員（代碼：" + ec + "）";
+    else if (ec === "auth/invalid-api-key" || ec === "auth/app-not-authorized" || ec === "auth/unauthorized-domain") errMsg = "此網址尚未被系統授權使用，請通知管理員（代碼：" + ec + "）";
+    else errMsg = "登入失敗，請再試一次（代碼：" + (ec || (err && err.message) || "未知") + "）";
+    document.getElementById("loginPinError").textContent = errMsg;
     document.getElementById("loginPinError").style.display = "block";
   }
 
@@ -5699,6 +5712,12 @@ document.getElementById("loginConfirmBtn").onclick = async () => {
   }
 };
 
+["playerIdInput", "playerPinInput"].forEach(function (elId) {
+  document.getElementById(elId).addEventListener("input", function () {
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("loginPinError").style.display = "none";
+  });
+});
 document.getElementById("playerIdInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") document.getElementById("loginConfirmBtn").click();
 });
